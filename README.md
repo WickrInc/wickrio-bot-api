@@ -27,7 +27,7 @@ var status = await bot.start(bot_username)
       process.exit();
   }
 // Sending message to a room
-var msg = "Hey, I'm a WickrBot, lets do things!";
+var msg = "Hey, I'm a WickrBot. Lets do things!";
 var vGroupID = "example-vGroupID";
 var sMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, msg);
 console.log(sMessage); //if successful should print "Sending message"
@@ -37,3 +37,5 @@ var closed = await bot.close();
   }
 }
 ```
+
+For a full usage and easy to get started example see: <https://github.com/WickrInc/wickrio-example-app>
