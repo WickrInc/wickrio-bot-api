@@ -1,0 +1,25 @@
+{
+  "name": "wickrio-bot-api",
+  "version": "1.0.0",
+  "description": "WickrIO Bot API Framework",
+  "main": "WickrIOBot.js",
+  "dependencies": {
+    "wickrio_addon": "^5.8.2",
+    "fs": "0.0.1-security"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wickr",
+    "wickrio",
+    "wickrbot",
+    "bot",
+    "bots",
+    "secure",
+    "messaging",
+    "api"
+  ],
+  "author": "Aaron Mishiyev (amishiyev@wickr.com)",
+  "license": "ISC"
+}
