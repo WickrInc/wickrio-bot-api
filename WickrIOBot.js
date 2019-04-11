@@ -111,33 +111,33 @@ class WickrIOBot {
 
   //WickrIO API functions used: cmdEncryptString()
   async encryptEnv() {
-    var processes = JSON.parse(fs.readFileSync('processes.json'));
-    var tokens = JSON.parse(process.env.tokens);
-    //Create an encryptor:
-    var key;
-    if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
-      key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value);
-    } else {
-      key = tokens.DATABASE_ENCRYPTION_KEY.value;
-    }
-    encryptor = require('simple-encryptor')(key);
-    for (var i in tokens) {
-      if (i === "BOT_USERNAME")
-        continue;
-      if (!tokens[i].encrypted) {
-        try {
+    try {
+      var processes = JSON.parse(fs.readFileSync('processes.json'));
+      var tokens = JSON.parse(process.env.tokens);
+      //Create an encryptor:
+      var key;
+      if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
+        key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value);
+      } else {
+        key = tokens.DATABASE_ENCRYPTION_KEY.value;
+      }
+      encryptor = require('simple-encryptor')(key);
+      for (var i in tokens) {
+        if (i === "BOT_USERNAME")
+          continue;
+        if (!tokens[i].encrypted) {
           tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
           tokens[i].encrypted = true;
-        } catch (err) {
-          console.log("Unable to encrypt Bot Tokens:", err);
-          return false;
         }
       }
+      processes.apps[0].env.tokens = tokens;
+      var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
+      console.log("Bot tokens encrypted successfully!");
+      return true;
+    } catch (err) {
+      console.log("Unable to encrypt Bot Tokens:", err);
+      return false;
     }
-    processes.apps[0].env.tokens = tokens;
-    var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
-    console.log("Bot tokens encrypted successfully!");
-    return true;
   }
 
   //Loads and decrypts the bot's user database
@@ -166,7 +166,7 @@ class WickrIOBot {
       if (this.wickrUsers.length === 0) {
         return;
       }
-      // Encrypt
+      //Encrypt
       var ciphertext = encryptor.encrypt(this.wickrUsers);
       var encrypted = WickrIOAPI.cmdEncryptString(ciphertext);
       var saved = fs.writeFileSync('users.txt', encrypted, 'utf-8');
