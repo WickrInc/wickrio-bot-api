@@ -1,5 +1,6 @@
 const WickrIOAPI = require('wickrio_addon');
 const WickrUser = require('./WickrUser');
+var MongoClient = require('mongodb').MongoClient;
 var fs = require('fs');
 var encryptor;
 
@@ -8,6 +9,12 @@ class WickrIOBot {
   constructor() {
     this.wickrUsers = [];
     this.listenFlag = false;
+    // Connect to the db
+    MongoClient.connect("mongodb://localhost:27017/exampleDb", function(err, db) {
+      if (!err) {
+        console.log("We are connected");
+      }
+    });
   }
 
   //WickrIO API functions used: clientInit() and isConnected()

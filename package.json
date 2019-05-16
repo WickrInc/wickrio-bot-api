@@ -5,8 +5,9 @@
   "main": "WickrIOBot.js",
   "dependencies": {
     "fs": "0.0.2",
-    "simple-encryptor": "^2.0.0",
-    "wickrio_addon": "^5.12.9"
+    "mongodb": "^3.2.4",
+    "simple-encryptor": "^3.0.0",
+    "wickrio_addon": "^5.18.9"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
