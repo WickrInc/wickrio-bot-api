@@ -78,7 +78,7 @@ class WickrIOBot {
       var settings = JSON.parse(fs.readFileSync('package.json'));
       //Check if bot supports a user database
       if (settings.database) {
-        var saved = this.saveData();
+        var saved = await this.saveData();
       }
       return new Promise(function(resolve, reject) {
         var stopMessaging = 'not needed';
