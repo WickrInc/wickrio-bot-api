@@ -180,7 +180,6 @@ class WickrIOBot {
 
   parseMessage(message) {
     var tokens = JSON.parse(process.env.tokens);
-    var bot_username = tokens.BOT_USERNAME.value;
     console.log(message)
     message = JSON.parse(message);
     var msgtype = message.msgtype;

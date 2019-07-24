@@ -2,6 +2,8 @@
 
 The Wickr IO Node.js Bot API Framework provides tools for an easier and more efficient Development of WickrIO integration bots. It utilizes the Wickr IO Node.js Addon API(wickrio_addon) functions to make it easier to develop integrations. For full documentation and usage guide go here: <https://wickrinc.github.io/wickrio-docs/#writing-integrations-node-js-bot-api-development-toolkit>
 
+To get started, you would need to setup your system, download and install Docker and run the WickrIO Docker container. Full instructions on how to do so are available here: https://wickrinc.github.io/wickrio-docs/#wickr-io-getting-started
+
 ## Install
 
 ```bash
