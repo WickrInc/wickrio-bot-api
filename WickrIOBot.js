@@ -185,6 +185,15 @@ class WickrIOBot {
     var msgtype = message.msgtype;
     var sender = message.sender;
     var vGroupID = message.vgroupid;
+    if(message.file){
+      var parsedObj = {
+        'file': message.file.localfilename,
+        'filename': message.file.filename,
+        'vgroupid': vGroupID,
+        'userEmail': sender
+        };
+      return parsedObj;
+    }
     var request = message.message;
     var command = '',
       argument = '',
