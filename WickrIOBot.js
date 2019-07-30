@@ -123,7 +123,7 @@ class WickrIOBot {
       }
       encryptor = require('simple-encryptor')(key);
       for (var i in tokens) {
-        if (i === "BOT_USERNAME")
+        if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
           continue;
         if (!tokens[i].encrypted) {
           tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
@@ -180,12 +180,20 @@ class WickrIOBot {
 
   parseMessage(message) {
     var tokens = JSON.parse(process.env.tokens);
-    var bot_username = tokens.BOT_USERNAME.value;
     console.log(message)
     message = JSON.parse(message);
     var msgtype = message.msgtype;
     var sender = message.sender;
     var vGroupID = message.vgroupid;
+    if(message.file){
+      var parsedObj = {
+        'file': message.file.localfilename,
+        'filename': message.file.filename,
+        'vgroupid': vGroupID,
+        'userEmail': sender
+        };
+      return parsedObj;
+    }
     var request = message.message;
     var command = '',
       argument = '',
@@ -195,9 +203,9 @@ class WickrIOBot {
     else
       var parsedData = request.match(/(\/[a-zA-Z]+)(@[a-zA-Z0-9_-]+)?(\s+)?(.*)$/);
     if (parsedData !== null) {
-      command = parsedData[1].toLowerCase();
+      command = parsedData[1];
       if (parsedData[4] !== '') {
-        argument = parsedData[4].toLowerCase();
+        argument = parsedData[4];
       }
     }
     if (vGroupID.charAt(0) === 'a' || vGroupID.charAt(0) === 'c' || vGroupID.charAt(0) === 'd')
@@ -221,7 +229,8 @@ class WickrIOBot {
   addUser(wickrUser) {
     this.wickrUsers.push(wickrUser);
     var saved = this.saveData();
-    return console.log("New Wickr user added to database.");
+    console.log("New Wickr user added to database.");
+    return wickrUser;
   }
 
   getUser(userEmail) {
