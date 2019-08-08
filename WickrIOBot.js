@@ -76,7 +76,7 @@ class WickrIOBot {
     try {
       var ref = this;
       var settings = JSON.parse(fs.readFileSync('package.json'));
-      //Check if bot supports a user database
+      //Checks if bot supports a user database saving feature
       if (settings.database) {
         var saved = await this.saveData();
       }
@@ -186,11 +186,15 @@ class WickrIOBot {
     var sender = message.sender;
     var vGroupID = message.vgroupid;
     if(message.file){
+      var isVoiceMemo = false;
+      if(message.file.isvoicememo)
+        isVoiceMemo = true;
       var parsedObj = {
         'file': message.file.localfilename,
         'filename': message.file.filename,
         'vgroupid': vGroupID,
-        'userEmail': sender
+        'userEmail': sender,
+        'isVoiceMemo': isVoiceMemo
         };
       return parsedObj;
     }
