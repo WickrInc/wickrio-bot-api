@@ -217,11 +217,12 @@ class WickrIOBot {
     if (message.control)
       return;
     else
-      var parsedData = request.match(/(\/[a-zA-Z]+)(@[a-zA-Z0-9_-]+)?(\s+)?(.*)$/);
+      //This doesn't capture @ mentions
+      var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/);
     if (parsedData !== null) {
       command = parsedData[1];
-      if (parsedData[4] !== '') {
-        argument = parsedData[4];
+      if (parsedData[2] !== '') {
+        argument = parsedData[2];
       }
     }
     if (vGroupID.charAt(0) === 'a' || vGroupID.charAt(0) === 'c' || vGroupID.charAt(0) === 'd')
