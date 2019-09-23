@@ -217,12 +217,13 @@ class WickrIOBot {
     if (message.control)
       return;
     else
-      //This doesn't capture @ mentions
-      var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/);
+      //This should capture @ mentions
+      //Would need to check if parsed data has 2 or 3 entries!!
+      var parsedData = request.match(/(\/[a-zA-Z]+) ?(@[a-zA-Z1-9]+)? ?([\s\S]*)$/);
     if (parsedData !== null) {
       command = parsedData[1];
-      if (parsedData[2] !== '') {
-        argument = parsedData[2];
+      if (parsedData[3] !== '') {
+        argument = parsedData[3];
       }
     }
     if (vGroupID.charAt(0) === 'a' || vGroupID.charAt(0) === 'c' || vGroupID.charAt(0) === 'd')
