@@ -13,36 +13,51 @@ class WickrIOBot {
   //WickrIO API functions used: clientInit() and isConnected()
   async start(client_username) {
     try {
-      var ref = this;
-      console.log('Starting bot up...');
-      return new Promise(function(resolve, reject) {
-        var status = WickrIOAPI.clientInit(client_username);
-        console.log(status);
-        resolve(status);
-      }).then(function(status) {
+        var ref = this;
+        console.log('Starting bot up...');
         return new Promise(function(resolve, reject) {
-          var connected = WickrIOAPI.isConnected(10);
-          console.log('isConnected:', connected)
-          resolve(connected);
-        }).then(async function(connected) {
-          var settings = JSON.parse(fs.readFileSync('package.json'));
-          //Check if bot supports a user database
-          if (!settings.database) {
-            return true;
-          }
-          if (connected) {
-            var encrypted = await ref.encryptEnv();
-            var loaded = await ref.loadData();
-            return true;
-          } else {
-            return false;
-          }
+            var status = WickrIOAPI.clientInit(client_username);
+            console.log(status);
+            resolve(status);
+        }).then(function(status) {
+            return new Promise(async function(resolve, reject) {
+                console.log('Checking for client connectionn...');
+                var connected = false;
+                do {
+                    connected = WickrIOAPI.isConnected(10);
+                    console.log('isConnected:', connected);
+                } while (connected != true);
+
+                console.log('isConnected: finally we are connected');
+
+                var cState;
+                do {
+                    cState = WickrIOAPI.getClientState();
+                    console.log('isConnected: client state is', cState);
+                    if (cState != "RUNNING")
+                        await sleep(5000);
+                } while (cState != "RUNNING");
+
+                resolve(connected);
+            }).then(async function(connected) {
+                var settings = JSON.parse(fs.readFileSync('package.json'));
+                //Check if bot supports a user database
+                if (!settings.database) {
+                    return true;
+                }
+                if (connected) {
+                    var encrypted = await ref.encryptEnv();
+                    var loaded = await ref.loadData();
+                    return true;
+                } else {
+                    return false;
+                }
+            }).catch(error => {
+                console.log(error);
+            });
         }).catch(error => {
-          console.log(error);
+            console.log(error);
         });
-      }).catch(error => {
-        console.log(error);
-      });
     } catch (err) {
       console.log(err);
     }
@@ -270,6 +285,10 @@ class WickrIOBot {
     return found;
   }
 };
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 module.exports = {
   WickrIOBot,
