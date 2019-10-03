@@ -137,22 +137,27 @@ class WickrIOBot {
       } else {
         key = tokens.DATABASE_ENCRYPTION_KEY.value;
       }
-      encryptor = require('simple-encryptor')(key);
-      for (var i in tokens) {
-        if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
-          continue;
-        if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
-          tokens[i].encrypted = true;
+
+        if (key.length < 16) {
+            console.log("WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long");
+            return true;
         }
-      }
-      processes.apps[0].env.tokens = tokens;
-      var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
-      console.log("Bot tokens encrypted successfully!");
-      return true;
+        encryptor = require('simple-encryptor')(key);
+        for (var i in tokens) {
+            if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
+                 continue;
+            if (!tokens[i].encrypted) {
+                 tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
+                 tokens[i].encrypted = true;
+            }
+        }
+        processes.apps[0].env.tokens = tokens;
+        var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
+        console.log("Bot tokens encrypted successfully!");
+        return true;
     } catch (err) {
-      console.log("Unable to encrypt Bot Tokens:", err);
-      return false;
+        console.log("Unable to encrypt Bot Tokens:", err);
+        return false;
     }
   }
 
@@ -160,17 +165,22 @@ class WickrIOBot {
   //WickrIO API functions used: cmdDecryptString()
   async loadData() {
     try {
-      var users = fs.readFileSync('users.txt', 'utf-8');
-      if (users.length === 0 || !users || users === "") {
-        return;
-      }
-      console.log("Decrypting user database...");
-      var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
-      // Decrypt
-      var decryptedData = encryptor.decrypt(ciphertext);
-      this.wickrUsers = decryptedData;
+        if (! fs.existsSync('users.txt')) {
+            console.log("WARNING: users.txt does not exist!");
+            return;
+        }
+
+        var users = fs.readFileSync('users.txt', 'utf-8');
+        if (users.length === 0 || !users || users === "") {
+            return;
+        }
+        console.log("Decrypting user database...");
+        var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
+        // Decrypt
+        var decryptedData = encryptor.decrypt(ciphertext);
+        this.wickrUsers = decryptedData;
     } catch (err) {
-      console.log(err);
+        console.log(err);
     }
   }
 
