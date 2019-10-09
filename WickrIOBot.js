@@ -211,6 +211,16 @@ class WickrIOBot {
     var msgtype = message.msgtype;
     var sender = message.sender;
     var vGroupID = message.vgroupid;
+    var convoType = '';
+
+    // Determine the convo type (1to1, group, or room)
+    if (vGroupID.charAt(0) === 'S')
+      convoType = 'room';
+    else if (vGroupID.charAt(0) === 'G')
+      convoType = 'groupconvo';
+    else
+      convoType = 'personal';
+
     if (message.file) {
       var isVoiceMemo = false;
       if (message.file.isvoicememo) {
@@ -222,7 +232,8 @@ class WickrIOBot {
           'vgroupid': vGroupID,
           'userEmail': sender,
           'isVoiceMemo': isVoiceMemo,
-          'voiceMemoDuration': voiceMemoDuration
+          'voiceMemoDuration': voiceMemoDuration,
+          'convotype': convoType
         };
       } else {
         var parsedObj = {
@@ -230,15 +241,15 @@ class WickrIOBot {
           'filename': message.file.filename,
           'vgroupid': vGroupID,
           'userEmail': sender,
-          'isVoiceMemo': isVoiceMemo
+          'isVoiceMemo': isVoiceMemo,
+          'convotype': convoType
         };
       }
       return parsedObj;
     }
     var request = message.message;
     var command = '',
-      argument = '',
-      convoType = '';
+      argument = '';
     if (message.control)
       return;
     else
@@ -250,13 +261,6 @@ class WickrIOBot {
         argument = parsedData[2];
       }
     }
-    if (vGroupID.charAt(0) === 'a' || vGroupID.charAt(0) === 'c' || vGroupID.charAt(0) === 'd')
-      convoType = 'personal';
-    else if (vGroupID.charAt(0) === 'G')
-      convoType = 'groupconvo';
-    else
-      convoType = 'room';
-
     var parsedObj = {
       'message': request,
       'command': command,
