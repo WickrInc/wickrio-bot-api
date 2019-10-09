@@ -2,6 +2,7 @@ const WickrIOAPI = require('wickrio_addon');
 const WickrUser = require('./WickrUser');
 var fs = require('fs');
 var encryptor;
+var encryptorDefined = false;
 
 class WickrIOBot {
 
@@ -140,9 +141,11 @@ class WickrIOBot {
 
         if (key.length < 16) {
             console.log("WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long");
+            encryptorDefined = false;
             return true;
         }
         encryptor = require('simple-encryptor')(key);
+        encryptorDefined = true;
         for (var i in tokens) {
             if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
                  continue;
@@ -176,9 +179,15 @@ class WickrIOBot {
         }
         console.log("Decrypting user database...");
         var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
-        // Decrypt
-        var decryptedData = encryptor.decrypt(ciphertext);
-        this.wickrUsers = decryptedData;
+
+        if (encryptorDefined === true) {
+            // Decrypt
+            var decryptedData = encryptor.decrypt(ciphertext);
+            this.wickrUsers = decryptedData;
+        } else {
+            this.wickrUsers = JSON.parse(ciphertext);
+        }
+console.log("loadData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     } catch (err) {
         console.log(err);
     }
@@ -192,9 +201,17 @@ class WickrIOBot {
       if (this.wickrUsers.length === 0) {
         return;
       }
-      //Encrypt
-      var ciphertext = encryptor.encrypt(this.wickrUsers);
-      var encrypted = WickrIOAPI.cmdEncryptString(ciphertext);
+
+console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
+      var serialusers;
+      if (encryptorDefined === true) {
+        //Encrypt
+        serialusers = encryptor.encrypt(this.wickrUsers);
+      } else {
+        serialusers = JSON.stringify(this.wickrUsers);
+      }
+
+      var encrypted = WickrIOAPI.cmdEncryptString(serialusers);
       var saved = fs.writeFileSync('users.txt', encrypted, 'utf-8');
       console.log("User database saved to file!");
       return true;
@@ -206,7 +223,6 @@ class WickrIOBot {
 
   parseMessage(message) {
     var tokens = JSON.parse(process.env.tokens);
-    console.log(message)
     message = JSON.parse(message);
     var msgtype = message.msgtype;
     var sender = message.sender;
@@ -259,8 +275,10 @@ class WickrIOBot {
       command = parsedData[1];
       if (parsedData[2] !== '') {
         argument = parsedData[2];
+        argument = argument.trim();
       }
     }
+
     var parsedObj = {
       'message': request,
       'command': command,
