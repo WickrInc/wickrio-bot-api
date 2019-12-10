@@ -1,12 +1,12 @@
 {
   "name": "wickrio-bot-api",
-  "version": "5.38.14",
+  "version": "5.44.2",
   "description": "The official Wickr IO Bot API Framework",
   "main": "WickrIOBot.js",
   "dependencies": {
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
-    "wickrio_addon": "^5.38.14"
+    "wickrio_addon": "^5.44.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
