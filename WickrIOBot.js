@@ -2,6 +2,7 @@ const WickrIOAPI = require('wickrio_addon');
 const WickrUser = require('./WickrUser');
 var fs = require('fs');
 var encryptor;
+var encryptorDefined = false;
 
 class WickrIOBot {
 
@@ -13,36 +14,51 @@ class WickrIOBot {
   //WickrIO API functions used: clientInit() and isConnected()
   async start(client_username) {
     try {
-      var ref = this;
-      console.log('Starting bot up...');
-      return new Promise(function(resolve, reject) {
-        var status = WickrIOAPI.clientInit(client_username);
-        console.log(status);
-        resolve(status);
-      }).then(function(status) {
+        var ref = this;
+        console.log('Starting bot up...');
         return new Promise(function(resolve, reject) {
-          var connected = WickrIOAPI.isConnected(10);
-          console.log('isConnected:', connected)
-          resolve(connected);
-        }).then(async function(connected) {
-          var settings = JSON.parse(fs.readFileSync('package.json'));
-          //Check if bot supports a user database
-          if (!settings.database) {
-            return true;
-          }
-          if (connected) {
-            var encrypted = await ref.encryptEnv();
-            var loaded = await ref.loadData();
-            return true;
-          } else {
-            return false;
-          }
+            var status = WickrIOAPI.clientInit(client_username);
+            console.log(status);
+            resolve(status);
+        }).then(function(status) {
+            return new Promise(async function(resolve, reject) {
+                console.log('Checking for client connectionn...');
+                var connected = false;
+                do {
+                    connected = WickrIOAPI.isConnected(10);
+                    console.log('isConnected:', connected);
+                } while (connected != true);
+
+                console.log('isConnected: finally we are connected');
+
+                var cState;
+                do {
+                    cState = WickrIOAPI.getClientState();
+                    console.log('isConnected: client state is', cState);
+                    if (cState != "RUNNING")
+                        await sleep(5000);
+                } while (cState != "RUNNING");
+
+                resolve(connected);
+            }).then(async function(connected) {
+                var settings = JSON.parse(fs.readFileSync('package.json'));
+                //Check if bot supports a user database
+                if (!settings.database) {
+                    return true;
+                }
+                if (connected) {
+                    var encrypted = await ref.encryptEnv();
+                    var loaded = await ref.loadData();
+                    return true;
+                } else {
+                    return false;
+                }
+            }).catch(error => {
+                console.log(error);
+            });
         }).catch(error => {
-          console.log(error);
+            console.log(error);
         });
-      }).catch(error => {
-        console.log(error);
-      });
     } catch (err) {
       console.log(err);
     }
@@ -122,22 +138,29 @@ class WickrIOBot {
       } else {
         key = tokens.DATABASE_ENCRYPTION_KEY.value;
       }
-      encryptor = require('simple-encryptor')(key);
-      for (var i in tokens) {
-        if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
-          continue;
-        if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
-          tokens[i].encrypted = true;
+
+        if (key.length < 16) {
+            console.log("WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long");
+            encryptorDefined = false;
+            return true;
         }
-      }
-      processes.apps[0].env.tokens = tokens;
-      var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
-      console.log("Bot tokens encrypted successfully!");
-      return true;
+        encryptor = require('simple-encryptor')(key);
+        encryptorDefined = true;
+        for (var i in tokens) {
+            if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
+                 continue;
+            if (!tokens[i].encrypted) {
+                 tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
+                 tokens[i].encrypted = true;
+            }
+        }
+        processes.apps[0].env.tokens = tokens;
+        var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
+        console.log("Bot tokens encrypted successfully!");
+        return true;
     } catch (err) {
-      console.log("Unable to encrypt Bot Tokens:", err);
-      return false;
+        console.log("Unable to encrypt Bot Tokens:", err);
+        return false;
     }
   }
 
@@ -145,17 +168,28 @@ class WickrIOBot {
   //WickrIO API functions used: cmdDecryptString()
   async loadData() {
     try {
-      var users = fs.readFileSync('users.txt', 'utf-8');
-      if (users.length === 0 || !users || users === "") {
-        return;
-      }
-      console.log("Decrypting user database...");
-      var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
-      // Decrypt
-      var decryptedData = encryptor.decrypt(ciphertext);
-      this.wickrUsers = decryptedData;
+        if (! fs.existsSync('users.txt')) {
+            console.log("WARNING: users.txt does not exist!");
+            return;
+        }
+
+        var users = fs.readFileSync('users.txt', 'utf-8');
+        if (users.length === 0 || !users || users === "") {
+            return;
+        }
+        console.log("Decrypting user database...");
+        var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
+
+        if (encryptorDefined === true) {
+            // Decrypt
+            var decryptedData = encryptor.decrypt(ciphertext);
+            this.wickrUsers = decryptedData;
+        } else {
+            this.wickrUsers = JSON.parse(ciphertext);
+        }
+console.log("loadData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     } catch (err) {
-      console.log(err);
+        console.log(err);
     }
   }
 
@@ -167,9 +201,17 @@ class WickrIOBot {
       if (this.wickrUsers.length === 0) {
         return;
       }
-      //Encrypt
-      var ciphertext = encryptor.encrypt(this.wickrUsers);
-      var encrypted = WickrIOAPI.cmdEncryptString(ciphertext);
+
+console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
+      var serialusers;
+      if (encryptorDefined === true) {
+        //Encrypt
+        serialusers = encryptor.encrypt(this.wickrUsers);
+      } else {
+        serialusers = JSON.stringify(this.wickrUsers);
+      }
+
+      var encrypted = WickrIOAPI.cmdEncryptString(serialusers);
       var saved = fs.writeFileSync('users.txt', encrypted, 'utf-8');
       console.log("User database saved to file!");
       return true;
@@ -181,11 +223,20 @@ class WickrIOBot {
 
   parseMessage(message) {
     var tokens = JSON.parse(process.env.tokens);
-    console.log(message)
     message = JSON.parse(message);
     var msgtype = message.msgtype;
     var sender = message.sender;
     var vGroupID = message.vgroupid;
+    var convoType = '';
+
+    // Determine the convo type (1to1, group, or room)
+    if (vGroupID.charAt(0) === 'S')
+      convoType = 'room';
+    else if (vGroupID.charAt(0) === 'G')
+      convoType = 'groupconvo';
+    else
+      convoType = 'personal';
+
     if (message.file) {
       var isVoiceMemo = false;
       if (message.file.isvoicememo) {
@@ -197,7 +248,8 @@ class WickrIOBot {
           'vgroupid': vGroupID,
           'userEmail': sender,
           'isVoiceMemo': isVoiceMemo,
-          'voiceMemoDuration': voiceMemoDuration
+          'voiceMemoDuration': voiceMemoDuration,
+          'convotype': convoType
         };
       } else {
         var parsedObj = {
@@ -205,15 +257,15 @@ class WickrIOBot {
           'filename': message.file.filename,
           'vgroupid': vGroupID,
           'userEmail': sender,
-          'isVoiceMemo': isVoiceMemo
+          'isVoiceMemo': isVoiceMemo,
+          'convotype': convoType
         };
       }
       return parsedObj;
     }
     var request = message.message;
     var command = '',
-      argument = '',
-      convoType = '';
+      argument = '';
     if (message.control)
       return;
     else
@@ -223,14 +275,9 @@ class WickrIOBot {
       command = parsedData[1];
       if (parsedData[2] !== '') {
         argument = parsedData[2];
+        argument = argument.trim();
       }
     }
-    if (vGroupID.charAt(0) === 'a' || vGroupID.charAt(0) === 'c' || vGroupID.charAt(0) === 'd')
-      convoType = 'personal';
-    else if (vGroupID.charAt(0) === 'G')
-      convoType = 'groupconvo';
-    else
-      convoType = 'room';
 
     var parsedObj = {
       'message': request,
@@ -270,6 +317,10 @@ class WickrIOBot {
     return found;
   }
 };
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 module.exports = {
   WickrIOBot,
