@@ -187,7 +187,6 @@ class WickrIOBot {
         } else {
             this.wickrUsers = JSON.parse(ciphertext);
         }
-console.log("loadData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     } catch (err) {
         console.log(err);
     }
