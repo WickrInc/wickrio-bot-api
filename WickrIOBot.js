@@ -31,13 +31,18 @@ class WickrIOBot {
 
                 console.log('isConnected: finally we are connected');
 
-                var cState;
-                do {
-                    cState = WickrIOAPI.getClientState();
-                    console.log('isConnected: client state is', cState);
-                    if (cState != "RUNNING")
-                        await sleep(5000);
-                } while (cState != "RUNNING");
+                // For backwards compatiblity fail, but don't exit if getClientState is not supported
+                try {
+                    var cState;
+                    do {
+                        cState = WickrIOAPI.getClientState();
+                        console.log('isConnected: client state is', cState);
+                        if (cState != "RUNNING")
+                            await sleep(5000);
+                    } while (cState != "RUNNING");
+                } catch (err) {
+                  console.log("getClientState not supported, should upgrade docker image!");
+                }
 
                 resolve(connected);
             }).then(async function(connected) {
