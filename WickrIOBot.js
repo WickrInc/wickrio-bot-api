@@ -1,5 +1,6 @@
 const WickrIOAPI = require('wickrio_addon');
 const WickrUser = require('./WickrUser');
+const WickrAdmin = require('./WickrAdmin');
 var fs = require('fs');
 var encryptor;
 var encryptorDefined = false;
@@ -8,11 +9,24 @@ class WickrIOBot {
 
   constructor() {
     this.wickrUsers = [];
+    this.myAdmins;
     this.listenFlag = false;
+    this.adminOnly = false;
   }
 
-  //WickrIO API functions used: clientInit() and isConnected()
+  /*
+   * Set this client to handle only commands from admin users
+   */
+  setAdminOnly(setting) {
+    this.adminOnly = setting;
+  }
+
+  /*
+   * WickrIO API functions used: clientInit() and isConnected()
+   */
   async start(client_username) {
+    var myLocalAdmins = new WickrAdmin();
+    this.myAdmins = myLocalAdmins;
     try {
         var ref = this;
         console.log('Starting bot up...');
@@ -41,6 +55,25 @@ class WickrIOBot {
 
                 resolve(connected);
             }).then(async function(connected) {
+                /*
+                 * Process the admin users
+                 */
+                var processes = JSON.parse(fs.readFileSync('processes.json'));
+                var tokens = JSON.parse(process.env.tokens);
+                var administrators;
+                if (tokens.ADMINISTRATORS.value) {
+                    administrators = tokens.ADMINISTRATORS.value;
+                    administrators = administrators.split(',');
+
+                    // Make sure there are no white spaces on the whitelisted users
+                    for(var i = 0; i < administrators.length; i++){
+                        var administrator = administrators[i].trim();
+                        console.log("administrator:" + administrator);
+                        var admin = myLocalAdmins.addAdmin(administrator);
+                    }
+                }
+
+
                 var settings = JSON.parse(fs.readFileSync('package.json'));
                 //Check if bot supports a user database
                 if (!settings.database) {
@@ -64,7 +97,9 @@ class WickrIOBot {
     }
   }
 
-  //WickrIO API functions used: cmdStartAsyncRecvMessages
+  /*
+   * WickrIO API functions used: cmdStartAsyncRecvMessages
+   */
   async startListening(callback) {
     try {
       var ref = this;
@@ -88,9 +123,10 @@ class WickrIOBot {
     }
   }
 
-  //WickrIO API functions used: closeClient() and cmdStopAsyncRecvMessages()
-  async close() {
-    try {
+  /* 
+   * WickrIO API functions used: closeClient() and cmdStopAsyncRecvMessages()
+   */
+  async close() { try {
       var ref = this;
       var settings = JSON.parse(fs.readFileSync('package.json'));
       //Checks if bot supports a user database saving feature
@@ -126,7 +162,9 @@ class WickrIOBot {
     }
   }
 
-  //WickrIO API functions used: cmdEncryptString()
+  /*
+   * WickrIO API functions used: cmdEncryptString()
+   */
   async encryptEnv() {
     try {
       var processes = JSON.parse(fs.readFileSync('processes.json'));
@@ -164,8 +202,10 @@ class WickrIOBot {
     }
   }
 
-  //Loads and decrypts the bot's user database
-  //WickrIO API functions used: cmdDecryptString()
+  /*
+   * Loads and decrypts the bot's user database
+   * WickrIO API functions used: cmdDecryptString()
+   */
   async loadData() {
     try {
         if (! fs.existsSync('users.txt')) {
@@ -192,8 +232,10 @@ class WickrIOBot {
     }
   }
 
-  //Decrypts and saves the bot's user database
-  //WickrIO API functions used: cmdEncryptString()
+  /*
+   * Decrypts and saves the bot's user database
+   * WickrIO API functions used: cmdEncryptString()
+   */
   async saveData() {
     try {
       console.log("Encrypting user database...");
@@ -201,7 +243,6 @@ class WickrIOBot {
         return;
       }
 
-console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
       var serialusers;
       if (encryptorDefined === true) {
         //Encrypt
@@ -220,6 +261,9 @@ console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     }
   }
 
+  /*
+   * This function parses an incoming message
+   */
   parseMessage(message) {
     var tokens = JSON.parse(process.env.tokens);
     message = JSON.parse(message);
@@ -227,6 +271,18 @@ console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     var sender = message.sender;
     var vGroupID = message.vgroupid;
     var convoType = '';
+
+    // If we only accept admin messages then check if the user is an admin.
+    // If not an admin, ignore the message
+    if (this.adminOnly === true) {
+      var localWickrAdmins = this.myAdmins;
+      var admin = localWickrAdmins.getAdmin(sender);
+      if (admin === undefined) {
+        console.log("Dropping message from non-admin user!");
+        return;
+      }
+    }
+
 
     // Determine the convo type (1to1, group, or room)
     if (vGroupID.charAt(0) === 'S')
@@ -278,6 +334,15 @@ console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
       }
     }
 
+    /*
+     * If this is an admin only client then process any admin commands
+    if (this.adminOnly === true) {
+      var localWickrAdmins = this.myAdmins;
+        
+      localWickrAdmins.processAdminCommand(command, argument) {
+    }
+     */  
+
     var parsedObj = {
       'message': request,
       'command': command,
@@ -286,9 +351,13 @@ console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
       'userEmail': sender,
       'convotype': convoType
     };
+
     return parsedObj;
   }
 
+  /*
+   * User functions
+   */
   addUser(wickrUser) {
     this.wickrUsers.push(wickrUser);
     var saved = this.saveData();
@@ -315,6 +384,8 @@ console.log("saveData: wickrUsers array:\n" + JSON.stringify(this.wickrUsers));
     this.wickrUsers.splice(index, 1);
     return found;
   }
+
+
 };
 
 function sleep(ms) {
