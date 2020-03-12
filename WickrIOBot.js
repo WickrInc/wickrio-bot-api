@@ -17,14 +17,21 @@ class WickrIOBot {
   /*
    * Set this client to handle only commands from admin users
    */
-  setAdminOnly(setting) {
+  setAdminOnly(setting)
+  {
     this.adminOnly = setting;
+  }
+
+  getAdminHelp(helpString)
+  {
+    return this.myAdmins.getHelp(helpString);
   }
 
   /*
    * WickrIO API functions used: clientInit() and isConnected()
    */
-  async start(client_username) {
+  async start(client_username)
+  {
     var myLocalAdmins = new WickrAdmin();
     this.myAdmins = myLocalAdmins;
     try {
@@ -61,7 +68,7 @@ class WickrIOBot {
                 var processes = JSON.parse(fs.readFileSync('processes.json'));
                 var tokens = JSON.parse(process.env.tokens);
                 var administrators;
-                if (tokens.ADMINISTRATORS.value) {
+                if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
                     administrators = tokens.ADMINISTRATORS.value;
                     administrators = administrators.split(',');
 
@@ -336,12 +343,12 @@ class WickrIOBot {
 
     /*
      * If this is an admin only client then process any admin commands
+     */  
     if (this.adminOnly === true) {
       var localWickrAdmins = this.myAdmins;
         
-      localWickrAdmins.processAdminCommand(command, argument) {
+      localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument);
     }
-     */  
 
     var parsedObj = {
       'message': request,
