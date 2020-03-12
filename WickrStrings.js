@@ -13,6 +13,9 @@ module.exports = {
   "invalidVerifyCommand": "Invalid /verify command, usage\n/verify getlist\n/verify all\n/verify users <list of users>",
   "adminHelp": "/admin list : Get list of admin users \n" +
                "/admin add <users> : Add one or more admin users \n" +
+               "/admin remove <users> : Remove one or more admin users \n",
+  "adminHelpWithVerify": "/admin list : Get list of admin users \n" +
+               "/admin add <users> : Add one or more admin users \n" +
                "/admin remove <users> : Remove one or more admin users \n" +
                "/verify getlist : Get list of users with verification issues \n" +
                "/verify all : Verifies all users \n" +

@@ -6,6 +6,19 @@ var strings = require('./WickrStrings');
 class WickrAdmin {
   constructor() {
     this.adminIDs = [];
+    this.verifyAutomatic = true;
+  }
+
+  async setVerifyMode(mode) {
+    if (mode === 'manual') {
+       this.verifyAutomatic = false;
+    } else if (mode === 'automatic') {
+       this.verifyAutomatic = true;
+    } else {
+      console.log("Invalid verification mode: " + mode);
+      return;
+    }
+    var setVerifMode = WickrIOAPI.cmdSetVerificationMode(mode);
   }
 
   async addAdmin(userID) {
@@ -81,11 +94,10 @@ class WickrAdmin {
     }
   }
 
-  processAdminCommand(sender, vGroupID, command, argument) {
-      console.log("command is " + command);
-      console.log("argument is " + argument);
+  // This function will process admin commands from the incoming values.
+  processAdminCommand(sender, vGroupID, command, argument)
+  {
       if (command === '/admin') {
-//        user.confirm = '';
         var action = argument.toLowerCase().trim();
         if (action === 'list') {
           var userList = this.adminIDs.join('\n');
@@ -169,44 +181,47 @@ class WickrAdmin {
               var reply = strings["invalidAdminCommand"];
               var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
           }
-      }
-      else if (command === '/verify') {
-        var action = argument.toLowerCase().trim();
+      } else {
+        if (this.verifyAutomatic !== true) {
+          if (command === '/verify') {
+            var action = argument.toLowerCase().trim();
         
-        console.log("verify action is " + action);
+            console.log("verify action is " + action);
 
-        if (action === 'getlist') {
-          var getVerifList = WickrIOAPI.cmdGetVerificationList();
-          console.log("verify getlist response:" + getVerifList);
-          var verificationList = JSON.parse(getVerifList);
-          var reply="User Verification List";
-          if (verificationList.users) {
-            for(var i = 0; i < verificationList.users.length; i++){
-              if (verificationList.users[i].user && verificationList.users[i].reason) {
-                reply = reply + "\nUser: " + verificationList.users[i].user + "  Reason: " + verificationList.users[i].reason;
+            if (action === 'getlist') {
+              var getVerifList = WickrIOAPI.cmdGetVerificationList();
+              console.log("verify getlist response:" + getVerifList);
+              var verificationList = JSON.parse(getVerifList);
+              var reply="User Verification List";
+              if (verificationList.users) {
+                for(var i = 0; i < verificationList.users.length; i++){
+                  if (verificationList.users[i].user && verificationList.users[i].reason) {
+                    reply = reply + "\nUser: " + verificationList.users[i].user + "  Reason: " + verificationList.users[i].reason;
+                  }
+                }
               }
+              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
+            } else if (action === 'all') {
+              var reply = WickrIOAPI.cmdVerifyAll();
+              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
+            } else if (action === 'users') {
+            } else if (action.startsWith("setmode")) {
+              // get the mode to be set
+              var values = action.split(' ');
+              values.shift();
+              var mode = values[0];
+              if (mode === "automatic" || mode === "manual") {
+                var response = WickrIOAPI.cmdSetVerificationMode(mode);
+                var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, response);
+              } else {
+                var reply="Invalid mode, usage:\n/verify setmode automatic|manual";
+                var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
+              }
+            } else {
+              var reply = strings["invalidVerifyCommand"];
+              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
             }
           }
-          var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
-        } else if (action === 'all') {
-          var reply = WickrIOAPI.cmdVerifyAll();
-          var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
-        } else if (action === 'users') {
-        } else if (action.startsWith("setmode")) {
-          // get the mode to be set
-          var values = action.split(' ');
-          values.shift();
-          var mode = values[0];
-          if (mode === "automatic" || mode === "manual") {
-            var response = WickrIOAPI.cmdSetVerificationMode(mode);
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, response);
-          } else {
-            var reply="Invalid mode, usage:\n/verify setmode automatic|manual";
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
-          }
-        } else {
-          var reply = strings["invalidVerifyCommand"];
-          var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
         }
       }
   }
@@ -216,8 +231,13 @@ class WickrAdmin {
   getHelp(helpString)
   {
     if (helpString.includes("{adminHelp}")) {
-      var reply = helpString.replace("%{adminHelp}", strings["adminHelp"]);
-      return reply;
+      if (this.verifyAutomatic === true) {
+        var reply = helpString.replace("%{adminHelp}", strings["adminHelp"]);
+        return reply;
+      } else {
+        var reply = helpString.replace("%{adminHelp}", strings["adminHelpWithVerify"]);
+        return reply;
+      }
     } else {
       return strings["adminHelp"];
     }

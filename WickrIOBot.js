@@ -27,6 +27,15 @@ class WickrIOBot {
     return this.myAdmins.getHelp(helpString);
   }
 
+  setVerificationMode(mode)
+  {
+    if (this.adminOnly === true) {
+      this.myAdmins.setVerifyMode(mode);
+    } else {
+      console.log('setVerificationMode not valid unless admin is set!');
+    }
+  }
+
   /*
    * WickrIO API functions used: clientInit() and isConnected()
    */
