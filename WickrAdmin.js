@@ -9,19 +9,27 @@ class WickrAdmin {
     this.verifyAutomatic = true;
   }
 
-  async setVerifyMode(mode) {
-    if (mode === 'manual') {
-       this.verifyAutomatic = false;
-    } else if (mode === 'automatic') {
-       this.verifyAutomatic = true;
+  async setVerifyMode(mode)
+  {
+    if (this.adminIDs.length > 0) {
+      if (mode === 'manual') {
+         this.verifyAutomatic = false;
+      } else if (mode === 'automatic') {
+         this.verifyAutomatic = true;
+      } else {
+        console.log("Invalid verification mode: " + mode);
+        return false;
+      }
+      var setVerifMode = WickrIOAPI.cmdSetVerificationMode(mode);
+      return true;
     } else {
-      console.log("Invalid verification mode: " + mode);
-      return;
+      console.log(strings["setModeNoAdminsError"]);
+      return false;
     }
-    var setVerifMode = WickrIOAPI.cmdSetVerificationMode(mode);
   }
 
-  async addAdmin(userID) {
+  async addAdmin(userID)
+  {
     var found = this.adminIDs.includes(userID);
     if (found === true) {
         return found;
@@ -34,7 +42,8 @@ class WickrAdmin {
     return this.adminIDs[this.adminIDs.indexOf(userID)];
   }
 
-  getAdmin(userID) {
+  getAdmin(userID)
+  {
     console.log(this.adminIDs);
 
     var found = this.adminIDs.includes(userID);
@@ -45,11 +54,13 @@ class WickrAdmin {
     return this.adminIDs[this.adminIDs.indexOf(userID)];
   }
 
-  getAdmins() {
+  getAdmins()
+  {
     return this.adminIDs;
   }
 
-  deleteAdmin(userID) {
+  deleteAdmin(userID)
+  {
     var found = this.adminIDs.find(function(user) {
       return user.userID === userID;
     });

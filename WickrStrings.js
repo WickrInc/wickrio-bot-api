@@ -19,6 +19,7 @@ module.exports = {
                "/admin remove <users> : Remove one or more admin users \n" +
                "/verify getlist : Get list of users with verification issues \n" +
                "/verify all : Verifies all users \n" +
-               "/verify users <users> : Verifies users in users list\n"
+               "/verify users <users> : Verifies users in users list\n",
+  "setModeNoAdminsError": "Cannot set verification mode if there are no administrators!"
 }
 

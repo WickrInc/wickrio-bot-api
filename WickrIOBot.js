@@ -29,11 +29,7 @@ class WickrIOBot {
 
   setVerificationMode(mode)
   {
-    if (this.adminOnly === true) {
-      this.myAdmins.setVerifyMode(mode);
-    } else {
-      console.log('setVerificationMode not valid unless admin is set!');
-    }
+    this.myAdmins.setVerifyMode(mode);
   }
 
   /*
@@ -288,17 +284,19 @@ class WickrIOBot {
     var vGroupID = message.vgroupid;
     var convoType = '';
 
-    // If we only accept admin messages then check if the user is an admin.
-    // If not an admin, ignore the message
-    if (this.adminOnly === true) {
-      var localWickrAdmins = this.myAdmins;
-      var admin = localWickrAdmins.getAdmin(sender);
-      if (admin === undefined) {
+    // Get the admin, if this is an admin user
+    var localWickrAdmins = this.myAdmins;
+    var admin = localWickrAdmins.getAdmin(sender);
+
+    // If ONLY admins can receive and handle messages and this is 
+    // not an admin, then drop the message
+    if (this.adminOnly === true && admin === undefined) {
         console.log("Dropping message from non-admin user!");
         return;
-      }
     }
 
+    // Set the isAdmin flag
+    var isAdmin = admin !== undefined;
 
     // Determine the convo type (1to1, group, or room)
     if (vGroupID.charAt(0) === 'S')
@@ -320,7 +318,8 @@ class WickrIOBot {
           'userEmail': sender,
           'isVoiceMemo': isVoiceMemo,
           'voiceMemoDuration': voiceMemoDuration,
-          'convotype': convoType
+          'convotype': convoType,
+          'isAdmin' : isAdmin
         };
       } else {
         var parsedObj = {
@@ -329,7 +328,8 @@ class WickrIOBot {
           'vgroupid': vGroupID,
           'userEmail': sender,
           'isVoiceMemo': isVoiceMemo,
-          'convotype': convoType
+          'convotype': convoType,
+          'isAdmin' : isAdmin
         };
       }
       return parsedObj;
@@ -350,13 +350,9 @@ class WickrIOBot {
       }
     }
 
-    /*
-     * If this is an admin only client then process any admin commands
-     */  
-    if (this.adminOnly === true) {
-      var localWickrAdmins = this.myAdmins;
-        
-      localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument);
+    // If this is an admin then process any admin commands
+    if (admin !== undefined) {
+        localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument);
     }
 
     var parsedObj = {
@@ -365,7 +361,8 @@ class WickrIOBot {
       'argument': argument,
       'vgroupid': vGroupID,
       'userEmail': sender,
-      'convotype': convoType
+      'convotype': convoType,
+      'isAdmin' : isAdmin
     };
 
     return parsedObj;
