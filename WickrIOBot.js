@@ -112,7 +112,8 @@ class WickrIOBot {
   /*
    * WickrIO API functions used: cmdStartAsyncRecvMessages
    */
-  async startListening(callback) {
+  async startListening(callback)
+  {
     try {
       var ref = this;
       return new Promise(function(resolve, reject) {
@@ -138,7 +139,9 @@ class WickrIOBot {
   /* 
    * WickrIO API functions used: closeClient() and cmdStopAsyncRecvMessages()
    */
-  async close() { try {
+  async close()
+  {
+    try {
       var ref = this;
       var settings = JSON.parse(fs.readFileSync('package.json'));
       //Checks if bot supports a user database saving feature
@@ -177,7 +180,8 @@ class WickrIOBot {
   /*
    * WickrIO API functions used: cmdEncryptString()
    */
-  async encryptEnv() {
+  async encryptEnv()
+  {
     try {
       var processes = JSON.parse(fs.readFileSync('processes.json'));
       var tokens = JSON.parse(process.env.tokens);
@@ -218,7 +222,8 @@ class WickrIOBot {
    * Loads and decrypts the bot's user database
    * WickrIO API functions used: cmdDecryptString()
    */
-  async loadData() {
+  async loadData()
+  {
     try {
         if (! fs.existsSync('users.txt')) {
             console.log("WARNING: users.txt does not exist!");
@@ -248,7 +253,8 @@ class WickrIOBot {
    * Decrypts and saves the bot's user database
    * WickrIO API functions used: cmdEncryptString()
    */
-  async saveData() {
+  async saveData()
+  {
     try {
       console.log("Encrypting user database...");
       if (this.wickrUsers.length === 0) {
@@ -276,7 +282,8 @@ class WickrIOBot {
   /*
    * This function parses an incoming message
    */
-  parseMessage(message) {
+  parseMessage(message)
+  {
     var tokens = JSON.parse(process.env.tokens);
     message = JSON.parse(message);
     var msgtype = message.msgtype;
@@ -371,25 +378,29 @@ class WickrIOBot {
   /*
    * User functions
    */
-  addUser(wickrUser) {
+  addUser(wickrUser)
+  {
     this.wickrUsers.push(wickrUser);
     var saved = this.saveData();
     console.log("New Wickr user added to database.");
     return wickrUser;
   }
 
-  getUser(userEmail) {
+  getUser(userEmail)
+  {
     var found = this.wickrUsers.find(function(user) {
       return user.userEmail === userEmail;
     });
     return found;
   }
 
-  getUsers() {
+  getUsers()
+  {
     return this.wickrUsers;
   }
 
-  deleteUser(userEmail) {
+  deleteUser(userEmail)
+  {
     var found = this.wickrUsers.find(function(user) {
       return user.userEmail === userEmail;
     });
