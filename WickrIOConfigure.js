@@ -342,6 +342,35 @@ class WickrIOConfigure
         });
     }
 
+    async configureYourBot()
+    {
+        if (this.processConfigured()) {
+            try {
+                var backup = path.dirname(this.processesFile) + '/processes_backup.json';
+                var execString = 'cp ' + this.processesFile + ' ' + backup;
+
+                var cp = execSync(execString)
+                if (this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value !== undefined) {
+                  var newName = "WickrIO-Broadcast-Bot_" + this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value;
+                } else {
+                  var newName = "WickrIO-Broadcast-Bot";
+                }
+                //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
+                this.dataParsed.apps[0].name = newName;
+                var ps = fs.writeFileSync(this.processesFile, JSON.stringify(this.dataParsed, null, 2));
+            } catch (err) {
+                console.log(err);
+            }
+            console.log("Already configured");
+        } else {
+            try {
+                await this.inputTokens();
+                console.log("Finished Configuring!");
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }
 };
 
 
