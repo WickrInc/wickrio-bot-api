@@ -207,7 +207,12 @@ class WickrAdmin {
               if (verificationList.users) {
                 for(var i = 0; i < verificationList.users.length; i++){
                   if (verificationList.users[i].user && verificationList.users[i].reason) {
-                    reply = reply + "\nUser: " + verificationList.users[i].user + "  Reason: " + verificationList.users[i].reason;
+                    var userreply  = "\nUser: " + verificationList.users[i].user + "  Reason: " + verificationList.users[i].reason;
+                    if ((reply.length + userreply.length) >= 10000) {
+                        var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply);
+                        reply="User Verification List (continued)";
+                    }
+                    reply = reply + userreply;
                   }
                 }
               }
