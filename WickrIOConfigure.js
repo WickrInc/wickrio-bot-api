@@ -18,7 +18,17 @@ class WickrIOConfigure
     {
         this.supportsVerification = false;
         this.supportsAdministrators = false;
-        this.tokenConfig = [];
+        this.tokenConfig = [
+            {
+                token: 'WICKRIO_BOT_NAME',
+                pattern: '',
+                type: 'string',
+                description: 'Enter the WickrIO bot name',
+                message: 'Cannot leave empty! Please enter a value',
+                required: true,
+                default: 'N/A',
+            }
+        ];
         try {
             if (fs.existsSync(processesFile)) {
                 this.processesFile = processesFile;
@@ -217,7 +227,6 @@ class WickrIOConfigure
         var i = 0;
 
         var newObjectResult = this.getCurrentValues();
-
         const inputPromises = [];
 
         for (let i = 0; i < this.tokenConfig.length; i++) {
@@ -257,8 +266,13 @@ class WickrIOConfigure
               };
 
               prompt.get(schema, async function(err, answer) {
-                if (answer[tokenEntry.token] === "")
-                  answer[tokenEntry.token] = newObjectResult[tokenEntry.token];
+                if (answer[tokenEntry.token] === "") {
+                  if (newObjectResult[tokenEntry.token] === undefined) {
+                     answer[tokenEntry.token] = tokenEntry.default;
+                  } else {
+                     answer[tokenEntry.token] = newObjectResult[tokenEntry.token];
+                  }
+                }
                 var input = tokenEntry.token + '=' + answer[tokenEntry.token];
                 config.push(input);
                 return resolve("Complete for" + tokenEntry.token);
