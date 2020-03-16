@@ -199,8 +199,16 @@ class WickrAdmin {
         
             console.log("verify action is " + action);
 
-            if (action === 'getlist') {
-              var getVerifList = WickrIOAPI.cmdGetVerificationList();
+            if (action.startsWith('getlist')) {
+              var values = action.split(' ');
+              values.shift();
+              var mode = values[0];
+
+              if (mode === "all") {
+                  var getVerifList = WickrIOAPI.cmdGetVerificationList(mode);
+              } else {
+                  var getVerifList = WickrIOAPI.cmdGetVerificationList();
+              }
               console.log("verify getlist response:" + getVerifList);
               var verificationList = JSON.parse(getVerifList);
               var reply="User Verification List";
