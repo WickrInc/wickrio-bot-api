@@ -2,6 +2,7 @@
 const fs = require('fs');
 const util = require('util')
 const prompt = require('prompt');
+var path = require('path');
 
 prompt.colors = false;
 
@@ -24,6 +25,15 @@ class WickrIOConfigure
                 pattern: '',
                 type: 'string',
                 description: 'Enter the WickrIO bot name',
+                message: 'Cannot leave empty! Please enter a value',
+                required: true,
+                default: 'N/A',
+            },
+            {
+                token: 'DATABASE_ENCRYPTION_KEY',
+                pattern: '',
+                type: 'string',
+                description: 'Enter the database encryption key',
                 message: 'Cannot leave empty! Please enter a value',
                 required: true,
                 default: 'N/A',
