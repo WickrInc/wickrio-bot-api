@@ -178,7 +178,7 @@ class WickrAdmin {
               for (var i = 0; i < values.length; i++) {
                 this.adminIDs.splice( this.adminIDs.indexOf(values[i]), 1);
               }
-              updateAdminList();
+              this.updateAdminList();
   
               // Send a message to all the current white listed users
               var donereply = strings["adminsDeleted"].replace("%{userEmail}", userEmail).replace("%{userList}", userList);
