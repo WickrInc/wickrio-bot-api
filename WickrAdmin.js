@@ -142,7 +142,7 @@ class WickrAdmin {
               }
               this.updateAdminList();
   
-              // Send a message to all the current white listed users
+              // Send a message to all the current admin users
               var donereply = strings["adminsAdded"].replace("%{sender}", sender).replace("%{userList}", userList);
               var uMessage = WickrIOAPI.cmdSend1to1Message(this.adminIDs, donereply);
             }
@@ -180,8 +180,8 @@ class WickrAdmin {
               }
               this.updateAdminList();
   
-              // Send a message to all the current white listed users
-              var donereply = strings["adminsDeleted"].replace("%{userEmail}", userEmail).replace("%{userList}", userList);
+              // Send a message to all the current admin users
+              var donereply = strings["adminsDeleted"].replace("%{sender}", sender).replace("%{userList}", userList);
               var uMessage = WickrIOAPI.cmdSend1to1Message(this.adminIDs, donereply);
             }
           } else {
