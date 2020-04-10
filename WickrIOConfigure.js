@@ -231,7 +231,7 @@ class WickrIOConfigure
     /**
      *
      */
-    async inputTokens()
+    async inputTokens(integrationName)
     {
         var config = [];
         var i = 0;
@@ -332,11 +332,11 @@ class WickrIOConfigure
           try {
             var cp = execSync('cp processes.json processes_backup.json');
             if (process.env.WICKRIO_BOT_NAME !== undefined) {
-              var newName = "WickrIO-Broadcast-Bot_" + process.env.WICKRIO_BOT_NAME;
+              var newName = integrationName + "_" + process.env.WICKRIO_BOT_NAME;
             } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
-              var newName = "WickrIO-Broadcast-Bot_" + newObjectResult.WICKRIO_BOT_NAME.value;
+              var newName = integrationName + "_" + newObjectResult.WICKRIO_BOT_NAME.value;
             } else {
-              var newName = "WickrIO-Broadcast-Bot";
+              var newName = integrationName
             }
 
             //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
@@ -352,7 +352,7 @@ class WickrIOConfigure
         });
     }
 
-    async configureYourBot()
+    async configureYourBot(integrationName)
     {
         if (this.processConfigured()) {
             try {
@@ -361,9 +361,9 @@ class WickrIOConfigure
 
                 var cp = execSync(execString)
                 if (this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value !== undefined) {
-                  var newName = "WickrIO-Broadcast-Bot_" + this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value;
+                  var newName = integrationName + "_" + this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value;
                 } else {
-                  var newName = "WickrIO-Broadcast-Bot";
+                  var newName = integrationName;
                 }
                 //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
                 this.dataParsed.apps[0].name = newName;
@@ -374,7 +374,7 @@ class WickrIOConfigure
             console.log("Already configured");
         } else {
             try {
-                await this.inputTokens();
+                await this.inputTokens(integrationName);
                 console.log("Finished Configuring!");
             } catch (err) {
                 console.log(err);
