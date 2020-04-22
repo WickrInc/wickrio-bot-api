@@ -254,21 +254,43 @@ class WickrIOConfigure
               requiredValue = false;
             }
 
-            schema.properties[tokenList[index].token] =  {
-               pattern: tokenList[index].pattern,
-               type: tokenList[index].type,
-               description: tokenList[index].description,
-               message: tokenList[index].message,
-               required: requiredValue,
-               default: tmpdflt,
-               ask: function() {
-                   var name = prompt.history(parentToken).value;
-                   return prompt.history(parentToken).value === 'yes';
-               }
-            };
+            if (tokenList[index].type === 'file') {
+                schema.properties[tokenList[index].token] =  {
+                   pattern: tokenList[index].pattern,
+                   type: 'string',
+                   description: tokenList[index].description,
+                   message: tokenList[index].message,
+                   required: requiredValue,
+                   default: tmpdflt,
+                   ask: function() {
+                       var name = prompt.history(parentToken).value;
+                           return prompt.history(parentToken).value === 'yes';
+                   },
+                   conform: function(filename) {
+                       if (fs.existsSync(filename)) {
+                           return true;
+                       } else {
+                           return false;
+                       }
+                   }
+                };
+            } else {
+                schema.properties[tokenList[index].token] =  {
+                   pattern: tokenList[index].pattern,
+                   type: 'string',
+                   description: tokenList[index].description,
+                   message: tokenList[index].message,
+                   required: requiredValue,
+                   default: tmpdflt,
+                   ask: function() {
+                       var name = prompt.history(parentToken).value;
+                           return prompt.history(parentToken).value === 'yes';
+                   }
+                };
+            }
 
             if (tokenList[index].list !== undefined) {
-                processTokenList(tokenList[index].list);
+                this.processTokenList(tokenList[index].list, tokenList[index].token, schema);
             }
         }
         return schema;
@@ -309,8 +331,27 @@ class WickrIOConfigure
               }
 
               var schema = {
-                properties: {
-                  [tokenEntry.token]: {
+                properties: {}
+              };
+
+              if (tokenEntry.type === 'file') {
+                  schema.properties[tokenEntry.token] = {
+                    pattern: tokenEntry.pattern,
+                    type: 'string',
+                    description: tokenEntry.description,
+                    message: tokenEntry.message,
+                    required: requiredValue,
+                    default: dflt,
+                    conform: function(filename) {
+                        if (fs.existsSync(filename)) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                  }
+              } else {
+                  schema.properties[tokenEntry.token] = {
                     pattern: tokenEntry.pattern,
                     type: tokenEntry.type,
                     description: tokenEntry.description,
@@ -318,36 +359,10 @@ class WickrIOConfigure
                     required: requiredValue,
                     default: dflt
                   }
-                }
-              };
+              }
 
               if (tokenEntry.list !== undefined) {
-                  for (let listIndex = 0; listIndex < tokenEntry.list.length; listIndex++) {
-                      var tmpdflt = newObjectResult[tokenEntry.list[listIndex].token];
-                      if (tmpdflt === undefined || tmpdflt === "undefined") {
-                        requiredValue = tokenEntry.list[listIndex].required;
-                        tmpdflt = ""
-                      } else {
-                        requiredValue = false;
-                      }
-
-                      schema.properties[tokenEntry.list[listIndex].token] =  {
-                         pattern: tokenEntry.list[listIndex].pattern,
-                         type: tokenEntry.list[listIndex].type,
-                         description: tokenEntry.list[listIndex].description,
-                         message: tokenEntry.list[listIndex].message,
-                         required: requiredValue,
-                         default: tmpdflt,
-                         ask: function() {
-                             var name = prompt.history(tokenEntry.token).value;
-                             return prompt.history(tokenEntry.token).value === 'yes';
-                         }
-                      };
-
-                      if (tokenEntry.list[listIndex].list !== undefined) {
-                          schema = this.processTokenList(tokenEntry.list[listIndex].list, tokenEntry.list[listIndex].token, schema);
-                      }
-                  }
+                  schema = this.processTokenList(tokenEntry.list, tokenEntry.token, schema);
               }
 
               prompt.get(schema, async function(err, answer) {
