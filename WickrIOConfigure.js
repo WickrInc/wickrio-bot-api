@@ -30,13 +30,24 @@ class WickrIOConfigure
                 default: 'N/A',
             },
             {
-                token: 'DATABASE_ENCRYPTION_KEY',
-                pattern: '',
+                token: 'DATABASE_ENCRYPTION_CHOICE',
+                pattern: 'yes|no',
                 type: 'string',
-                description: 'Enter the database encryption key',
-                message: 'Cannot leave empty! Please enter a value',
-                required: true,
-                default: 'N/A',
+                description: 'Do you want to encrypt the configuration values',
+                message: 'Please enter either yes or no',
+                required: false,
+                default: 'no',
+                list: [
+                    {
+                        token: 'DATABASE_ENCRYPTION_KEY',
+                        pattern: /^.{16,}$/,
+                        type: 'string',
+                        description: 'Enter the database encryption key',
+                        message: 'Please enter a value at least 16 characters long',
+                        required: true,
+                        default: '',
+                    }
+                ]
             }
         ];
         try {
@@ -472,31 +483,11 @@ class WickrIOConfigure
 
     async configureYourBot(integrationName)
     {
-        if (this.processConfigured()) {
-            try {
-                var backup = path.dirname(this.processesFile) + '/processes_backup.json';
-                var execString = 'cp ' + this.processesFile + ' ' + backup;
-
-                var cp = execSync(execString)
-                if (this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value !== undefined) {
-                  var newName = integrationName + "_" + this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value;
-                } else {
-                  var newName = integrationName;
-                }
-                //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
-                this.dataParsed.apps[0].name = newName;
-                var ps = fs.writeFileSync(this.processesFile, JSON.stringify(this.dataParsed, null, 2));
-            } catch (err) {
-                console.log(err);
-            }
-            console.log("Already configured");
-        } else {
-            try {
-                await this.inputTokens(integrationName);
-                console.log("Finished Configuring!");
-            } catch (err) {
-                console.log(err);
-            }
+        try {
+            await this.inputTokens(integrationName);
+            console.log("Finished Configuring!");
+        } catch (err) {
+            console.log(err);
         }
     }
 };
