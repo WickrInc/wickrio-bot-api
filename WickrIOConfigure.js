@@ -72,6 +72,7 @@ class WickrIOConfigure
             default: 'N/A',
         };
 
+
         if (tokens !== undefined) {
             for (var i = 0; i < tokens.length; i++) {
                 this.tokenConfig.push(tokens[i]);
@@ -190,6 +191,28 @@ class WickrIOConfigure
     }
 
     /*
+     * This function will process the input token list.  If there are tokens
+     * that have list of other dependent tokens then they will be processed
+     * recursively.
+     */
+    processConfiguredTokenList(pjson, tokenList)
+    {
+        // Check if the value for any of the tokens is not set
+        // If it is not set then return false
+        for (var i = 0; i < tokenList.length; i++) {
+            if (pjson.apps[0].env.tokens[tokenList[i].token] === undefined) {
+                return false;
+            }
+
+            if (tokenList[i].list !== undefined) {
+                if (this.processConfiguredTokenList(pjson, tokenList[i].list) === false)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    /*
      * This function will check if any of the tokens have NOT been configured.
      * If all tokens have values assigned then a true value is returned.
      * If any tokens do not have values assigned then a false value is returned.
@@ -214,18 +237,42 @@ class WickrIOConfigure
         }
 
         // Check if the value for any of the tokens is not set
-        // If it is not set then return false
-        for (var i = 0; i < this.tokenConfig.length; i++) {
-            if (pjson.apps[0].env.tokens[this.tokenConfig[i].token] === undefined) {
-                return false;
-            }
-        }
-
-        // All of the tokens have values set
-        return true;
+        return this.processConfiguredTokenList(pjson, this.tokenConfig);
     }
 
 
+    processTokenList(tokenList, parentToken, schema)
+    {
+        var newObjectResult = this.getCurrentValues();
+        for (let index = 0; index < tokenList.length; index++) {
+            var tmpdflt = newObjectResult[tokenList[index].token];
+            var requiredValue;
+            if (tmpdflt === undefined || tmpdflt === "undefined") {
+              requiredValue = tokenList[index].required;
+              tmpdflt = ""
+            } else {
+              requiredValue = false;
+            }
+
+            schema.properties[tokenList[index].token] =  {
+               pattern: tokenList[index].pattern,
+               type: tokenList[index].type,
+               description: tokenList[index].description,
+               message: tokenList[index].message,
+               required: requiredValue,
+               default: tmpdflt,
+               ask: function() {
+                   var name = prompt.history(parentToken).value;
+                   return prompt.history(parentToken).value === 'yes';
+               }
+            };
+
+            if (tokenList[index].list !== undefined) {
+                processTokenList(tokenList[index].list);
+            }
+        }
+        return schema;
+    }
 
 
     /**
@@ -253,13 +300,11 @@ class WickrIOConfigure
               }
 
               var dflt = newObjectResult[tokenEntry.token];
-              var descriptionValue;
               var requiredValue = tokenEntry.required;
 
               if (dflt === undefined || dflt === "undefined") {
-                descriptionValue = tokenEntry.description + ' (Default: ' + tokenEntry.default + ')';
+                dflt="";
               } else {
-                descriptionValue = tokenEntry.description + ' (Default: ' + dflt + ')';
                 requiredValue = false;
               }
 
@@ -268,12 +313,42 @@ class WickrIOConfigure
                   [tokenEntry.token]: {
                     pattern: tokenEntry.pattern,
                     type: tokenEntry.type,
-                    description: descriptionValue,
+                    description: tokenEntry.description,
                     message: tokenEntry.message,
-                    required: requiredValue
+                    required: requiredValue,
+                    default: dflt
                   }
                 }
               };
+
+              if (tokenEntry.list !== undefined) {
+                  for (let listIndex = 0; listIndex < tokenEntry.list.length; listIndex++) {
+                      var tmpdflt = newObjectResult[tokenEntry.list[listIndex].token];
+                      if (tmpdflt === undefined || tmpdflt === "undefined") {
+                        requiredValue = tokenEntry.list[listIndex].required;
+                        tmpdflt = ""
+                      } else {
+                        requiredValue = false;
+                      }
+
+                      schema.properties[tokenEntry.list[listIndex].token] =  {
+                         pattern: tokenEntry.list[listIndex].pattern,
+                         type: tokenEntry.list[listIndex].type,
+                         description: tokenEntry.list[listIndex].description,
+                         message: tokenEntry.list[listIndex].message,
+                         required: requiredValue,
+                         default: tmpdflt,
+                         ask: function() {
+                             var name = prompt.history(tokenEntry.token).value;
+                             return prompt.history(tokenEntry.token).value === 'yes';
+                         }
+                      };
+
+                      if (tokenEntry.list[listIndex].list !== undefined) {
+                          schema = this.processTokenList(tokenEntry.list[listIndex].list, tokenEntry.list[listIndex].token, schema);
+                      }
+                  }
+              }
 
               prompt.get(schema, async function(err, answer) {
                 if (answer[tokenEntry.token] === "") {
@@ -285,6 +360,34 @@ class WickrIOConfigure
                 }
                 var input = tokenEntry.token + '=' + answer[tokenEntry.token];
                 config.push(input);
+
+                if (tokenEntry.list !== undefined) {
+                    var tokens = [];
+                    var tokendefault = {};
+                    for (let index = 0; index < tokenEntry.list.length; index++) {
+                        tokens.push(tokenEntry.list[index].token);
+                        tokendefault[tokenEntry.list[index].token] = tokenEntry.list[index].default;
+                        if (tokenEntry.list[index].list !== undefined) {
+                            for (let i2 = 0; i2 < tokenEntry.list[index].list.length; i2++) {
+                                tokens.push(tokenEntry.list[index].list[i2].token);
+                                tokendefault[tokenEntry.list[index].list[i2].token] = tokenEntry.list[index].list[i2].default;
+                            }
+                        }
+                    }
+
+                    for (let tindex = 0; tindex < tokens.length; tindex++) {
+                        if (answer[tokens[tindex]] === "") {
+                            if (newObjectResult[tokens[tindex]] === undefined) {
+                                answer[tokens[tindex]] = tokendefault[tokens[tindex]];
+                            } else {
+                               answer[tokens[tindex]] = newObjectResult[tokens[tindex]];
+                            }
+                        }
+                        var input = tokens[tindex] + '=' + answer[tokens[tindex]];
+                        config.push(input);
+                    }
+                }
+
                 return resolve("Complete for" + tokenEntry.token);
               });
             }
