@@ -75,7 +75,12 @@ class WickrIOBot {
                 var tokens = JSON.parse(process.env.tokens);
                 var administrators;
                 if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
-                    administrators = tokens.ADMINISTRATORS.value;
+                    if (tokens.ADMINISTRATORS.encrypted) {
+                        administrators = WickrIOAPI.cmdDecryptString(tokens.ADMINISTRATORS.value);
+                    } else {
+                        administrators = tokens.ADMINISTRATORS.value;
+                    }
+console.log("administrators = "+administrators);
                     administrators = administrators.split(',');
 
                     // Make sure there are no white spaces on the whitelisted users

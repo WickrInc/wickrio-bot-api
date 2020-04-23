@@ -35,7 +35,7 @@ class WickrIOConfigure
                 type: 'string',
                 description: 'Do you want to encrypt the configuration values',
                 message: 'Please enter either yes or no',
-                required: false,
+                required: true,
                 default: 'no',
                 list: [
                     {
@@ -195,7 +195,8 @@ class WickrIOConfigure
 
         // Create a mapping of the list of tokens and their values
         for(var attributename in pjson.apps[0].env.tokens){
-            newObjectResult[attributename] = pjson.apps[0].env.tokens[attributename].value;
+            if (!pjson.apps[0].env.tokens[attributename].encrypted)
+                newObjectResult[attributename] = pjson.apps[0].env.tokens[attributename].value;
         }
 
         return newObjectResult;
