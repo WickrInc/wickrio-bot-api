@@ -75,7 +75,12 @@ class WickrIOBot {
                 var tokens = JSON.parse(process.env.tokens);
                 var administrators;
                 if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
-                    administrators = tokens.ADMINISTRATORS.value;
+                    if (tokens.ADMINISTRATORS.encrypted) {
+                        administrators = WickrIOAPI.cmdDecryptString(tokens.ADMINISTRATORS.value);
+                    } else {
+                        administrators = tokens.ADMINISTRATORS.value;
+                    }
+console.log("administrators = "+administrators);
                     administrators = administrators.split(',');
 
                     // Make sure there are no white spaces on the whitelisted users
@@ -188,6 +193,15 @@ class WickrIOBot {
       var tokens = JSON.parse(process.env.tokens);
       //Create an encryptor:
       var key;
+
+      // if the encryption choice value is there and is 'no' then return
+      if (tokens.DATABASE_ENCRYPTION_CHOICE !== undefined) {
+        if (tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes') {
+          console.log("WARNING: Configurations are not encrypted");
+          return true;
+        }
+      }
+
       if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
         key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value);
       } else {
