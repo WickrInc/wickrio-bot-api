@@ -30,13 +30,24 @@ class WickrIOConfigure
                 default: 'N/A',
             },
             {
-                token: 'DATABASE_ENCRYPTION_KEY',
-                pattern: '',
+                token: 'DATABASE_ENCRYPTION_CHOICE',
+                pattern: 'yes|no',
                 type: 'string',
-                description: 'Enter the database encryption key',
-                message: 'Cannot leave empty! Please enter a value',
-                required: true,
-                default: 'N/A',
+                description: 'Do you want to encrypt the configuration values',
+                message: 'Please enter either yes or no',
+                required: false,
+                default: 'no',
+                list: [
+                    {
+                        token: 'DATABASE_ENCRYPTION_KEY',
+                        pattern: /^.{16,}$/,
+                        type: 'string',
+                        description: 'Enter the database encryption key',
+                        message: 'Please enter a value at least 16 characters long',
+                        required: true,
+                        default: '',
+                    }
+                ]
             }
         ];
         try {
@@ -71,6 +82,7 @@ class WickrIOConfigure
             required: true,
             default: 'N/A',
         };
+
 
         if (tokens !== undefined) {
             for (var i = 0; i < tokens.length; i++) {
@@ -190,6 +202,28 @@ class WickrIOConfigure
     }
 
     /*
+     * This function will process the input token list.  If there are tokens
+     * that have list of other dependent tokens then they will be processed
+     * recursively.
+     */
+    processConfiguredTokenList(pjson, tokenList)
+    {
+        // Check if the value for any of the tokens is not set
+        // If it is not set then return false
+        for (var i = 0; i < tokenList.length; i++) {
+            if (pjson.apps[0].env.tokens[tokenList[i].token] === undefined) {
+                return false;
+            }
+
+            if (tokenList[i].list !== undefined) {
+                if (this.processConfiguredTokenList(pjson, tokenList[i].list) === false)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    /*
      * This function will check if any of the tokens have NOT been configured.
      * If all tokens have values assigned then a true value is returned.
      * If any tokens do not have values assigned then a false value is returned.
@@ -214,18 +248,64 @@ class WickrIOConfigure
         }
 
         // Check if the value for any of the tokens is not set
-        // If it is not set then return false
-        for (var i = 0; i < this.tokenConfig.length; i++) {
-            if (pjson.apps[0].env.tokens[this.tokenConfig[i].token] === undefined) {
-                return false;
-            }
-        }
-
-        // All of the tokens have values set
-        return true;
+        return this.processConfiguredTokenList(pjson, this.tokenConfig);
     }
 
 
+    processTokenList(tokenList, parentToken, schema)
+    {
+        var newObjectResult = this.getCurrentValues();
+        for (let index = 0; index < tokenList.length; index++) {
+            var tmpdflt = newObjectResult[tokenList[index].token];
+            var requiredValue;
+            if (tmpdflt === undefined || tmpdflt === "undefined") {
+              requiredValue = tokenList[index].required;
+              tmpdflt = ""
+            } else {
+              requiredValue = false;
+            }
+
+            if (tokenList[index].type === 'file') {
+                schema.properties[tokenList[index].token] =  {
+                   pattern: tokenList[index].pattern,
+                   type: 'string',
+                   description: tokenList[index].description,
+                   message: tokenList[index].message,
+                   required: requiredValue,
+                   default: tmpdflt,
+                   ask: function() {
+                       var name = prompt.history(parentToken).value;
+                           return prompt.history(parentToken).value === 'yes';
+                   },
+                   conform: function(filename) {
+                       if (fs.existsSync(filename)) {
+                           return true;
+                       } else {
+                           return false;
+                       }
+                   }
+                };
+            } else {
+                schema.properties[tokenList[index].token] =  {
+                   pattern: tokenList[index].pattern,
+                   type: 'string',
+                   description: tokenList[index].description,
+                   message: tokenList[index].message,
+                   required: requiredValue,
+                   default: tmpdflt,
+                   ask: function() {
+                       var name = prompt.history(parentToken).value;
+                           return prompt.history(parentToken).value === 'yes';
+                   }
+                };
+            }
+
+            if (tokenList[index].list !== undefined) {
+                this.processTokenList(tokenList[index].list, tokenList[index].token, schema);
+            }
+        }
+        return schema;
+    }
 
 
     /**
@@ -253,27 +333,48 @@ class WickrIOConfigure
               }
 
               var dflt = newObjectResult[tokenEntry.token];
-              var descriptionValue;
               var requiredValue = tokenEntry.required;
 
               if (dflt === undefined || dflt === "undefined") {
-                descriptionValue = tokenEntry.description + ' (Default: ' + tokenEntry.default + ')';
+                dflt="";
               } else {
-                descriptionValue = tokenEntry.description + ' (Default: ' + dflt + ')';
                 requiredValue = false;
               }
 
               var schema = {
-                properties: {
-                  [tokenEntry.token]: {
+                properties: {}
+              };
+
+              if (tokenEntry.type === 'file') {
+                  schema.properties[tokenEntry.token] = {
+                    pattern: tokenEntry.pattern,
+                    type: 'string',
+                    description: tokenEntry.description,
+                    message: tokenEntry.message,
+                    required: requiredValue,
+                    default: dflt,
+                    conform: function(filename) {
+                        if (fs.existsSync(filename)) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                  }
+              } else {
+                  schema.properties[tokenEntry.token] = {
                     pattern: tokenEntry.pattern,
                     type: tokenEntry.type,
-                    description: descriptionValue,
+                    description: tokenEntry.description,
                     message: tokenEntry.message,
-                    required: requiredValue
+                    required: requiredValue,
+                    default: dflt
                   }
-                }
-              };
+              }
+
+              if (tokenEntry.list !== undefined) {
+                  schema = this.processTokenList(tokenEntry.list, tokenEntry.token, schema);
+              }
 
               prompt.get(schema, async function(err, answer) {
                 if (answer[tokenEntry.token] === "") {
@@ -285,6 +386,34 @@ class WickrIOConfigure
                 }
                 var input = tokenEntry.token + '=' + answer[tokenEntry.token];
                 config.push(input);
+
+                if (tokenEntry.list !== undefined) {
+                    var tokens = [];
+                    var tokendefault = {};
+                    for (let index = 0; index < tokenEntry.list.length; index++) {
+                        tokens.push(tokenEntry.list[index].token);
+                        tokendefault[tokenEntry.list[index].token] = tokenEntry.list[index].default;
+                        if (tokenEntry.list[index].list !== undefined) {
+                            for (let i2 = 0; i2 < tokenEntry.list[index].list.length; i2++) {
+                                tokens.push(tokenEntry.list[index].list[i2].token);
+                                tokendefault[tokenEntry.list[index].list[i2].token] = tokenEntry.list[index].list[i2].default;
+                            }
+                        }
+                    }
+
+                    for (let tindex = 0; tindex < tokens.length; tindex++) {
+                        if (answer[tokens[tindex]] === "") {
+                            if (newObjectResult[tokens[tindex]] === undefined) {
+                                answer[tokens[tindex]] = tokendefault[tokens[tindex]];
+                            } else {
+                               answer[tokens[tindex]] = newObjectResult[tokens[tindex]];
+                            }
+                        }
+                        var input = tokens[tindex] + '=' + answer[tokens[tindex]];
+                        config.push(input);
+                    }
+                }
+
                 return resolve("Complete for" + tokenEntry.token);
               });
             }
@@ -354,31 +483,11 @@ class WickrIOConfigure
 
     async configureYourBot(integrationName)
     {
-        if (this.processConfigured()) {
-            try {
-                var backup = path.dirname(this.processesFile) + '/processes_backup.json';
-                var execString = 'cp ' + this.processesFile + ' ' + backup;
-
-                var cp = execSync(execString)
-                if (this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value !== undefined) {
-                  var newName = integrationName + "_" + this.dataParsed.apps[0].env.tokens.WICKRIO_BOT_NAME.value;
-                } else {
-                  var newName = integrationName;
-                }
-                //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
-                this.dataParsed.apps[0].name = newName;
-                var ps = fs.writeFileSync(this.processesFile, JSON.stringify(this.dataParsed, null, 2));
-            } catch (err) {
-                console.log(err);
-            }
-            console.log("Already configured");
-        } else {
-            try {
-                await this.inputTokens(integrationName);
-                console.log("Finished Configuring!");
-            } catch (err) {
-                console.log(err);
-            }
+        try {
+            await this.inputTokens(integrationName);
+            console.log("Finished Configuring!");
+        } catch (err) {
+            console.log(err);
         }
     }
 };
