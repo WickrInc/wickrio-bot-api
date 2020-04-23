@@ -188,6 +188,15 @@ class WickrIOBot {
       var tokens = JSON.parse(process.env.tokens);
       //Create an encryptor:
       var key;
+
+      // if the encryption choice value is there and is 'no' then return
+      if (tokens.DATABASE_ENCRYPTION_CHOICE !== undefined) {
+        if (tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes') {
+          console.log("WARNING: Configurations are not encrypted");
+          return true;
+        }
+      }
+
       if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
         key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value);
       } else {
