@@ -80,6 +80,7 @@ class WickrIOBot {
                     } else {
                         administrators = tokens.ADMINISTRATORS.value;
                     }
+
                     administrators = administrators.split(',');
 
                     // Make sure there are no white spaces on the whitelisted users
