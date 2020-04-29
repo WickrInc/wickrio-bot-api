@@ -80,7 +80,7 @@ class WickrIOBot {
                     } else {
                         administrators = tokens.ADMINISTRATORS.value;
                     }
-
+console.log("administrators = "+administrators);
                     administrators = administrators.split(',');
 
                     // Make sure there are no white spaces on the whitelisted users
@@ -341,7 +341,8 @@ class WickrIOBot {
           'isVoiceMemo': isVoiceMemo,
           'voiceMemoDuration': voiceMemoDuration,
           'convotype': convoType,
-          'isAdmin' : isAdmin
+          'isAdmin' : isAdmin,
+          'msgtype' : 'file'
         };
       } else {
         var parsedObj = {
@@ -351,19 +352,52 @@ class WickrIOBot {
           'userEmail': sender,
           'isVoiceMemo': isVoiceMemo,
           'convotype': convoType,
-          'isAdmin' : isAdmin
+          'isAdmin' : isAdmin,
+          'msgtype' : 'file'
         };
       }
       return parsedObj;
+    } else if (message.location) {
+      var parsedObj = {
+        'latitude': message.location.latitude,
+        'longitude': message.location.longitude,
+        'vgroupid': vGroupID,
+        'userEmail': sender,
+        'convotype': convoType,
+        'isAdmin' : isAdmin,
+        'msgtype' : 'location'
+      };
+      return parsedObj;
+    } else if (message.call) {
+      var parsedObj = {
+        'status': message.call.status,
+        'vgroupid': vGroupID,
+        'userEmail': sender,
+        'convotype': convoType,
+        'isAdmin' : isAdmin,
+        'msgtype' : 'call'
+      };
+      return parsedObj;
+    } else if (message.keyverify) {
+      var parsedObj = {
+        'vgroupid': vGroupID,
+        'userEmail': sender,
+        'convotype': convoType,
+        'isAdmin' : isAdmin,
+        'msgtype' : 'keyverify'
+      };
+      return parsedObj;
+    } else if (message.control) {
+      return;
+    } else if (message.message === undefined) {
+      return;
     }
+
     var request = message.message;
     var command = '',
       argument = '';
-    if (message.control)
-      return;
-    else
-      //This doesn't capture @ mentions
-      var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/);
+    //This doesn't capture @ mentions
+    var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/);
     if (parsedData !== null) {
       command = parsedData[1];
       if (parsedData[2] !== '') {
@@ -384,7 +418,8 @@ class WickrIOBot {
       'vgroupid': vGroupID,
       'userEmail': sender,
       'convotype': convoType,
-      'isAdmin' : isAdmin
+      'isAdmin' : isAdmin,
+      'msgtype' : 'message'
     };
 
     return parsedObj;
