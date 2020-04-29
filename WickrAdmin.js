@@ -44,8 +44,6 @@ class WickrAdmin {
 
   getAdmin(userID)
   {
-    console.log(this.adminIDs);
-
     var found = this.adminIDs.includes(userID);
     if (found === false) {
         return undefined;
@@ -85,8 +83,6 @@ class WickrAdmin {
     }
 
     var pjson = JSON.parse(processes);
-    console.log(pjson);
-
     var wlUsers = this.adminIDs.join(',');
     if (pjson.apps[0].env.tokens.ADMINISTRATORS.encrypted) {
         var wlUsersEncrypted = WickrIOAPI.cmdEncryptString(wlUsers);
@@ -94,8 +90,6 @@ class WickrAdmin {
     } else {
         pjson.apps[0].env.tokens.ADMINISTRATORS.value = wlUsers;
     }
-
-    console.log(pjson);
 
     try {
         var cp = execSync('cp processes.json processes_backup.json');
@@ -196,9 +190,6 @@ class WickrAdmin {
         if (this.verifyAutomatic !== true) {
           if (command === '/verify') {
             var action = argument.toLowerCase().trim();
-        
-            console.log("verify action is " + action);
-
             if (action.startsWith('getlist')) {
               var values = action.split(' ');
               values.shift();
@@ -209,7 +200,6 @@ class WickrAdmin {
               } else {
                   var getVerifList = WickrIOAPI.cmdGetVerificationList();
               }
-              console.log("verify getlist response:" + getVerifList);
               var verificationList = JSON.parse(getVerifList);
               var reply="User Verification List";
               if (verificationList.users) {
