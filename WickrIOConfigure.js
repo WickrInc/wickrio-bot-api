@@ -275,6 +275,9 @@ class WickrIOConfigure
                    required: requiredValue,
                    default: tmpdflt,
                    ask: function() {
+                       if (prompt.history(parentToken) === null) {
+                           return false;
+                       }
                        var name = prompt.history(parentToken).value;
                            return prompt.history(parentToken).value === 'yes';
                    },
@@ -295,6 +298,9 @@ class WickrIOConfigure
                    required: requiredValue,
                    default: tmpdflt,
                    ask: function() {
+                       if (prompt.history(parentToken) === null) {
+                           return false;
+                       }
                        var name = prompt.history(parentToken).value;
                            return prompt.history(parentToken).value === 'yes';
                    }
@@ -302,7 +308,7 @@ class WickrIOConfigure
             }
 
             if (tokenList[index].list !== undefined) {
-                this.processTokenList(tokenList[index].list, tokenList[index].token, schema);
+                schema = this.processTokenList(tokenList[index].list, tokenList[index].token, schema);
             }
         }
         return schema;
@@ -376,6 +382,7 @@ class WickrIOConfigure
               if (tokenEntry.list !== undefined) {
                   schema = this.processTokenList(tokenEntry.list, tokenEntry.token, schema);
               }
+
 
               prompt.get(schema, async function(err, answer) {
                 if (answer[tokenEntry.token] === "") {
