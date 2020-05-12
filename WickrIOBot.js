@@ -16,6 +16,14 @@ class WickrIOBot {
   }
 
   /*
+   * Return the version of the addon that the bot-api is using
+   */
+  getWickrIOAddon()
+  {
+    return WickrIOAPI;
+  }
+
+  /*
    * Set this client to handle only commands from admin users
    */
   setAdminOnly(setting)
