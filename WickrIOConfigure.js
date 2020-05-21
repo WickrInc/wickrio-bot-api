@@ -17,6 +17,7 @@ class WickrIOConfigure
 {
     constructor(tokens, processesFile, supportAdministrators, supportVerification)
     {
+        this.botName = '';
         this.supportsVerification = false;
         this.supportsAdministrators = false;
         this.tokenConfig = [
@@ -470,10 +471,13 @@ class WickrIOConfigure
             var cp = execSync('cp processes.json processes_backup.json');
             if (process.env.WICKRIO_BOT_NAME !== undefined) {
               var newName = integrationName + "_" + process.env.WICKRIO_BOT_NAME;
+              this.botName = process.env.WICKRIO_BOT_NAME;
             } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
               var newName = integrationName + "_" + newObjectResult.WICKRIO_BOT_NAME.value;
+              this.botName = newObjectResult.WICKRIO_BOT_NAME.value;
             } else {
               var newName = integrationName
+              this.botName = '';
             }
 
             //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
@@ -497,6 +501,11 @@ class WickrIOConfigure
         } catch (err) {
             console.log(err);
         }
+    }
+
+    getBotName()
+    {
+        return this.botName;
     }
 };
 

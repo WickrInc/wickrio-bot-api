@@ -1,5 +1,6 @@
 const WickrIOAPI = require('wickrio_addon');
 const WickrIOConfigure = require('./WickrIOConfigure');
+const WickrIOIni = require('./WickrIOIni');
 const WickrUser = require('./WickrUser');
 const WickrAdmin = require('./WickrAdmin');
 var fs = require('fs');
@@ -475,5 +476,6 @@ function sleep(ms) {
 module.exports = {
   WickrIOBot,
   WickrUser,
-  WickrIOConfigure
+  WickrIOConfigure,
+  WickrIOIni
 };
