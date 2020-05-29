@@ -2,7 +2,7 @@
   "name": "wickrio-bot-api",
   "version": "5.56.1",
   "description": "The official Wickr IO Bot API Framework",
-  "main": "WickrIOBot.js",
+  "main": "lib/WickrIOBot.js",
   "dependencies": {
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
