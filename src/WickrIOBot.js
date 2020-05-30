@@ -44,14 +44,13 @@ class WickrIOBot {
     var myLocalAdmins = new WickrAdmin();
     console.log('stating bot')
     this.myAdmins = myLocalAdmins;
-    // var ref = this
+
     const clientinitPromise = (client_username) => new Promise(async (resolve, reject) => {
       console.log({ client_username })
       var status = WickrIOAPI.clientInit(client_username);
       console.log({ 'clientInit status inside promise': status })
       resolve(status);
     })
-
     const clientconnectionPromise = () => new Promise(async (resolve, reject) => {
       console.log('Checking for client connectionn...');
       var connected = false;
@@ -71,7 +70,6 @@ class WickrIOBot {
       } while (cState != "RUNNING");
       resolve(connected);
     })
-
     const processAdminUsers = async (connected) => {
       /*
        * Process the admin users
