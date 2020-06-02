@@ -8,6 +8,7 @@ module.exports = {
   "noNewAdmins": "Command contains no user names to add!",
   "adminsToDelete": "Going to delete admins:\n%{userList}",
   "adminsDeleted": "%{sender} has removed the following admins:\n%{userList}",
+  "removeFail": "Failed to remove the following admin(s):\n%{user}\nAdmin(s) not found. ",
   "noRemoveAdmins": "Command contains no user names to remove!",
   "invalidAdminCommand": "Invalid /admin command, usage:\n/admin list\n/admin add <user(s)>\n/admin remove <user(s)>",
   "invalidVerifyCommand": "Invalid /verify command, usage\n/verify getlist\n/verify all\n/verify users <list of users>",
