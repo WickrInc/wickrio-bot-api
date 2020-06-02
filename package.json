@@ -9,7 +9,7 @@
     "wickrio_addon": "5.56.x"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "wickr",
