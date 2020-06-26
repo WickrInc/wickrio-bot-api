@@ -33,7 +33,7 @@ class WickrIOConfigure
                 token: 'DATABASE_ENCRYPTION_CHOICE',
                 pattern: 'yes|no',
                 type: 'string',
-                description: 'Do you want to encrypt the configuration values',
+                description: 'Do you want to encrypt the configuration values [yes|no]',
                 message: 'Please enter either yes or no',
                 required: true,
                 default: 'no',
@@ -261,7 +261,12 @@ class WickrIOConfigure
             var requiredValue;
             if (tmpdflt === undefined || tmpdflt === "undefined") {
               requiredValue = tokenList[index].required;
-              tmpdflt = ""
+
+              if (tokenList[index].default === undefined) {
+                tmpdflt = ""
+              } else {
+                tmpdflt=tokenList[index].default;
+              }
             } else {
               requiredValue = false;
             }
@@ -343,7 +348,11 @@ class WickrIOConfigure
               var requiredValue = tokenEntry.required;
 
               if (dflt === undefined || dflt === "undefined") {
-                dflt="";
+                if (tokenEntry.default === undefined) {
+                  dflt="";
+                } else {
+                  dflt=tokenEntry.default;
+                }
               } else {
                 requiredValue = false;
               }
