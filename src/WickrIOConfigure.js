@@ -15,10 +15,11 @@ const {exec, execSync, execFileSync} = require('child_process');
 
 class WickrIOConfigure
 {
-    constructor(tokens, processesFile, supportAdministrators, supportVerification)
+    constructor(tokens, processesFile, supportAdministrators, supportVerification, supportEncrypt)
     {
         this.supportsVerification = false;
         this.supportsAdministrators = false;
+        this.supportsEncrypt = false;
         this.tokenConfig = [
             {
                 token: 'WICKRIO_BOT_NAME',
@@ -28,26 +29,6 @@ class WickrIOConfigure
                 message: 'Cannot leave empty! Please enter a value',
                 required: true,
                 default: 'N/A',
-            },
-            {
-                token: 'DATABASE_ENCRYPTION_CHOICE',
-                pattern: 'yes|no',
-                type: 'string',
-                description: 'Do you want to encrypt the configuration values [yes|no]',
-                message: 'Please enter either yes or no',
-                required: true,
-                default: 'no',
-                list: [
-                    {
-                        token: 'DATABASE_ENCRYPTION_KEY',
-                        pattern: /^.{16,}$/,
-                        type: 'string',
-                        description: 'Enter the database encryption key',
-                        message: 'Please enter a value at least 16 characters long',
-                        required: true,
-                        default: '',
-                    }
-                ]
             }
         ];
         try {
@@ -83,6 +64,27 @@ class WickrIOConfigure
             default: 'N/A',
         };
 
+        this.encryptToken = {
+            token: 'DATABASE_ENCRYPTION_CHOICE',
+            pattern: 'yes|no',
+            type: 'string',
+            description: 'Do you want to encrypt the configuration values [yes|no]',
+            message: 'Please enter either yes or no',
+            required: true,
+            default: 'no',
+            list: [
+                {
+                    token: 'DATABASE_ENCRYPTION_KEY',
+                    pattern: /^.{16,}$/,
+                    type: 'string',
+                    description: 'Enter the database encryption key',
+                    message: 'Please enter a value at least 16 characters long',
+                    required: true,
+                    default: '',
+                }
+            ]
+        };
+
 
         if (tokens !== undefined) {
             for (var i = 0; i < tokens.length; i++) {
@@ -99,6 +101,11 @@ class WickrIOConfigure
             this.setVerification(false);
         else
             this.setVerification(true);
+
+        if (supportEncrypt === undefined || supportEncrypt !== true)
+            this.setEncrypt(false);
+        else
+            this.setEncrypt(true);
     }
 
     displayValues()
@@ -173,6 +180,34 @@ class WickrIOConfigure
         return true;
     }
  
+    setEncrypt(turnOn)
+    {
+        this.supportsEncrypt = false;
+        var oldValue = this.supportsEncrypt;
+
+        // If turning on the encrypt mode
+        if (turnOn === undefined || turnOn === false) {
+            this.supportsEncrypt = false;
+        } else if (turnOn === true) {
+            this.supportsEncrypt = true;
+        } else {
+            console.log("setEncrypt: invalid input: " + turnOn);
+            return false;
+        }
+
+        if (oldValue === this.supportsEncrypt)
+            return;
+
+        if (this.supportsEncrypt === true) {
+            console.log("Adding " + this.encryptToken.token + " to the list of tokens");
+            this.tokenConfig.push(this.encryptToken);
+        } else {
+            console.log("Removing " + this.encryptToken.token + " from the list of tokens");
+            this.tokenConfig = this.tokenConfig.filter(token => token.token != this.encryptToken.token);
+        }
+        return true;
+    }
+
     getCurrentValues()
     {
         var newObjectResult = {};
