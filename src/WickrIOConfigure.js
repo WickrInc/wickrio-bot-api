@@ -15,7 +15,7 @@ const {exec, execSync, execFileSync} = require('child_process');
 
 class WickrIOConfigure
 {
-    constructor(tokens, processesFile, supportAdministrators, supportVerification, addOnToJSON, supportEncrypt)
+    constructor(tokens, processesFile, supportAdministrators, supportVerification, supportEncrypt, addOnToJSON)
     {
         this.supportsVerification = false;
         this.supportsAdministrators = false;
@@ -535,8 +535,7 @@ class WickrIOConfigure
             // else add on the exisitng JSON file and then append to it.
             if(this.addOnToJSON === false){
                 var ps = fs.writeFileSync('./processes.json', JSON.stringify(this.dataParsed, null, 2));
-                }
-                else{
+                } else {
                     /*  Adding Security Group Access for each user to processes.json
                     
                         1. Get the old JSON data from /processes.json file
@@ -574,7 +573,9 @@ class WickrIOConfigure
     {
         try {
             await this.inputTokens(integrationName);
-            console.log("Finished Configuring!");
+            if(this.addOnToJSON === true){
+                console.log("Finished Configuring!");
+            }
         } catch (err) {
             console.log(err);
         }
