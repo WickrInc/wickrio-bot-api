@@ -22,10 +22,10 @@ class WickrIOConfigure
         this.supportsEncrypt = false;
         this.addOnToJSON = false;
 
-        if (addOnToJSON === undefined || addOnToJSON !== false)
-            this.addOnToJSON = true;
-        else
+        if (addOnToJSON === undefined || addOnToJSON !== true)
             this.addOnToJSON = false;
+        else
+            this.addOnToJSON = true;
 
         this.tokenConfig = [
             {
