@@ -15,11 +15,18 @@ const {exec, execSync, execFileSync} = require('child_process');
 
 class WickrIOConfigure
 {
-    constructor(tokens, processesFile, supportAdministrators, supportVerification, supportEncrypt)
+    constructor(tokens, processesFile, supportAdministrators, supportVerification, supportEncrypt, addOnToJSON)
     {
         this.supportsVerification = false;
         this.supportsAdministrators = false;
         this.supportsEncrypt = false;
+        this.addOnToJSON = false;
+
+        if (addOnToJSON === undefined || addOnToJSON !== true)
+            this.addOnToJSON = false;
+        else
+            this.addOnToJSON = true;
+
         this.tokenConfig = [
             {
                 token: 'WICKRIO_BOT_NAME',
@@ -524,7 +531,36 @@ class WickrIOConfigure
             this.dataParsed.apps[0].name = newName;
 
             var assign = Object.assign(this.dataParsed.apps[0].env.tokens, newObjectResult);
-            var ps = fs.writeFileSync('./processes.json', JSON.stringify(this.dataParsed, null, 2));
+                  // If addOnToJSON is false write the file,
+            // else add on the exisitng JSON file and then append to it.
+            if(this.addOnToJSON === false){
+                var ps = fs.writeFileSync('./processes.json', JSON.stringify(this.dataParsed, null, 2));
+                } else {
+                    /*  Adding Security Group Access for each user to processes.json
+                    
+                        1. Get the old JSON data from /processes.json file
+                        2. Get the admins that were entered in
+                        3. Build the struct that is to be added into the JSON object
+                        4. Add in SECURITY_GROUP_ACCESS struct to JSON object then write the object
+                           to the ./processes.json file 
+                    */
+                    
+                    // 1.
+                    var data = JSON.parse(fs.readFileSync(this.processesFile, 'utf-8'));
+                    // 2.
+                    const adminArray = this.getCurrentValues().ADMINISTRATORS.split(',');
+                    // 3.
+                    var objToAdd = {};
+                    let i;
+                    for(i =0;i<adminArray.length;i++){
+                        const userSecurityGroups = this.dataParsed.apps[0].env.tokens[adminArray[i]].value.split(',');
+                        objToAdd[adminArray[i]] = userSecurityGroups;
+                        
+                    }
+                    // 4.
+                    data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd;
+                    fs.writeFileSync('./processes.json', JSON.stringify(data, null, 2));
+                }
           } catch (err) {
             console.log(err);
           }
