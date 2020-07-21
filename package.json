@@ -1,6 +1,6 @@
 {
   "name": "wickrio-bot-api",
-  "version": "5.59.2",
+  "version": "5.59.3",
   "description": "The official Wickr IO Bot API Framework",
   "main": "src/WickrIOBot.js",
   "dependencies": {
