@@ -573,9 +573,7 @@ class WickrIOConfigure
     {
         try {
             await this.inputTokens(integrationName);
-            if(this.addOnToJSON === true){
-                console.log("Finished Configuring!");
-            }
+            console.log("Finished Configuring!");
         } catch (err) {
             console.log(err);
         }
