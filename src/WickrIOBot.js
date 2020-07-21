@@ -196,11 +196,9 @@ class WickrIOBot {
       var key;
 
       // if the encryption choice value is there and is 'no' then return
-      if (tokens.DATABASE_ENCRYPTION_CHOICE !== undefined) {
-        if (tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes') {
-          console.log("WARNING: Configurations are not encrypted");
-          return true;
-        }
+      if ((tokens.DATABASE_ENCRYPTION_CHOICE === undefined) || (tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes')) {
+        console.log("WARNING: Configurations are not encrypted");
+        return true;
       }
 
       if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
