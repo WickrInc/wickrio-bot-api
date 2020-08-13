@@ -1,465 +1,580 @@
-const WickrIOAPI = require('wickrio_addon');
-const WickrIOConfigure = require('./WickrIOConfigure');
-const WickrUser = require('./WickrUser');
-const WickrAdmin = require('./WickrAdmin');
-var fs = require('fs');
-var encryptor;
-var encryptorDefined = false;
+const WickrIOAPI = require("wickrio_addon")
+const WickrIOConfigure = require("./WickrIOConfigure")
+const WickrUser = require("./WickrUser")
+const WickrAdmin = require("./WickrAdmin")
+var fs = require("fs")
+var encryptor
+var encryptorDefined = false
 
 class WickrIOBot {
+	constructor() {
+		this.wickrUsers = []
+		this.myAdmins
+		this.listenFlag = false
+		this.adminOnly = false
+	}
 
-  constructor() {
-    this.wickrUsers = [];
-    this.myAdmins;
-    this.listenFlag = false;
-    this.adminOnly = false;
-  }
+	/*
+	 * Return the version of the addon that the bot-api is using
+	 */
+	getWickrIOAddon() {
+		return WickrIOAPI
+	}
 
-  /*
-   * Return the version of the addon that the bot-api is using
-   */
-  getWickrIOAddon() {
-    return WickrIOAPI;
-  }
+	/*
+	 * Set this client to handle only commands from admin users
+	 */
+	setAdminOnly(setting) {
+		this.adminOnly = setting
+	}
 
-  /*
-   * Set this client to handle only commands from admin users
-   */
-  setAdminOnly(setting) {
-    this.adminOnly = setting;
-  }
+	getAdminHelp(helpString) {
+		return this.myAdmins.getHelp(helpString)
+	}
 
-  getAdminHelp(helpString) {
-    return this.myAdmins.getHelp(helpString);
-  }
+	setVerificationMode(mode) {
+		this.myAdmins.setVerifyMode(mode)
+	}
 
-  setVerificationMode(mode) {
-    this.myAdmins.setVerifyMode(mode);
-  }
+	/*
+	 * WickrIO API functions used: clientInit() and isConnected()
+	 */
+	async start(client_username) {
+		var myLocalAdmins = new WickrAdmin()
+		console.log("stating bot")
+		this.myAdmins = myLocalAdmins
 
-  /*
-   * WickrIO API functions used: clientInit() and isConnected()
-   */
-  async start(client_username) {
-    var myLocalAdmins = new WickrAdmin();
-    console.log('stating bot')
-    this.myAdmins = myLocalAdmins;
+		const clientinitPromise = (client_username) =>
+			new Promise(async (resolve, reject) => {
+				console.log({ client_username })
+				var status = WickrIOAPI.clientInit(client_username)
+				console.log({ "clientInit status inside promise": status })
+				resolve(status)
+			})
+		const clientconnectionPromise = () =>
+			new Promise(async (resolve, reject) => {
+				console.log("Checking for client connectionn...")
+				var connected = false
+				do {
+					connected = WickrIOAPI.isConnected(10)
+					console.log("isConnected:", connected)
+				} while (connected != true)
 
-    const clientinitPromise = (client_username) => new Promise(async (resolve, reject) => {
-      console.log({ client_username })
-      var status = WickrIOAPI.clientInit(client_username);
-      console.log({ 'clientInit status inside promise': status })
-      resolve(status);
-    })
-    const clientconnectionPromise = () => new Promise(async (resolve, reject) => {
-      console.log('Checking for client connectionn...');
-      var connected = false;
-      do {
-        connected = WickrIOAPI.isConnected(10);
-        console.log('isConnected:', connected);
-      } while (connected != true);
+				console.log("isConnected: finally we are connected")
 
-      console.log('isConnected: finally we are connected');
+				var cState
+				do {
+					cState = WickrIOAPI.getClientState()
+					console.log("isConnected: client state is", cState)
+					if (cState != "RUNNING") await sleep(5000)
+				} while (cState != "RUNNING")
+				resolve(connected)
+			})
+		const processAdminUsers = async (connected) => {
+			/*
+			 * Process the admin users
+			 */
+			var processes = JSON.parse(fs.readFileSync("processes.json"))
+			var tokens = JSON.parse(process.env.tokens)
+			var administrators
+			if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
+				if (tokens.ADMINISTRATORS.encrypted) {
+					administrators = WickrIOAPI.cmdDecryptString(
+						tokens.ADMINISTRATORS.value
+					)
+				} else {
+					administrators = tokens.ADMINISTRATORS.value
+				}
+				administrators = administrators.split(",")
 
-      var cState;
-      do {
-        cState = WickrIOAPI.getClientState();
-        console.log('isConnected: client state is', cState);
-        if (cState != "RUNNING")
-          await sleep(5000);
-      } while (cState != "RUNNING");
-      resolve(connected);
-    })
-    const processAdminUsers = async (connected) => {
-      /*
-       * Process the admin users
-       */
-      var processes = JSON.parse(fs.readFileSync('processes.json'));
-      var tokens = JSON.parse(process.env.tokens);
-      var administrators;
-      if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
-        if (tokens.ADMINISTRATORS.encrypted) {
-          administrators = WickrIOAPI.cmdDecryptString(tokens.ADMINISTRATORS.value);
-        } else {
-          administrators = tokens.ADMINISTRATORS.value;
-        }
-        administrators = administrators.split(',');
+				// Make sure there are no white spaces on the whitelisted users
+				for (var i = 0; i < administrators.length; i++) {
+					var administrator = administrators[i].trim()
+					var admin = myLocalAdmins.addAdmin(administrator)
+				}
+			}
 
-        // Make sure there are no white spaces on the whitelisted users
-        for (var i = 0; i < administrators.length; i++) {
-          var administrator = administrators[i].trim();
-          var admin = myLocalAdmins.addAdmin(administrator);
-        }
-      }
+			var settings = JSON.parse(fs.readFileSync("package.json"))
+			//Check if bot supports a user database
+			if (!settings.database) {
+				return true
+			}
+			if (connected) {
+				var encrypted = await this.encryptEnv()
+				var loaded = await this.loadData()
+				return true
+			} else {
+				console.log("not connected, not processing admin users")
+				return false
+			}
+		}
 
+		const client = await clientinitPromise(client_username)
+		if (client) {
+			console.log({ client })
+			const connection = await clientconnectionPromise()
+			console.log({ connection })
+			if (connection) {
+				return processAdminUsers(connection)
+			}
+		}
+	}
 
-      var settings = JSON.parse(fs.readFileSync('package.json'));
-      //Check if bot supports a user database
-      if (!settings.database) {
-        return true;
-      }
-      if (connected) {
-        var encrypted = await this.encryptEnv();
-        var loaded = await this.loadData();
-        return true;
-      } else {
-        console.log('not connected, not processing admin users')
-        return false;
-      }
-    }
+	/*
+	 * WickrIO API functions used: cmdStartAsyncRecvMessages
+	 */
+	async startListening(callback) {
+		try {
+			var ref = this
+			return new Promise(function (resolve, reject) {
+				var start = WickrIOAPI.cmdStartAsyncRecvMessages(callback)
+				if (start === "Success") resolve(start)
+				else reject(start)
+			})
+				.then(function (start) {
+					ref.listenFlag = true
+					console.log("Bot message listener set successfully!")
+					return true
+				})
+				.catch((error) => {
+					console.log("Bot message listener failed to set:", error)
+					return false
+				})
+		} catch (err) {
+			console.log(err)
+		}
+	}
 
-    const client = await clientinitPromise(client_username)
-    if (client) {
-      console.log({ client })
-      const connection = await clientconnectionPromise()
-      console.log({ connection })
-      if (connection) {
-        return processAdminUsers(connection)
-      }
-    }
-  }
+	/*
+	 * WickrIO API functions used: closeClient() and cmdStopAsyncRecvMessages()
+	 */
+	async close() {
+		try {
+			var ref = this
+			var settings = JSON.parse(fs.readFileSync("package.json"))
+			//Checks if bot supports a user database saving feature
+			if (settings.database) {
+				var saved = await this.saveData()
+			}
+			return new Promise(function (resolve, reject) {
+				var stopMessaging = "not needed"
+				if (ref.listenFlag === true)
+					stopMessaging = WickrIOAPI.cmdStopAsyncRecvMessages()
+				resolve(stopMessaging)
+			})
+				.then(function (stopMessaging) {
+					if (stopMessaging === "Success") {
+						console.log("Async message receiving stopped!")
+					}
+					console.log("Shutting bot down...")
+					return new Promise(function (resolve, reject) {
+						var closed = WickrIOAPI.closeClient()
+						resolve(closed)
+					})
+						.then(function (closed) {
+							console.log(closed)
+							console.log("Bot shut down successfully!")
+							return true
+						})
+						.catch((error) => {
+							console.log(error)
+						})
+				})
+				.catch((error) => {
+					console.log(error)
+				})
+		} catch (err) {
+			console.log(err)
+			return false
+		}
+	}
 
-  /*
-   * WickrIO API functions used: cmdStartAsyncRecvMessages
-   */
-  async startListening(callback) {
-    try {
-      var ref = this;
-      return new Promise(function (resolve, reject) {
-        var start = WickrIOAPI.cmdStartAsyncRecvMessages(callback);
-        if (start === 'Success')
-          resolve(start);
-        else
-          reject(start);
-      }
-      ).then(function (start) {
-        ref.listenFlag = true;
-        console.log('Bot message listener set successfully!');
-        return true;
-      }).catch(error => {
-        console.log('Bot message listener failed to set:', error);
-        return false;
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }
+	/*
+	 * WickrIO API functions used: cmdEncryptString()
+	 */
+	async encryptEnv() {
+		try {
+			var processes = JSON.parse(fs.readFileSync("processes.json"))
+			var tokens = JSON.parse(process.env.tokens)
+			//Create an encryptor:
+			var key
 
-  /* 
-   * WickrIO API functions used: closeClient() and cmdStopAsyncRecvMessages()
-   */
-  async close() {
-    try {
-      var ref = this;
-      var settings = JSON.parse(fs.readFileSync('package.json'));
-      //Checks if bot supports a user database saving feature
-      if (settings.database) {
-        var saved = await this.saveData();
-      }
-      return new Promise(function (resolve, reject) {
-        var stopMessaging = 'not needed';
-        if (ref.listenFlag === true)
-          stopMessaging = WickrIOAPI.cmdStopAsyncRecvMessages();
-        resolve(stopMessaging);
-      }).then(function (stopMessaging) {
-        if (stopMessaging === 'Success') {
-          console.log('Async message receiving stopped!')
-        }
-        console.log('Shutting bot down...');
-        return new Promise(function (resolve, reject) {
-          var closed = WickrIOAPI.closeClient();
-          resolve(closed);
-        }).then(function (closed) {
-          console.log(closed);
-          console.log('Bot shut down successfully!');
-          return true;
-        }).catch(error => {
-          console.log(error);
-        });
-      }).catch(error => {
-        console.log(error);
-      });
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  }
+			// if the encryption choice value is there and is 'no' then return
+			if (
+				tokens.DATABASE_ENCRYPTION_CHOICE === undefined ||
+				tokens.DATABASE_ENCRYPTION_CHOICE.value !== "yes"
+			) {
+				console.log("WARNING: Configurations are not encrypted")
+				return true
+			}
 
-  /*
-   * WickrIO API functions used: cmdEncryptString()
-   */
-  async encryptEnv() {
-    try {
-      var processes = JSON.parse(fs.readFileSync('processes.json'));
-      var tokens = JSON.parse(process.env.tokens);
-      //Create an encryptor:
-      var key;
+			if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
+				key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
+			} else {
+				key = tokens.DATABASE_ENCRYPTION_KEY.value
+			}
 
-      // if the encryption choice value is there and is 'no' then return
-      if ((tokens.DATABASE_ENCRYPTION_CHOICE === undefined) || (tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes')) {
-        console.log("WARNING: Configurations are not encrypted");
-        return true;
-      }
+			if (key.length < 16) {
+				console.log(
+					"WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long"
+				)
+				encryptorDefined = false
+				return true
+			}
+			encryptor = require("simple-encryptor")(key)
+			encryptorDefined = true
+			for (var i in tokens) {
+				if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME") continue
+				if (!tokens[i].encrypted) {
+					tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
+					tokens[i].encrypted = true
+				}
+			}
+			processes.apps[0].env.tokens = tokens
+			var ps = fs.writeFileSync(
+				"./processes.json",
+				JSON.stringify(processes, null, 2)
+			)
+			console.log("Bot tokens encrypted successfully!")
+			return true
+		} catch (err) {
+			console.log("Unable to encrypt Bot Tokens:", err)
+			return false
+		}
+	}
 
-      if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
-        key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value);
-      } else {
-        key = tokens.DATABASE_ENCRYPTION_KEY.value;
-      }
+	/*
+	 * Loads and decrypts the bot's user database
+	 * WickrIO API functions used: cmdDecryptString()
+	 */
+	async loadData() {
+		try {
+			if (!fs.existsSync("users.txt")) {
+				console.log("WARNING: users.txt does not exist!")
+				return
+			}
 
-      if (key.length < 16) {
-        console.log("WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long");
-        encryptorDefined = false;
-        return true;
-      }
-      encryptor = require('simple-encryptor')(key);
-      encryptorDefined = true;
-      for (var i in tokens) {
-        if (i === "BOT_USERNAME" || i === "WICKRIO_BOT_NAME")
-          continue;
-        if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value);
-          tokens[i].encrypted = true;
-        }
-      }
-      processes.apps[0].env.tokens = tokens;
-      var ps = fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2));
-      console.log("Bot tokens encrypted successfully!");
-      return true;
-    } catch (err) {
-      console.log("Unable to encrypt Bot Tokens:", err);
-      return false;
-    }
-  }
+			var users = fs.readFileSync("users.txt", "utf-8")
+			if (users.length === 0 || !users || users === "") {
+				return
+			}
+			console.log("Decrypting user database...")
+			var ciphertext = WickrIOAPI.cmdDecryptString(users.toString())
 
-  /*
-   * Loads and decrypts the bot's user database
-   * WickrIO API functions used: cmdDecryptString()
-   */
-  async loadData() {
-    try {
-      if (!fs.existsSync('users.txt')) {
-        console.log("WARNING: users.txt does not exist!");
-        return;
-      }
+			if (encryptorDefined === true) {
+				// Decrypt
+				var decryptedData = encryptor.decrypt(ciphertext)
+				this.wickrUsers = decryptedData
+			} else {
+				this.wickrUsers = JSON.parse(ciphertext)
+			}
+		} catch (err) {
+			console.log(err)
+		}
+	}
 
-      var users = fs.readFileSync('users.txt', 'utf-8');
-      if (users.length === 0 || !users || users === "") {
-        return;
-      }
-      console.log("Decrypting user database...");
-      var ciphertext = WickrIOAPI.cmdDecryptString(users.toString());
+	/*
+	 * Decrypts and saves the bot's user database
+	 * WickrIO API functions used: cmdEncryptString()
+	 */
+	async saveData() {
+		try {
+			console.log("Encrypting user database...")
+			if (this.wickrUsers.length === 0) {
+				return
+			}
 
-      if (encryptorDefined === true) {
-        // Decrypt
-        var decryptedData = encryptor.decrypt(ciphertext);
-        this.wickrUsers = decryptedData;
-      } else {
-        this.wickrUsers = JSON.parse(ciphertext);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
+			var serialusers
+			if (encryptorDefined === true) {
+				//Encrypt
+				serialusers = encryptor.encrypt(this.wickrUsers)
+			} else {
+				serialusers = JSON.stringify(this.wickrUsers)
+			}
 
-  /*
-   * Decrypts and saves the bot's user database
-   * WickrIO API functions used: cmdEncryptString()
-   */
-  async saveData() {
-    try {
-      console.log("Encrypting user database...");
-      if (this.wickrUsers.length === 0) {
-        return;
-      }
+			var encrypted = WickrIOAPI.cmdEncryptString(serialusers)
+			var saved = fs.writeFileSync("users.txt", encrypted, "utf-8")
+			console.log("User database saved to file!")
+			return true
+		} catch (err) {
+			console.log(err)
+			return false
+		}
+	}
 
-      var serialusers;
-      if (encryptorDefined === true) {
-        //Encrypt
-        serialusers = encryptor.encrypt(this.wickrUsers);
-      } else {
-        serialusers = JSON.stringify(this.wickrUsers);
-      }
+	/*
+	 * This function parses an incoming message
+	 */
+	parseMessage(message) {
+		var tokens = JSON.parse(process.env.tokens)
+		message = JSON.parse(message)
+		let { control, msg_ts, receiver, sender, ttl, bor } = message
+		var msgtype = message.msgtype
+		var vGroupID = message.vgroupid
+		var convoType = ""
 
-      var encrypted = WickrIOAPI.cmdEncryptString(serialusers);
-      var saved = fs.writeFileSync('users.txt', encrypted, 'utf-8');
-      console.log("User database saved to file!");
-      return true;
-    } catch (err) {
-      console.log(err);
-      return false;
-    }
-  }
+		// Get the admin, if this is an admin user
+		var localWickrAdmins = this.myAdmins
+		var admin = localWickrAdmins.getAdmin(sender)
 
-  /*
-   * This function parses an incoming message
-   */
-  parseMessage(message) {
-    var tokens = JSON.parse(process.env.tokens);
-    message = JSON.parse(message);
-    var msgtype = message.msgtype;
-    var sender = message.sender;
-    var vGroupID = message.vgroupid;
-    var convoType = '';
+		// If ONLY admins can receive and handle messages and this is
+		// not an admin, then drop the message
+		if (this.adminOnly === true && admin === undefined) {
+			console.log("Dropping message from non-admin user!")
+			return
+		}
 
-    // Get the admin, if this is an admin user
-    var localWickrAdmins = this.myAdmins;
-    var admin = localWickrAdmins.getAdmin(sender);
+		// Set the isAdmin flag
+		var isAdmin = admin !== undefined
 
-    // If ONLY admins can receive and handle messages and this is 
-    // not an admin, then drop the message
-    if (this.adminOnly === true && admin === undefined) {
-      console.log("Dropping message from non-admin user!");
-      return;
-    }
+		// Determine the convo type (1to1, group, or room)
+		if (vGroupID.charAt(0) === "S") convoType = "room"
+		else if (vGroupID.charAt(0) === "G") convoType = "groupconvo"
+		else convoType = "personal"
 
-    // Set the isAdmin flag
-    var isAdmin = admin !== undefined;
+		if (message.file) {
+			var isVoiceMemo = false
+			if (message.file.isvoicememo) {
+				isVoiceMemo = true
+				var voiceMemoDuration = message.file.voicememoduration
+				var parsedObj = {
+					file: message.file.localfilename,
+					filename: message.file.filename,
+					vgroupid: vGroupID,
+					control,
+					msgTS: msg_ts,
+					receiver,
+					userEmail: sender,
+					isVoiceMemo: isVoiceMemo,
+					voiceMemoDuration: voiceMemoDuration,
+					convotype: convoType,
+					isAdmin: isAdmin,
+					msgtype: "file",
+					ttl,
+					bor
+				}
+			} else {
+				var parsedObj = {
+					file: message.file.localfilename,
+					filename: message.file.filename,
+					vgroupid: vGroupID,
+					control,
+					msgTS: msg_ts,
+					receiver,
+					userEmail: sender,
+					isVoiceMemo: isVoiceMemo,
+					convotype: convoType,
+					isAdmin: isAdmin,
+					msgtype: "file",
+					ttl,
+					bor
+				}
+			}
+			return parsedObj
+		} else if (message.location) {
+			var parsedObj = {
+				latitude: message.location.latitude,
+				longitude: message.location.longitude,
+				vgroupid: vGroupID,
+				control,
+				msgTS: msg_ts,
+				receiver,
+				userEmail: sender,
+				convotype: convoType,
+				isAdmin: isAdmin,
+				msgtype: "location",
+				ttl,
+				bor
+			}
+			return parsedObj
+		} else if (message.call) {
+			var parsedObj = {
+				status: message.call.status,
+				vgroupid: vGroupID,
+				control,
+				msgTS: msg_ts,
+				receiver,
+				userEmail: sender,
+				convotype: convoType,
+				isAdmin: isAdmin,
+				msgtype: "call",
+				ttl,
+				bor
+			}
+			return parsedObj
+		} else if (message.keyverify) {
+			var parsedObj = {
+				vgroupid: vGroupID,
+				control,
+				msgTS: msg_ts,
+				receiver,
+				userEmail: sender,
+				convotype: convoType,
+				isAdmin: isAdmin,
+				msgtype: "keyverify",
+				ttl,
+				bor
+			}
+			return parsedObj
+		} else if (message.control) {
+			return
+		} else if (message.message === undefined) {
+			return
+		}
 
-    // Determine the convo type (1to1, group, or room)
-    if (vGroupID.charAt(0) === 'S')
-      convoType = 'room';
-    else if (vGroupID.charAt(0) === 'G')
-      convoType = 'groupconvo';
-    else
-      convoType = 'personal';
+		var request = message.message
+		var command = "",
+			argument = ""
+		//This doesn't capture @ mentions
+		var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+		if (parsedData !== null) {
+			command = parsedData[1]
+			if (parsedData[2] !== "") {
+				argument = parsedData[2]
+				argument = argument.trim()
+			}
+		}
 
-    if (message.file) {
-      var isVoiceMemo = false;
-      if (message.file.isvoicememo) {
-        isVoiceMemo = true;
-        var voiceMemoDuration = message.file.voicememoduration;
-        var parsedObj = {
-          'file': message.file.localfilename,
-          'filename': message.file.filename,
-          'vgroupid': vGroupID,
-          'userEmail': sender,
-          'isVoiceMemo': isVoiceMemo,
-          'voiceMemoDuration': voiceMemoDuration,
-          'convotype': convoType,
-          'isAdmin': isAdmin,
-          'msgtype': 'file'
-        };
-      } else {
-        var parsedObj = {
-          'file': message.file.localfilename,
-          'filename': message.file.filename,
-          'vgroupid': vGroupID,
-          'userEmail': sender,
-          'isVoiceMemo': isVoiceMemo,
-          'convotype': convoType,
-          'isAdmin': isAdmin,
-          'msgtype': 'file'
-        };
-      }
-      return parsedObj;
-    } else if (message.location) {
-      var parsedObj = {
-        'latitude': message.location.latitude,
-        'longitude': message.location.longitude,
-        'vgroupid': vGroupID,
-        'userEmail': sender,
-        'convotype': convoType,
-        'isAdmin': isAdmin,
-        'msgtype': 'location'
-      };
-      return parsedObj;
-    } else if (message.call) {
-      var parsedObj = {
-        'status': message.call.status,
-        'vgroupid': vGroupID,
-        'userEmail': sender,
-        'convotype': convoType,
-        'isAdmin': isAdmin,
-        'msgtype': 'call'
-      };
-      return parsedObj;
-    } else if (message.keyverify) {
-      var parsedObj = {
-        'vgroupid': vGroupID,
-        'userEmail': sender,
-        'convotype': convoType,
-        'isAdmin': isAdmin,
-        'msgtype': 'keyverify'
-      };
-      return parsedObj;
-    } else if (message.control) {
-      return;
-    } else if (message.message === undefined) {
-      return;
-    }
+		// If this is an admin then process any admin commands
+		if (admin !== undefined) {
+			localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
+		}
 
-    var request = message.message;
-    var command = '',
-      argument = '';
-    //This doesn't capture @ mentions
-    var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/);
-    if (parsedData !== null) {
-      command = parsedData[1];
-      if (parsedData[2] !== '') {
-        argument = parsedData[2];
-        argument = argument.trim();
-      }
-    }
+		var parsedObj = {
+			message: request,
+			command: command,
+			control,
+			msgTS: msg_ts,
+			receiver,
+			argument: argument,
+			vgroupid: vGroupID,
+			userEmail: sender,
+			convotype: convoType,
+			isAdmin: isAdmin,
+			msgtype: "message",
+			ttl,
+			bor
+		}
 
-    // If this is an admin then process any admin commands
-    if (admin !== undefined) {
-      localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument);
-    }
+		return parsedObj
+	}
 
-    var parsedObj = {
-      'message': request,
-      'command': command,
-      'argument': argument,
-      'vgroupid': vGroupID,
-      'userEmail': sender,
-      'convotype': convoType,
-      'isAdmin': isAdmin,
-      'msgtype': 'message'
-    };
+	async getMessageData(rawMessage) {
+		// TODO fix the parseMessage function so it can include control messages
+		// TODO add a parseMessage that can get the important parts and leave out recipients
+		// Parses an incoming message and returns an object with command, argument, vGroupID and Sender fields
 
-    return parsedObj;
-  }
+		// get message
+		const {
+			ttl,
+			bor,
+			control,
+			msgTS,
+			receiver,
+			sender,
+			file,
+			filename,
+			message,
+			command,
+			argument,
+			vgroupid,
+			userEmail,
+			convotype,
+			isAdmin,
+			msgtype,
+			latitude,
+			longitude,
+			isVoiceMemo,
+			voiceMemoDuration
+		} = this.parseMessage(rawMessage)
+		let wickrUser
+		// get command
 
-  /*
-   * User functions
-   */
-  addUser(wickrUser) {
-    this.wickrUsers.push(wickrUser);
-    var saved = this.saveData();
-    console.log("New Wickr user added to database.");
-    return wickrUser;
-  }
+		// TODO what's the difference between full message and message
+		// const messageReceived = parsedMessage.message
 
-  getUser(userEmail) {
-    var found = this.wickrUsers.find(function (user) {
-      return user.userEmail === userEmail;
-    });
-    return found;
-  }
+		// enable this and move it out of bot repos
+		// let user = this.getUser(userEmail) // Look up user by their wickr email
 
-  getUsers() {
-    return this.wickrUsers;
-  }
+		// if (user === undefined) {
+		// 	// Check if a user exists in the database
+		// 	wickrUser = new WickrUser(userEmail, {
+		// 		message,
+		// 		vgroupid,
+		// 		personalVGroupID: "",
+		// 		command: "",
+		// 		argument: "",
+		// 		currentState: 0
+		// 	})
+		// 	user = this.addUser(wickrUser) // Add a new user to the database
+		// }
 
-  deleteUser(userEmail) {
-    var found = this.wickrUsers.find(function (user) {
-      return user.userEmail === userEmail;
-    });
-    var index = this.wickrUsers.indexOf(found);
-    this.wickrUsers.splice(index, 1);
-    return found;
-  }
+		// create a directory for users to upload files for the bot to recall or use, if it doesn't already exist
+		if (!fs.existsSync(`${process.cwd()}/files/${userEmail}`)) {
+			fs.mkdirSync(`${process.cwd()}/files/${userEmail}`)
+		}
 
+		return {
+			ttl,
+			bor,
+			control,
+			msgTS,
+			receiver,
+			sender,
+			file,
+			filename,
+			message,
+			command,
+			argument,
+			vGroupID: vgroupid,
+			convoType: convotype,
+			msgType: msgtype,
+			userEmail,
+			isAdmin,
+			latitude,
+			longitude,
+			isVoiceMemo,
+			voiceMemoDuration
+		}
+	}
 
-};
+	/*
+	 * User functions
+	 */
+	addUser(wickrUser) {
+		this.wickrUsers.push(wickrUser)
+		var saved = this.saveData()
+		console.log("New Wickr user added to database.")
+		return wickrUser
+	}
+
+	getUser(userEmail) {
+		var found = this.wickrUsers.find(function (user) {
+			return user.userEmail === userEmail
+		})
+		return found
+	}
+
+	getUsers() {
+		return this.wickrUsers
+	}
+
+	deleteUser(userEmail) {
+		var found = this.wickrUsers.find(function (user) {
+			return user.userEmail === userEmail
+		})
+		var index = this.wickrUsers.indexOf(found)
+		this.wickrUsers.splice(index, 1)
+		return found
+	}
+}
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 module.exports = {
-  WickrIOBot,
-  WickrUser,
-  WickrIOConfigure
-};
+	WickrIOBot,
+	WickrUser,
+	WickrIOConfigure
+}
