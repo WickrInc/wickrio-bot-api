@@ -12,6 +12,7 @@ class WickrIOBot {
 		this.myAdmins
 		this.listenFlag = false
 		this.adminOnly = false
+		this.WickrIOAPI = WickrIOAPI
 	}
 
 	/*
@@ -308,14 +309,24 @@ class WickrIOBot {
 	parseMessage(message) {
 		var tokens = JSON.parse(process.env.tokens)
 		message = JSON.parse(message)
-		let { control, msg_ts, receiver, sender, ttl, bor } = message
-		var msgtype = message.msgtype
-		var vGroupID = message.vgroupid
+		let {
+			users,
+			time,
+			message_id: messageID,
+			control,
+			msg_ts: msgTS,
+			receiver,
+			sender: userEmail,
+			ttl,
+			bor,
+			msgtype: msgType,
+			vgroupid: vGroupID
+		} = message
 		var convoType = ""
 
 		// Get the admin, if this is an admin user
 		var localWickrAdmins = this.myAdmins
-		var admin = localWickrAdmins.getAdmin(sender)
+		var admin = localWickrAdmins.getAdmin(userEmail)
 
 		// If ONLY admins can receive and handle messages and this is
 		// not an admin, then drop the message
@@ -338,33 +349,37 @@ class WickrIOBot {
 				isVoiceMemo = true
 				var voiceMemoDuration = message.file.voicememoduration
 				var parsedObj = {
+					messageID,
 					file: message.file.localfilename,
-					filename: message.file.filename,
-					vgroupid: vGroupID,
+					fileName: message.file.filename,
+					vGroupID,
 					control,
-					msgTS: msg_ts,
+					msgTS,
+					time,
 					receiver,
-					userEmail: sender,
-					isVoiceMemo: isVoiceMemo,
-					voiceMemoDuration: voiceMemoDuration,
-					convotype: convoType,
-					isAdmin: isAdmin,
-					msgtype: "file",
+					userEmail,
+					isVoiceMemo,
+					voiceMemoDuration,
+					convoType,
+					isAdmin,
+					msgType: "file",
 					ttl,
 					bor
 				}
 			} else {
 				var parsedObj = {
+					messageID,
 					file: message.file.localfilename,
-					filename: message.file.filename,
-					vgroupid: vGroupID,
+					fileName: message.file.filename,
+					vGroupID,
 					control,
-					msgTS: msg_ts,
+					time,
+					msgTS,
 					receiver,
-					userEmail: sender,
-					isVoiceMemo: isVoiceMemo,
-					convotype: convoType,
-					isAdmin: isAdmin,
+					userEmail,
+					isVoiceMemo,
+					convoType,
+					isAdmin,
 					msgtype: "file",
 					ttl,
 					bor
@@ -373,15 +388,17 @@ class WickrIOBot {
 			return parsedObj
 		} else if (message.location) {
 			var parsedObj = {
+				messageID,
 				latitude: message.location.latitude,
 				longitude: message.location.longitude,
-				vgroupid: vGroupID,
+				vGroupID,
 				control,
-				msgTS: msg_ts,
+				time,
+				msgTS,
 				receiver,
-				userEmail: sender,
-				convotype: convoType,
-				isAdmin: isAdmin,
+				userEmail,
+				convoType,
+				isAdmin,
 				msgtype: "location",
 				ttl,
 				bor
@@ -389,29 +406,33 @@ class WickrIOBot {
 			return parsedObj
 		} else if (message.call) {
 			var parsedObj = {
+				messageID,
 				status: message.call.status,
-				vgroupid: vGroupID,
+				vGroupID,
 				control,
-				msgTS: msg_ts,
+				time,
+				msgTS,
 				receiver,
-				userEmail: sender,
-				convotype: convoType,
-				isAdmin: isAdmin,
-				msgtype: "call",
+				userEmail,
+				convoType,
+				isAdmin,
+				msgType: "call",
 				ttl,
 				bor
 			}
 			return parsedObj
 		} else if (message.keyverify) {
 			var parsedObj = {
-				vgroupid: vGroupID,
+				time,
+				messageID,
+				vGroupID,
 				control,
-				msgTS: msg_ts,
+				msgTS,
 				receiver,
-				userEmail: sender,
-				convotype: convoType,
-				isAdmin: isAdmin,
-				msgtype: "keyverify",
+				userEmail,
+				convoType,
+				isAdmin,
+				msgType: "keyverify",
 				ttl,
 				bor
 			}
@@ -437,105 +458,61 @@ class WickrIOBot {
 
 		// If this is an admin then process any admin commands
 		if (admin !== undefined) {
-			localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
+			localWickrAdmins.processAdminCommand(
+				userEmail,
+				vGroupID,
+				command,
+				argument
+			)
 		}
 
-		var parsedObj = {
+		parsedObj = {
+			time,
+			messageID,
+			users,
 			message: request,
-			command: command,
+			command,
 			control,
-			msgTS: msg_ts,
+			msgTS,
 			receiver,
-			argument: argument,
-			vgroupid: vGroupID,
-			userEmail: sender,
-			convotype: convoType,
-			isAdmin: isAdmin,
-			msgtype: "message",
+			argument,
+			vGroupID,
+			userEmail,
+			convoType,
+			isAdmin,
+			msgType: "message",
 			ttl,
 			bor
 		}
 
+		let parsedMessage = {
+			time,
+			messageID,
+			users,
+			ttl,
+			bor,
+			// control,
+			msgTS,
+			// receiver,
+			// sender,
+			// file,
+			// filename,
+			message: request,
+			// command,
+			// argument,
+			vGroupID,
+			convoType,
+			msgType,
+			userEmail,
+			isAdmin
+			// latitude,
+			// longitude,
+			// isVoiceMemo,
+			// voiceMemoDuration
+		}
+		// console.log({ parsedObj, parsedMessage })
+
 		return parsedObj
-	}
-
-	async getMessageData(rawMessage) {
-		// TODO fix the parseMessage function so it can include control messages
-		// TODO add a parseMessage that can get the important parts and leave out recipients
-		// Parses an incoming message and returns an object with command, argument, vGroupID and Sender fields
-
-		// get message
-		const {
-			ttl,
-			bor,
-			control,
-			msgTS,
-			receiver,
-			sender,
-			file,
-			filename,
-			message,
-			command,
-			argument,
-			vgroupid,
-			userEmail,
-			convotype,
-			isAdmin,
-			msgtype,
-			latitude,
-			longitude,
-			isVoiceMemo,
-			voiceMemoDuration
-		} = this.parseMessage(rawMessage)
-		let wickrUser
-		// get command
-
-		// TODO what's the difference between full message and message
-		// const messageReceived = parsedMessage.message
-
-		// enable this and move it out of bot repos
-		// let user = this.getUser(userEmail) // Look up user by their wickr email
-
-		// if (user === undefined) {
-		// 	// Check if a user exists in the database
-		// 	wickrUser = new WickrUser(userEmail, {
-		// 		message,
-		// 		vgroupid,
-		// 		personalVGroupID: "",
-		// 		command: "",
-		// 		argument: "",
-		// 		currentState: 0
-		// 	})
-		// 	user = this.addUser(wickrUser) // Add a new user to the database
-		// }
-
-		// create a directory for users to upload files for the bot to recall or use, if it doesn't already exist
-		if (!fs.existsSync(`${process.cwd()}/files/${userEmail}`)) {
-			fs.mkdirSync(`${process.cwd()}/files/${userEmail}`)
-		}
-
-		return {
-			ttl,
-			bor,
-			control,
-			msgTS,
-			receiver,
-			sender,
-			file,
-			filename,
-			message,
-			command,
-			argument,
-			vGroupID: vgroupid,
-			convoType: convotype,
-			msgType: msgtype,
-			userEmail,
-			isAdmin,
-			latitude,
-			longitude,
-			isVoiceMemo,
-			voiceMemoDuration
-		}
 	}
 
 	/*
