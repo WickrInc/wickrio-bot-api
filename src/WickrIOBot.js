@@ -306,22 +306,27 @@ class WickrIOBot {
 	/*
 	 * This function parses an incoming message
 	 */
-	parseMessage(message) {
-		var tokens = JSON.parse(process.env.tokens)
-		message = JSON.parse(message)
+	parseMessage(rawMsg) {
+		const rawParsed = JSON.parse(rawMsg)
 		let {
 			users,
 			time,
-			message_id: messageID,
+			// message_id: messageID,
+			// msg_ts: msgTS,
+			// msgtype: msgType,
+			// vgroupid: vGroupID
+			message_id,
+			msg_ts,
+			// keyverify,
+			msgtype,
+			vgroupid,
 			control,
-			msg_ts: msgTS,
 			receiver,
 			sender: userEmail,
 			ttl,
-			bor,
-			msgtype: msgType,
-			vgroupid: vGroupID
-		} = message
+			bor
+		} = rawParsed
+		console.log({ msgtype })
 		var convoType = ""
 
 		// Get the admin, if this is an admin user
@@ -343,108 +348,134 @@ class WickrIOBot {
 		else if (vGroupID.charAt(0) === "G") convoType = "groupconvo"
 		else convoType = "personal"
 
-		if (message.file) {
-			var isVoiceMemo = false
-			if (message.file.isvoicememo) {
+		if (rawParsed.file) {
+			if (rawParsed.file.isvoicememo) {
 				isVoiceMemo = true
-				var voiceMemoDuration = message.file.voicememoduration
 				var parsedObj = {
-					messageID,
-					file: message.file.localfilename,
-					fileName: message.file.filename,
-					vGroupID,
+					// messageID,
+					// vGroupID,
+					// msgTS,
+					// isVoiceMemo,
+					// voiceMemoDuration,
+					// msgType: "file",
+					// msgType,
+					// convoType,
+					convotype,
+					message_id,
+					vgroupid,
+					msg_ts,
+					msgtype: "file",
+					isvoicememo: rawParsed.file.isvoicememo,
+					voicememoduration: rawParsed.file.voicememoduration,
+					file: rawParsed.file.localfilename,
+					fileName: rawParsed.file.filename,
 					control,
-					msgTS,
 					time,
 					receiver,
 					userEmail,
-					isVoiceMemo,
-					voiceMemoDuration,
-					convoType,
 					isAdmin,
-					msgType: "file",
 					ttl,
-					bor
+					bor: bor ?? 0
 				}
 			} else {
 				var parsedObj = {
-					messageID,
-					file: message.file.localfilename,
-					fileName: message.file.filename,
-					vGroupID,
+					// messageID,
+					// vGroupID,
+					// isVoiceMemo,
+					// convoType,
+					convotype,
+					message_id,
+					vgroupid,
+					msg_ts,
+					file: rawParsed.file.localfilename,
+					fileName: rawParsed.file.filename,
+					msgTS,
 					control,
 					time,
-					msgTS,
 					receiver,
 					userEmail,
-					isVoiceMemo,
-					convoType,
 					isAdmin,
 					msgtype: "file",
 					ttl,
-					bor
+					bor: bor ?? 0
 				}
 			}
 			return parsedObj
-		} else if (message.location) {
+		} else if (rawParsed.location) {
 			var parsedObj = {
-				messageID,
-				latitude: message.location.latitude,
-				longitude: message.location.longitude,
-				vGroupID,
+				// messageID,
+				// msgTS,
+				// convoType,
+				// vGroupID,
+				convotype,
+				message_id,
+				msg_ts,
+				vgroupid,
+				latitude: rawParsed.location.latitude,
+				longitude: rawParsed.location.longitude,
+				userEmail,
+				isAdmin,
 				control,
 				time,
-				msgTS,
 				receiver,
-				userEmail,
-				convoType,
-				isAdmin,
 				msgtype: "location",
 				ttl,
-				bor
+				bor: bor ?? 0
 			}
 			return parsedObj
-		} else if (message.call) {
+		} else if (rawParsed.call) {
 			var parsedObj = {
-				messageID,
-				status: message.call.status,
-				participants: message.call.participants,
-				vGroupID,
+				// messageID,
+				// vGroupID,
+				// msgTS,
+				// convoType,
+				// msgType: "call",
+				convotype,
+				message_id,
+				vgroupid,
+				msg_ts,
+				msgtype: "call",
+				status: rawParsed.call.status,
+				participants: rawParsed.call.participants,
 				control,
 				time,
-				msgTS,
 				receiver,
 				userEmail,
-				convoType,
 				isAdmin,
-				msgType: "call",
 				ttl,
-				bor
+				bor: bor ?? 0
 			}
 			return parsedObj
-		} else if (message.keyverify) {
+		} else if (rawParsed.keyverify) {
 			var parsedObj = {
 				time,
-				messageID,
-				vGroupID,
+				// messageID,
+				// vGroupID,
+				// msgTS,
+				// convoType,
+				// msgType: "keyverify",
+				convotype,
+				message_id,
+				vgroupid,
+				msg_ts,
+				msgtype: "keyverify",
+				msgtype: rawParsed.keyverify,
+				keyverify,
 				control,
-				msgTS,
 				receiver,
 				userEmail,
-				convoType,
 				isAdmin,
-				msgType: "keyverify",
 				ttl,
-				bor
+				bor: bor ?? 0
 			}
 			return parsedObj
-		} else if (message.control) {
+		} else if (rawParsed.control) {
 			let parsedMessage = {
 				time,
 				messageID,
 				users,
 				ttl,
-				bor,
+				bor: bor ?? 0,
 				control,
 				isrecall: control.isrecall,
 				msgTS,
@@ -466,11 +497,10 @@ class WickrIOBot {
 				// voiceMemoDuration
 			}
 			return parsedMessage
-		} else if (message.message === undefined) {
+		} else if (rawParsed.message === undefined) {
 			return
 		}
 
-		var request = message.message
 		var command = "",
 			argument = ""
 		//This doesn't capture @ mentions
@@ -509,7 +539,7 @@ class WickrIOBot {
 			isAdmin,
 			msgType: "message",
 			ttl,
-			bor
+			bor: bor ?? 0
 		}
 
 		let parsedMessage = {
