@@ -408,6 +408,7 @@ class WickrIOBot {
 			var parsedObj = {
 				messageID,
 				status: message.call.status,
+				participants: message.call.participants,
 				vGroupID,
 				control,
 				time,
@@ -438,7 +439,33 @@ class WickrIOBot {
 			}
 			return parsedObj
 		} else if (message.control) {
-			return
+			let parsedMessage = {
+				time,
+				messageID,
+				users,
+				ttl,
+				bor,
+				control,
+				isrecall: control.isrecall,
+				msgTS,
+				// receiver,
+				// sender,
+				// file,
+				// filename,
+				message: request,
+				// command,
+				// argument,
+				vGroupID,
+				convoType,
+				msgType,
+				userEmail,
+				isAdmin
+				// latitude,
+				// longitude,
+				// isVoiceMemo,
+				// voiceMemoDuration
+			}
+			return parsedMessage
 		} else if (message.message === undefined) {
 			return
 		}
