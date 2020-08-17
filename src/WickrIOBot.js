@@ -308,7 +308,7 @@ class WickrIOBot {
 	parseMessage(message) {
 		var tokens = JSON.parse(process.env.tokens)
 		message = JSON.parse(message)
-		let { edit, control, msg_ts, receiver, sender, ttl, bor } = message
+		let { edit, control, msg_ts, time, receiver, sender, ttl, bor } = message
 		var msgtype = message.msgtype
 		var vGroupID = message.vgroupid
 		var convoType = ""
@@ -343,6 +343,7 @@ class WickrIOBot {
 					vgroupid: vGroupID,
 					control,
 					msgTS: msg_ts,
+					time,
 					receiver,
 					userEmail: sender,
 					isVoiceMemo: isVoiceMemo,
@@ -360,6 +361,7 @@ class WickrIOBot {
 					vgroupid: vGroupID,
 					control,
 					msgTS: msg_ts,
+					time,
 					receiver,
 					userEmail: sender,
 					isVoiceMemo: isVoiceMemo,
@@ -378,6 +380,7 @@ class WickrIOBot {
 				vgroupid: vGroupID,
 				control,
 				msgTS: msg_ts,
+				time,
 				receiver,
 				userEmail: sender,
 				convotype: convoType,
@@ -393,6 +396,7 @@ class WickrIOBot {
 				vgroupid: vGroupID,
 				call : message.call,
 				msgTS: msg_ts,
+				time,
 				receiver,
 				userEmail: sender,
 				convotype: convoType,
@@ -407,6 +411,7 @@ class WickrIOBot {
 				vgroupid: vGroupID,
 				control,
 				msgTS: msg_ts,
+				time,
 				receiver,
 				userEmail: sender,
 				convotype: convoType,
@@ -421,6 +426,7 @@ class WickrIOBot {
 				vgroupid: vGroupID,
 				control,
 				msgTS: msg_ts,
+				time,
 				receiver,
 				userEmail: sender,
 				convotype: convoType,
@@ -435,6 +441,7 @@ class WickrIOBot {
 				vgroupid: vGroupID,
 				edit,
 				msgTS: msg_ts,
+				time,
 				receiver,
 				userEmail: sender,
 				convotype: convoType,
@@ -470,6 +477,7 @@ class WickrIOBot {
 			message: request,
 			command: command,
 			msgTS: msg_ts,
+			time,
 			receiver,
 			argument: argument,
 			vgroupid: vGroupID,
