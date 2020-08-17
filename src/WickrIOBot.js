@@ -306,9 +306,10 @@ class WickrIOBot {
 	 * This function parses an incoming message
 	 */
 	parseMessage(message) {
+console.log("MESSAGE:" + message);
 		var tokens = JSON.parse(process.env.tokens)
 		message = JSON.parse(message)
-		let { control, msg_ts, receiver, sender, ttl, bor } = message
+		let { edit, control, msg_ts, receiver, sender, ttl, bor } = message
 		var msgtype = message.msgtype
 		var vGroupID = message.vgroupid
 		var convoType = ""
@@ -391,7 +392,7 @@ class WickrIOBot {
 			var parsedObj = {
 				status: message.call.status,
 				vgroupid: vGroupID,
-				control,
+				call : message.call,
 				msgTS: msg_ts,
 				receiver,
 				userEmail: sender,
@@ -417,7 +418,33 @@ class WickrIOBot {
 			}
 			return parsedObj
 		} else if (message.control) {
-			return
+			var parsedObj = {
+				vgroupid: vGroupID,
+				control,
+				msgTS: msg_ts,
+				receiver,
+				userEmail: sender,
+				convotype: convoType,
+				isAdmin: isAdmin,
+				msgtype: "edit",
+				ttl,
+				bor
+			}
+			return parsedObj
+		} else if (message.edit) {
+			var parsedObj = {
+				vgroupid: vGroupID,
+				edit,
+				msgTS: msg_ts,
+				receiver,
+				userEmail: sender,
+				convotype: convoType,
+				isAdmin: isAdmin,
+				msgtype: "edit",
+				ttl,
+				bor
+			}
+			return parsedObj
 		} else if (message.message === undefined) {
 			return
 		}
@@ -443,7 +470,6 @@ class WickrIOBot {
 		var parsedObj = {
 			message: request,
 			command: command,
-			control,
 			msgTS: msg_ts,
 			receiver,
 			argument: argument,
