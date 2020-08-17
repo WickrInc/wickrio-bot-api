@@ -306,7 +306,6 @@ class WickrIOBot {
 	 * This function parses an incoming message
 	 */
 	parseMessage(message) {
-console.log("MESSAGE:" + message);
 		var tokens = JSON.parse(process.env.tokens)
 		message = JSON.parse(message)
 		let { edit, control, msg_ts, receiver, sender, ttl, bor } = message
