@@ -394,7 +394,7 @@ class WickrIOBot {
 			var parsedObj = {
 				status: message.call.status,
 				vgroupid: vGroupID,
-				call : message.call,
+				call: message.call,
 				msgTS: msg_ts,
 				time,
 				receiver,
@@ -492,85 +492,165 @@ class WickrIOBot {
 		return parsedObj
 	}
 
-	async getMessageData(rawMessage) {
-		// TODO fix the parseMessage function so it can include control messages
-		// TODO add a parseMessage that can get the important parts and leave out recipients
-		// Parses an incoming message and returns an object with command, argument, vGroupID and Sender fields
-
-		// get message
+	getMessage({ rawMessage }) {
+		console.log({ rawMessage })
+		// const tokens = JSON.parse(process.env.tokens)
+		const jsonmsg = JSON.parse(rawMessage)
 		const {
-			ttl,
-			bor,
-			control,
-			msgTS,
-			receiver,
-			sender,
-			file,
-			filename,
+			message_id: messageID,
 			message,
-			command,
-			argument,
-			vgroupid,
-			userEmail,
-			convotype,
-			isAdmin,
-			msgtype,
-			latitude,
-			longitude,
-			isVoiceMemo,
-			voiceMemoDuration
-		} = this.parseMessage(rawMessage)
-		let wickrUser
-		// get command
+			edit,
+			control,
+			file,
+			msg_ts: msgTS,
+			time,
+			receiver,
+			sender: userEmail,
+			ttl,
+			location,
+			vgroupid: vGroupID,
+			msgtype: msgType,
+			call,
+			users,
+			keyverify
+		} = jsonmsg
+		let { bor } = jsonmsg
+		if (!bor) bor = 0
 
-		// TODO what's the difference between full message and message
-		// const messageReceived = parsedMessage.message
+		// const msgtype = message.msgtype
+		// const vGroupID = message.vgroupid
+		let convoType = ""
 
-		// enable this and move it out of bot repos
-		// let user = this.getUser(userEmail) // Look up user by their wickr email
+		// Get the admin, if this is an admin user
+		const localWickrAdmins = this.myAdmins
+		const admin = localWickrAdmins.getAdmin(userEmail)
 
-		// if (user === undefined) {
-		// 	// Check if a user exists in the database
-		// 	wickrUser = new WickrUser(userEmail, {
-		// 		message,
-		// 		vgroupid,
-		// 		personalVGroupID: "",
-		// 		command: "",
-		// 		argument: "",
-		// 		currentState: 0
-		// 	})
-		// 	user = this.addUser(wickrUser) // Add a new user to the database
-		// }
-
-		// create a directory for users to upload files for the bot to recall or use, if it doesn't already exist
-		if (!fs.existsSync(`${process.cwd()}/files/${userEmail}`)) {
-			fs.mkdirSync(`${process.cwd()}/files/${userEmail}`)
+		// If ONLY admins can receive and handle messages and this is
+		// not an admin, then drop the message
+		if (this.adminOnly === true && admin === undefined) {
+			console.log("Dropping message from non-admin user!")
+			return
 		}
 
-		return {
-			ttl,
-			bor,
-			control,
-			msgTS,
-			receiver,
-			sender,
-			file,
-			filename,
+		// Set the isAdmin flag
+		const isAdmin = admin !== undefined
+
+		// Determine the convo type (1to1, group, or room)
+		if (vGroupID.charAt(0) === "S") convoType = "room"
+		else if (vGroupID.charAt(0) === "G") convoType = "groupconvo"
+		else convoType = "personal"
+		let parsedMessage = {
+			messageID,
 			message,
-			command,
-			argument,
-			vGroupID: vgroupid,
-			convoType: convotype,
-			msgType: msgtype,
+			msgTS,
+			time,
+			receiver,
+			users,
+			vGroupID,
 			userEmail,
+			convoType,
 			isAdmin,
-			latitude,
-			longitude,
-			isVoiceMemo,
-			voiceMemoDuration
+			ttl,
+			bor
 		}
+		if (file) {
+			if (file.isvoicememo) {
+				parsedMessage = {
+					...parsedMessage,
+					file: file.localfilename,
+					filename: file.filename,
+					isVoiceMemo: true,
+					voiceMemoDuration: file.voicememoduration,
+					msgType: "file"
+				}
+				return parsedMessage
+			} else {
+				parsedMessage = {
+					...parsedMessage,
+					file: file.localfilename,
+					filename: file.filename,
+					isVoiceMemo: false,
+					msgType: "file"
+				}
+			}
+			return parsedMessage
+		} else if (location) {
+			parsedMessage = {
+				...parsedMessage,
+				latitude: location.latitude,
+				longitude: location.longitude,
+				msgType: "location"
+			}
+			return parsedMessage
+		} else if (call) {
+			parsedMessage = {
+				...parsedMessage,
+				status: call.status,
+				call,
+				msgType: "call"
+			}
+			return parsedMessage
+		} else if (keyverify) {
+			parsedMessage = {
+				...parsedMessage,
+				control,
+				msgType: "keyverify"
+			}
+			return parsedMessage
+		} else if (control) {
+			if (control.isrecall) {
+				parsedMessage = {
+					...parsedMessage,
+					msgType: "delete"
+				}
+			} else {
+				parsedMessage = {
+					...parsedMessage,
+					control,
+					msgType: "edit"
+				}
+			}
+			return parsedMessage
+		} else if (edit) {
+			parsedMessage = {
+				...parsedMessage,
+				msgType: "edit"
+			}
+			return parsedMessage
+		} else if (message === undefined) {
+			return
+		}
+
+		let command = ""
+		let argument = ""
+		// This doesn't capture @ mentions
+		const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+		if (parsedData !== null) {
+			command = parsedData[1]
+			if (parsedData[2] !== "") {
+				argument = parsedData[2]
+				argument = argument.trim()
+			}
+		}
+
+		// If this is an admin then process any admin commands
+		if (admin !== undefined) {
+			localWickrAdmins.processAdminCommand(
+				userEmail,
+				vGroupID,
+				command,
+				argument
+			)
+		}
+
+		parsedMessage = {
+			...parsedMessage,
+			command,
+			argument
+		}
+
+		return parsedMessage
 	}
-
 	/*
 	 * User functions
 	 */
