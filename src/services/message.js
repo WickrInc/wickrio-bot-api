@@ -130,11 +130,6 @@ class MessageService {
     }
 
     this.user = user
-
-    // what is this for
-    if (!fs.existsSync(`${process.cwd()}/files/${userEmail}`)) {
-      fs.mkdirSync(`${process.cwd()}/files/${userEmail}`)
-    }
   }
 
   getMessageData() {
@@ -171,13 +166,16 @@ class MessageService {
     let command = null
     let argument = null
     // This doesn't capture @ mentions
-    const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
 
-    if (parsedData !== null) {
-      command = parsedData[1]
-      if (parsedData[2] !== '') {
-        argument = parsedData[2]
-        argument = argument.trim()
+    if (message) {
+      const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+
+      if (parsedData !== null) {
+        command = parsedData[1]
+        if (parsedData[2] !== '') {
+          argument = parsedData[2]
+          argument = argument.trim()
+        }
       }
     }
 
