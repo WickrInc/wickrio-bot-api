@@ -3,23 +3,29 @@ const WickrIOConfigure = require('./WickrIOConfigure')
 const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
 const MessageService = require('./services/message')
-var fs = require('fs')
-var encryptor
-var encryptorDefined = false
+const fs = require('fs')
+let encryptor
+let encryptorDefined = false
 
 class WickrIOBot {
   constructor() {
-    this.wickrUsers = []
-    this.myAdmins
+    this.wickrUsers = [] // wickrusers populate on load data which happens on start, or on addUser()
     this.listenFlag = false
     this.adminOnly = false
+    this.myAdmins = null // admins dont populate until start
   }
 
   messageService({ rawMessage }) {
     return new MessageService({
       rawMessage,
+      // addUser: this.addUser,
+      // getUser: this.getUser,
+      // getUsers: this.getUsers,
+      // deleteUser: this.deleteUser,
       admins: this.myAdmins,
       adminOnly: this.adminOnly,
+      wickrUsers: this.wickrUsers,
+      wickrAPI: WickrIOAPI,
     })
   }
 
@@ -49,19 +55,19 @@ class WickrIOBot {
    * WickrIO API functions used: clientInit() and isConnected()
    */
   async start(client_username) {
-    var myLocalAdmins = new WickrAdmin()
+    const myLocalAdmins = new WickrAdmin()
     console.log('starting bot')
     this.myAdmins = myLocalAdmins
 
     const clientinitPromise = client_username =>
-      new Promise(async (resolve, reject) => {
-        var status = WickrIOAPI.clientInit(client_username)
+      new Promise((resolve, reject) => {
+        const status = WickrIOAPI.clientInit(client_username)
         resolve(status)
       })
     const clientconnectionPromise = () =>
-      new Promise(async (resolve, reject) => {
+      new Promise((resolve, reject) => {
         console.log('Checking for client connectionn...')
-        var connected = false
+        let connected = false
         do {
           connected = WickrIOAPI.isConnected(10)
           console.log('isConnected:', connected)
@@ -69,11 +75,11 @@ class WickrIOBot {
 
         console.log('isConnected: finally we are connected')
 
-        var cState
+        let cState
         do {
           cState = WickrIOAPI.getClientState()
           console.log('isConnected: client state is', cState)
-          if (cState != 'RUNNING') await sleep(5000)
+          if (cState != 'RUNNING') sleep(5000)
         } while (cState != 'RUNNING')
         resolve(connected)
       })
@@ -81,9 +87,9 @@ class WickrIOBot {
       /*
        * Process the admin users
        */
-      var processes = JSON.parse(fs.readFileSync('processes.json'))
-      var tokens = JSON.parse(process.env.tokens)
-      var administrators
+      const processes = JSON.parse(fs.readFileSync('processes.json'))
+      const tokens = JSON.parse(process.env.tokens)
+      let administrators
       if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
         if (tokens.ADMINISTRATORS.encrypted) {
           administrators = WickrIOAPI.cmdDecryptString(
@@ -95,20 +101,20 @@ class WickrIOBot {
         administrators = administrators.split(',')
 
         // Make sure there are no white spaces on the whitelisted users
-        for (var i = 0; i < administrators.length; i++) {
-          var administrator = administrators[i].trim()
-          var admin = myLocalAdmins.addAdmin(administrator)
+        for (let i = 0; i < administrators.length; i++) {
+          const administrator = administrators[i].trim()
+          const admin = myLocalAdmins.addAdmin(administrator)
         }
       }
 
-      var settings = JSON.parse(fs.readFileSync('package.json'))
-      //Check if bot supports a user database
+      const settings = JSON.parse(fs.readFileSync('package.json'))
+      // Check if bot supports a user database
       if (!settings.database) {
         return true
       }
       if (connected) {
-        var encrypted = await this.encryptEnv()
-        var loaded = await this.loadData()
+        const encrypted = await this.encryptEnv()
+        const loaded = await this.loadData()
         return true
       } else {
         console.log('not connected, not processing admin users')
@@ -132,9 +138,9 @@ class WickrIOBot {
    */
   async startListening(callback) {
     try {
-      var ref = this
+      const ref = this
       return new Promise(function (resolve, reject) {
-        var start = WickrIOAPI.cmdStartAsyncRecvMessages(callback)
+        const start = WickrIOAPI.cmdStartAsyncRecvMessages(callback)
         if (start === 'Success') resolve(start)
         else reject(start)
       })
@@ -157,14 +163,14 @@ class WickrIOBot {
    */
   async close() {
     try {
-      var ref = this
-      var settings = JSON.parse(fs.readFileSync('package.json'))
-      //Checks if bot supports a user database saving feature
+      const ref = this
+      const settings = JSON.parse(fs.readFileSync('package.json'))
+      // Checks if bot supports a user database saving feature
       if (settings.database) {
-        var saved = await this.saveData()
+        const saved = await this.saveData()
       }
       return new Promise(function (resolve, reject) {
-        var stopMessaging = 'not needed'
+        let stopMessaging = 'not needed'
         if (ref.listenFlag === true)
           stopMessaging = WickrIOAPI.cmdStopAsyncRecvMessages()
         resolve(stopMessaging)
@@ -175,7 +181,7 @@ class WickrIOBot {
           }
           console.log('Shutting bot down...')
           return new Promise(function (resolve, reject) {
-            var closed = WickrIOAPI.closeClient()
+            const closed = WickrIOAPI.closeClient()
             resolve(closed)
           })
             .then(function (closed) {
@@ -201,10 +207,10 @@ class WickrIOBot {
    */
   async encryptEnv() {
     try {
-      var processes = JSON.parse(fs.readFileSync('processes.json'))
-      var tokens = JSON.parse(process.env.tokens)
-      //Create an encryptor:
-      var key
+      const processes = JSON.parse(fs.readFileSync('processes.json'))
+      const tokens = JSON.parse(process.env.tokens)
+      // Create an encryptor:
+      let key
 
       // if the encryption choice value is there and is 'no' then return
       if (
@@ -230,7 +236,7 @@ class WickrIOBot {
       }
       encryptor = require('simple-encryptor')(key)
       encryptorDefined = true
-      for (var i in tokens) {
+      for (const i in tokens) {
         if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
         if (!tokens[i].encrypted) {
           tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
@@ -238,7 +244,7 @@ class WickrIOBot {
         }
       }
       processes.apps[0].env.tokens = tokens
-      var ps = fs.writeFileSync(
+      const ps = fs.writeFileSync(
         './processes.json',
         JSON.stringify(processes, null, 2)
       )
@@ -261,16 +267,16 @@ class WickrIOBot {
         return
       }
 
-      var users = fs.readFileSync('users.txt', 'utf-8')
+      const users = fs.readFileSync('users.txt', 'utf-8')
       if (users.length === 0 || !users || users === '') {
         return
       }
       console.log('Decrypting user database...')
-      var ciphertext = WickrIOAPI.cmdDecryptString(users.toString())
+      const ciphertext = WickrIOAPI.cmdDecryptString(users.toString())
 
       if (encryptorDefined === true) {
         // Decrypt
-        var decryptedData = encryptor.decrypt(ciphertext)
+        const decryptedData = encryptor.decrypt(ciphertext)
         this.wickrUsers = decryptedData
       } else {
         this.wickrUsers = JSON.parse(ciphertext)
@@ -291,16 +297,16 @@ class WickrIOBot {
         return
       }
 
-      var serialusers
+      let serialusers
       if (encryptorDefined === true) {
-        //Encrypt
+        // Encrypt
         serialusers = encryptor.encrypt(this.wickrUsers)
       } else {
         serialusers = JSON.stringify(this.wickrUsers)
       }
 
-      var encrypted = WickrIOAPI.cmdEncryptString(serialusers)
-      var saved = fs.writeFileSync('users.txt', encrypted, 'utf-8')
+      const encrypted = WickrIOAPI.cmdEncryptString(serialusers)
+      const saved = fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
       return true
     } catch (err) {
@@ -313,16 +319,16 @@ class WickrIOBot {
    * This function parses an incoming message
    */
   parseMessage(message) {
-    var tokens = JSON.parse(process.env.tokens)
+    const tokens = JSON.parse(process.env.tokens)
     message = JSON.parse(message)
-    let { edit, control, msg_ts, time, receiver, sender, ttl, bor } = message
-    var msgtype = message.msgtype
-    var vGroupID = message.vgroupid
-    var convoType = ''
+    const { edit, control, msg_ts, time, receiver, sender, ttl, bor } = message
+    const msgtype = message.msgtype
+    const vGroupID = message.vgroupid
+    let convoType = ''
 
     // Get the admin, if this is an admin user
-    var localWickrAdmins = this.myAdmins
-    var admin = localWickrAdmins.getAdmin(sender)
+    const localWickrAdmins = this.myAdmins
+    const admin = localWickrAdmins.getAdmin(sender)
 
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
@@ -332,7 +338,7 @@ class WickrIOBot {
     }
 
     // Set the isAdmin flag
-    var isAdmin = admin !== undefined
+    const isAdmin = admin !== undefined
 
     // Determine the convo type (1to1, group, or room)
     if (vGroupID.charAt(0) === 'S') convoType = 'room'
@@ -340,10 +346,10 @@ class WickrIOBot {
     else convoType = 'personal'
 
     if (message.file) {
-      var isVoiceMemo = false
+      let isVoiceMemo = false
       if (message.file.isvoicememo) {
         isVoiceMemo = true
-        var voiceMemoDuration = message.file.voicememoduration
+        const voiceMemoDuration = message.file.voicememoduration
         var parsedObj = {
           file: message.file.localfilename,
           filename: message.file.filename,
@@ -462,11 +468,11 @@ class WickrIOBot {
       return
     }
 
-    var request = message.message
-    var command = '',
-      argument = ''
-    //This doesn't capture @ mentions
-    var parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+    const request = message.message
+    let command = ''
+    let argument = ''
+    // This doesn't capture @ mentions
+    const parsedData = request.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
     if (parsedData !== null) {
       command = parsedData[1]
       if (parsedData[2] !== '') {
@@ -658,18 +664,19 @@ class WickrIOBot {
 
     return parsedMessage
   }
+
   /*
    * User functions
    */
   addUser(wickrUser) {
     this.wickrUsers.push(wickrUser)
-    var saved = this.saveData()
+    const saved = this.saveData()
     console.log('New Wickr user added to database.')
     return wickrUser
   }
 
   getUser(userEmail) {
-    var found = this.wickrUsers.find(function (user) {
+    const found = this.wickrUsers.find(function (user) {
       return user.userEmail === userEmail
     })
     return found
@@ -680,10 +687,10 @@ class WickrIOBot {
   }
 
   deleteUser(userEmail) {
-    var found = this.wickrUsers.find(function (user) {
+    const found = this.wickrUsers.find(function (user) {
       return user.userEmail === userEmail
     })
-    var index = this.wickrUsers.indexOf(found)
+    const index = this.wickrUsers.indexOf(found)
     this.wickrUsers.splice(index, 1)
     return found
   }

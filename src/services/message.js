@@ -1,12 +1,18 @@
 const fs = require('fs')
-const WickrAdmin = require('../WickrAdmin')
+const WickrUser = require('wickrio-bot-api/src/WickrUser')
+// const WickrAdmin = require('../WickrAdmin')
+let encryptor
+const encryptorDefined = false
 
 class MessageService {
-  constructor({ rawMessage, admins, adminOnly }) {
+  constructor({ rawMessage, admins, adminOnly, wickrUsers, wickrAPI }) {
+    this.rawMessage = rawMessage
     this.myAdmins = admins
     this.adminOnly = adminOnly
-
-    let {
+    this.wickrUsers = wickrUsers
+    this.wickrAPI = wickrAPI
+    this.user = null
+    const {
       time,
       messageID,
       users,
@@ -29,8 +35,13 @@ class MessageService {
       longitude,
       isVoiceMemo,
       voiceMemoDuration,
-    } = this.parseRawMsg({ rawMessage })
+    } = this.parseRawMsg({ rawMessage: this.rawMessage })
 
+    //
+    //
+    // RECORDER BOT ADDITIONS
+    //
+    //
     // let historyFileType = null
     // let fromDate = null
     // let toDate = null
@@ -64,6 +75,8 @@ class MessageService {
     // this.historyFileType = historyFileType
     // this.fromDate = fromDate
     // this.toDate = toDate
+
+    // OG MSG DATA
     this.time = time || null
     this.botName = JSON.parse(process.env.tokens).WICKRIO_BOT_NAME.value || null
     this.messageID = messageID || null
@@ -77,8 +90,8 @@ class MessageService {
     this.file = file ? fs.readFileSync(file) : null
     this.filename = filename || null
     this.message = message || null
-    this.command = command.toLowerCase().trim() || null
-    this.argument = argument || null
+    this.command = command ? command.toLowerCase().trim() : null
+    this.argument = argument ? argument.toLowerCase().trim() : null
     this.vGroupID = vGroupID
     this.convoType = convoType
     this.msgType = msgType
@@ -95,14 +108,40 @@ class MessageService {
         : ''
     this.isVoiceMemo = isVoiceMemo || false
     this.voiceMemoDuration = voiceMemoDuration || null
+
+    let personalVGroupID = ''
+    if (convoType === 'personal') personalVGroupID = vGroupID
+
+    // create a directory for the user using their email as the name
+    // why create a directory for each users files?
+    // Check if a user exists in the database
+    let user = this.getUserFromDB({ userEmail }) // Look up user by their wickr email
+
+    if (user === undefined) {
+      const wickrUser = new WickrUser(userEmail, {
+        message,
+        vGroupID,
+        personalVGroupID, // what personalvGroupID
+        command,
+        argument,
+        currentState: null, // undefined
+      })
+      user = this.addUserToDB(wickrUser) // Add a new user to the database
+    }
+
+    this.user = user
+
+    // what is this for
+    if (!fs.existsSync(`${process.cwd()}/files/${userEmail}`)) {
+      fs.mkdirSync(`${process.cwd()}/files/${userEmail}`)
+    }
   }
+
   getMessageData() {
     return this
   }
 
   parseRawMsg({ rawMessage }) {
-    // console.log({ rawMessage })
-    // const tokens = JSON.parse(process.env.tokens)
     const jsonmsg = JSON.parse(rawMessage)
     const {
       message_id: messageID,
@@ -117,24 +156,36 @@ class MessageService {
       ttl,
       location,
       vgroupid: vGroupID,
-      msgtype: msgType,
+      // msgtype: msgType,
       call,
       users,
       keyverify,
     } = jsonmsg
+
     let { bor } = jsonmsg
     if (!bor) bor = 0
 
     // const msgtype = message.msgtype
     // const vGroupID = message.vgroupid
-    let convoType = ''
+    let convoType = null
+    let command = null
+    let argument = null
+    // This doesn't capture @ mentions
+    const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+
+    if (parsedData !== null) {
+      command = parsedData[1]
+      if (parsedData[2] !== '') {
+        argument = parsedData[2]
+        argument = argument.trim()
+      }
+    }
 
     // Get the admin, if this is an admin user
     const localWickrAdmins = this.myAdmins
     const admin = localWickrAdmins.getAdmin(userEmail)
-    // console.log("local")
-    // console.log(this.myAdmins)
-    // console.log(localWickrAdmins)
+    console.log({ admin })
+
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
     if (this.adminOnly === true && admin === undefined) {
@@ -149,6 +200,7 @@ class MessageService {
     if (vGroupID.charAt(0) === 'S') convoType = 'room'
     else if (vGroupID.charAt(0) === 'G') convoType = 'groupconvo'
     else convoType = 'personal'
+
     let parsedMessage = {
       messageID,
       message,
@@ -157,6 +209,7 @@ class MessageService {
       receiver,
       users,
       vGroupID,
+      user: this.user,
       userEmail,
       convoType,
       isAdmin,
@@ -231,18 +284,6 @@ class MessageService {
       return
     }
 
-    let command = ''
-    let argument = ''
-    // This doesn't capture @ mentions
-    const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
-    if (parsedData !== null) {
-      command = parsedData[1]
-      if (parsedData[2] !== '') {
-        argument = parsedData[2]
-        argument = argument.trim()
-      }
-    }
-
     // If this is an admin then process any admin commands
     if (admin !== undefined) {
       localWickrAdmins.processAdminCommand(
@@ -294,8 +335,8 @@ class MessageService {
     return this.command
   }
 
-  getCurrentState() {
-    return this.currentState
+  getUserCurrentStateConstructor() {
+    return this.user.currentState
   }
 
   getFile() {
@@ -327,6 +368,78 @@ class MessageService {
       return false
     }
     return true
+  }
+
+  /*
+   * User functions
+   */
+  addUserToDB(wickrUser) {
+    this.wickrUsers.push(wickrUser)
+    this.saveData()
+    this.user = wickrUser
+    console.log('New Wickr user added to database.')
+    return wickrUser
+  }
+
+  setUserCurrentState({ currentState }) {
+    const userInDB = this.getUserFromDB({ userEmail: this.userEmail })
+    userInDB.currentState = currentState
+    this.wickrUsers.push(userInDB)
+    this.user = userInDB
+    this.saveData()
+    console.log('Wickr state added to db.')
+    console.log({ userInDB })
+    return userInDB
+  }
+
+  getUserCurrentState({ userEmail }) {
+    const userInDB = this.getUserFromDB({ userEmail })
+    return userInDB.currentState
+  }
+
+  getUserFromDB({ userEmail }) {
+    const found = this.wickrUsers.find(function (user) {
+      return user.userEmail === userEmail
+    })
+    return found
+  }
+
+  getUsersFromDB() {
+    return this.wickrUsers
+  }
+
+  deleteUserFromDB(userEmail) {
+    const found = this.wickrUsers.find(function (user) {
+      return user.userEmail === userEmail
+    })
+    const index = this.wickrUsers.indexOf(found)
+    this.wickrUsers.splice(index, 1)
+    return found
+  }
+
+  async saveData() {
+    try {
+      console.log('Encrypting user database...')
+      if (this.wickrUsers.length === 0) {
+        return
+      }
+
+      let serialusers
+      if (encryptorDefined === true) {
+        // Encrypt
+        serialusers = encryptor.encrypt(this.wickrUsers)
+      } else {
+        serialusers = JSON.stringify(this.wickrUsers)
+      }
+
+      const encrypted = this.wickrAPI.cmdEncryptString(serialusers)
+      fs.writeFileSync('users.txt', encrypted, 'utf-8')
+      console.log('User database saved to file!')
+      return true
+    } catch (err) {
+      console.log(err)
+      return false
+    }
   }
 
   // function replyWithButtons(message) {
