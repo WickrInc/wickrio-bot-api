@@ -443,7 +443,7 @@ class MessageService {
   async saveData() {
     try {
       console.log('Encrypting user database...')
-      console.log({ storingTheseUsers: this.wickrUsers })
+      // console.log({ storingTheseUsers: this.wickrUsers })
       if (this.wickrUsers.length === 0) {
         return
       }
