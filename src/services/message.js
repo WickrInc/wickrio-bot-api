@@ -1,6 +1,5 @@
 const fs = require('fs')
-const WickrUser = require('wickrio-bot-api/src/WickrUser')
-// const WickrAdmin = require('../WickrAdmin')
+const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
 
@@ -37,45 +36,6 @@ class MessageService {
       voiceMemoDuration,
     } = this.parseRawMsg({ rawMessage: this.rawMessage })
 
-    //
-    //
-    // RECORDER BOT ADDITIONS
-    //
-    //
-    // let historyFileType = null
-    // let fromDate = null
-    // let toDate = null
-
-    // if (argument === "" || argument === undefined) {
-    // 	argument = null
-    // } else {
-    // 	if (argument.trim().includes("csv", "txt")) {
-    // 		historyFileType = argument.trim().slice(0, 3)
-    // 		argument = argument.trim().slice(3)
-    // 	}
-    // 	let tryFromDate
-    // 	if (argument.trim().includes(" to ")) {
-    // 		argument = argument.split("to")
-    // 		tryFromDate = new Date(argument[0].trim())
-    // 		const tryToDate = new Date(argument[1].trim())
-    // 		toDate = !isNaN(Date.parse(tryToDate)) ? tryToDate : null
-    // 		if (toDate === null)
-    // 			console.log(
-    // 				"the second date is not being read correctly, try a different format"
-    // 			)
-    // 	} else {
-    // 		tryFromDate = new Date(argument.trim())
-    // 	}
-    // 	fromDate = !isNaN(Date.parse(tryFromDate)) ? tryFromDate : null
-    // 	if (fromDate === null)
-    // 		console.log(
-    // 			"the first date is not being read correctly, try a different format"
-    // 		)
-    // }
-    // this.historyFileType = historyFileType
-    // this.fromDate = fromDate
-    // this.toDate = toDate
-
     // OG MSG DATA
     this.time = time || null
     this.botName = JSON.parse(process.env.tokens).WICKRIO_BOT_NAME.value || null
@@ -109,31 +69,43 @@ class MessageService {
     this.isVoiceMemo = isVoiceMemo || false
     this.voiceMemoDuration = voiceMemoDuration || null
 
-    let personalVGroupID = ''
-    if (convoType === 'personal') personalVGroupID = vGroupID
+    // let personalVGroupID = ''
+    // if (convoType === 'personal') personalVGroupID = vGroupID
 
     // create a directory for the user using their email as the name
-    // why create a directory for each users files?
     // Check if a user exists in the database
-    let user = this.getUserFromDB({ userEmail }) // Look up user by their wickr email
-
-    if (user === undefined) {
-      const wickrUser = new WickrUser(userEmail, {
-        message,
-        vGroupID,
-        personalVGroupID, // what personalvGroupID
-        command,
-        argument,
-        currentState: null, // undefined
-      })
-      user = this.addUserToDB(wickrUser) // Add a new user to the database
-    }
-
-    this.user = user
+    this.user = this.getOrCreateUser({ userEmail }) // Look up user by their wickr email
   }
 
   getMessageData() {
-    return this
+    return {
+      time: this.time,
+      botName: this.botName,
+      messageID: this.messageID,
+      users: this.users,
+      ttl: this.ttl,
+      bor: this.bor,
+      control: this.control,
+      msgTS: this.msgTS,
+      receiver: this.receiver,
+      filepath: this.filepath,
+      file: this.file,
+      filename: this.filename,
+      message: this.message,
+      command: this.command,
+      argument: this.argument,
+      vGroupID: this.vGroupID,
+      convoType: this.convoType,
+      msgType: this.msgType,
+      user: this.user,
+      userEmail: this.userEmail,
+      isAdmin: this.isAdmin,
+      latitude: this.latitude,
+      longitude: this.longitude,
+      location: this.location,
+      isVoiceMemo: this.isVoiceMemo,
+      voiceMemoDuration: this.voiceMemoDuration,
+    }
   }
 
   parseRawMsg({ rawMessage }) {
@@ -182,7 +154,6 @@ class MessageService {
     // Get the admin, if this is an admin user
     const localWickrAdmins = this.myAdmins
     const admin = localWickrAdmins.getAdmin(userEmail)
-    console.log({ admin })
 
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
@@ -301,10 +272,6 @@ class MessageService {
     return parsedMessage
   }
 
-  requestedFileType() {
-    return this.historyFileType
-  }
-
   // TODO why use getters and setters here??
   getMessage() {
     return this.message
@@ -380,19 +347,77 @@ class MessageService {
   }
 
   setUserCurrentState({ currentState }) {
-    const userInDB = this.getUserFromDB({ userEmail: this.userEmail })
-    userInDB.currentState = currentState
-    this.wickrUsers.push(userInDB)
-    this.user = userInDB
+    let userWithState
+    // this.wickrUsers.find(user => {
+    //   return user.userEmail === this.userEmail
+    // })
+    this.wickrUsers = this.wickrUsers.map(user => {
+      userWithState = {
+        ...user,
+        currentState,
+      }
+      this.user = userWithState
+      if (user.userEmail === this.userEmail) return userWithState
+      else return user
+    })
     this.saveData()
     console.log('Wickr state added to db.')
-    console.log({ userInDB })
-    return userInDB
+    return userWithState
   }
 
   getUserCurrentState({ userEmail }) {
     const userInDB = this.getUserFromDB({ userEmail })
     return userInDB.currentState
+  }
+
+  matchUserCommandCurrentState({ commandState }) {
+    const { userEmail } = this
+    const userCurrentState = this.getUserCurrentState({
+      userEmail,
+    })
+
+    if (userCurrentState === commandState) {
+      return true
+    }
+    return false
+  }
+
+  getOrCreateUser({ userEmail }) {
+    // on every every message,
+    // see if there is a submission in the bot for the user,
+    // if there is, return user
+    // if not,
+    // get message,
+    // userEmail
+    // vGroupID,
+    // personalVGroupID, // what personalvGroupID
+    // command,
+    // argument from current message
+    // and add the use to to db and return the user
+
+    const {
+      message,
+      vGroupID,
+      personalVGroupID, // what personalvGroupID
+      command,
+      argument,
+    } = this
+
+    let user = this.getUserFromDB({ userEmail }) // Look up user by their wickr email
+    if (user === undefined) {
+      console.log('creating new user')
+      const wickrUser = new WickrUser(userEmail, {
+        message,
+        vGroupID,
+        personalVGroupID, // what personalvGroupID
+        command,
+        argument,
+        currentState: null, // undefined
+      })
+      user = this.addUserToDB(wickrUser) // Add a new user to the database
+    }
+
+    return user
   }
 
   getUserFromDB({ userEmail }) {
@@ -418,10 +443,10 @@ class MessageService {
   async saveData() {
     try {
       console.log('Encrypting user database...')
+      // console.log({ storingTheseUsers: this.wickrUsers })
       if (this.wickrUsers.length === 0) {
         return
       }
-
       let serialusers
       if (encryptorDefined === true) {
         // Encrypt
@@ -429,7 +454,6 @@ class MessageService {
       } else {
         serialusers = JSON.stringify(this.wickrUsers)
       }
-
       const encrypted = this.wickrAPI.cmdEncryptString(serialusers)
       fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
