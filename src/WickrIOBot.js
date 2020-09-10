@@ -4,6 +4,7 @@ const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
 const MessageService = require('./services/message')
 const fs = require('fs')
+const APIService = require('./services/api')
 let encryptor
 let encryptorDefined = false
 
@@ -26,6 +27,12 @@ class WickrIOBot {
       adminOnly: this.adminOnly,
       wickrUsers: this.wickrUsers,
       wickrAPI: WickrIOAPI,
+    })
+  }
+
+  apiService() {
+    return new APIService({
+      WickrIOAPI,
     })
   }
 

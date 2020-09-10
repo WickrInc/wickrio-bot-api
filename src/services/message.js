@@ -308,6 +308,10 @@ class MessageService {
     return this.file
   }
 
+  getFilePath() {
+    return this.filepath
+  }
+
   getFilename() {
     return this.filename
   }
