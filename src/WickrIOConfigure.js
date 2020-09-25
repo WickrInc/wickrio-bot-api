@@ -25,6 +25,7 @@ class WickrIOConfigure {
     this.supportsAdministrators = false
     this.supportsEncrypt = false
     this.addOnToJSON = false
+    console.log('Processes File' + processesFile)
 
     if (addOnToJSON === undefined || addOnToJSON !== true)
       this.addOnToJSON = false
@@ -42,15 +43,35 @@ class WickrIOConfigure {
       },
     ]
     try {
+      // TODO need more error checking here if file doesn't exist
+      if (processesFile.includes('botConfig.json') {
+        this.fileType = 'CONFIG'
+      }
       if (fs.existsSync(processesFile)) {
         this.processesFile = processesFile
         this.processes = require(processesFile)
         this.dataStringify = JSON.stringify(this.processes)
         this.dataParsed = JSON.parse(this.dataStringify)
       } else {
-        console.error(
-          'processes.json file does not exist! (' + processesFile + ')'
-        )
+        if (this.fileType === 'CONFIG') {
+          const configObject = {
+            config : {
+              clients : []
+            }
+          }
+          this.processesFile = processesFile
+          this.processes = require(processesFile)
+          this.dataStringify = JSON.stringify(this.processes)
+          this.dataParsed = JSON.parse(this.dataStringify)
+          // TODO is this the right write format?
+          fs.writeFile(this.processesFile, configObject, err => {
+            if (err) throw err
+          })
+        } else {
+          console.error(
+            'processes.json file does not exist! (' + processesFile + ')'
+          )
+        }
       }
     } catch (err) {
       console.error(err)
@@ -543,28 +564,41 @@ class WickrIOConfigure {
         delete this.dataParsed.apps[0].env.tokens[key]
       }
       try {
-        var cp = execSync('cp processes.json processes_backup.json')
-        if (process.env.WICKRIO_BOT_NAME !== undefined) {
-          var newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
-        } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
-          var newName =
-            integrationName + '_' + newObjectResult.WICKRIO_BOT_NAME.value
-        } else {
-          var newName = integrationName
+        if (this.processesFile.includes('processes.json')) {
+          var cp = execSync('cp processes.json processes_backup.json')
+          if (process.env.WICKRIO_BOT_NAME !== undefined) {
+            var newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
+          } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
+            var newName =
+              integrationName + '_' + newObjectResult.WICKRIO_BOT_NAME.value
+          } else {
+            var newName = integrationName
+          }
         }
 
         //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
-
+ 
         var assign = Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
         )
+
+        // TODO if bot config
+        this.dataParsed.config.clients[this.clientIndex].name = integrationName 
+        this.dataParsed.config.clients[this.clientIndex].integration = integration
+
+        var assign = Object.assign(
+          this.dataParsed.config.clients[this.clientIndex].tokens,
+          newObjectResult
+        )
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
+          // TODO where is this set?
         if (this.addOnToJSON === false) {
           var ps = fs.writeFileSync(
-            './processes.json',
+            // './processes.json',
+            this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
