@@ -4,8 +4,16 @@ let encryptor
 const encryptorDefined = false
 
 class MessageService {
-  constructor({ rawMessage, admins, adminOnly, wickrUsers, wickrAPI }) {
+  constructor({
+    rawMessage,
+    admins,
+    adminOnly,
+    wickrUsers,
+    wickrAPI,
+    adminDMonly = false,
+  }) {
     this.rawMessage = rawMessage
+    this.adminDMonly = adminDMonly
     this.myAdmins = admins
     this.adminOnly = adminOnly
     this.wickrUsers = wickrUsers
@@ -254,13 +262,23 @@ class MessageService {
     }
 
     // If this is an admin then process any admin commands
-    if (admin !== undefined) {
-      localWickrAdmins.processAdminCommand(
-        userEmail,
-        vGroupID,
-        command,
-        argument
-      )
+    // if adminDMonly is false
+
+    if (isAdmin) {
+      if (this.adminDMonly && this.convoType !== 'personal') {
+        const reply = `Hey admin commands should be sent in direct message to the bot, not in a room`
+        this.wickrAPI.cmdSendRoomMessage(this.messageService.vGroupID, reply)
+        return
+      }
+
+      if (!this.adminDMonly) {
+        localWickrAdmins.processAdminCommand(
+          userEmail,
+          vGroupID,
+          command,
+          argument
+        )
+      }
     }
 
     parsedMessage = {
