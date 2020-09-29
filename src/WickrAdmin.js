@@ -107,6 +107,7 @@ class WickrAdmin {
         // Process the list of users to be added from the white list
         var values = action.split(' ')
         values.shift()
+        values = this.removeDuplicates(values)
         const addFails = []
         if (values.length >= 1) {
           for (var i = 0; i < values.length; i++) {
@@ -152,6 +153,7 @@ class WickrAdmin {
         // TODO potentially add buttons here?
         var values = action.split(' ')
         values.shift()
+        values = this.removeDuplicates(values)
         const removeFails = []
         if (values.length >= 1) {
           for (var i = 0; i < values.length; i++) {
@@ -279,6 +281,17 @@ class WickrAdmin {
     } else {
       return strings.adminHelp
     }
+  }
+
+  // Function to remove duplicate values from a list of users
+  removeDuplicates(userList) {
+    const uniqueUsers = []
+    for (let user = 0; user < userList.length; user += 1) {
+      if (!uniqueUsers.includes(userList[user])) {
+        uniqueUsers.push(userList[user])
+      }
+    }
+    return uniqueUsers
   }
 }
 
