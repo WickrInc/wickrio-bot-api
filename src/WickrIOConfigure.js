@@ -44,8 +44,10 @@ class WickrIOConfigure {
     ]
     try {
       // TODO need more error checking here if file doesn't exist
-      if (processesFile.includes('botConfig.json') {
+      if (processesFile.includes('botConfig.json')) {
         this.fileType = 'CONFIG'
+      } else if (processesFile.include('processes.json')) {
+        this.fileType = 'PROCESSES'
       }
       if (fs.existsSync(processesFile)) {
         this.processesFile = processesFile
@@ -60,13 +62,13 @@ class WickrIOConfigure {
             }
           }
           this.processesFile = processesFile
+          fs.writeFileSync(this.processesFile, JSON.stringify(configObject), err => {
+            if (err) throw err
+          })
           this.processes = require(processesFile)
           this.dataStringify = JSON.stringify(this.processes)
           this.dataParsed = JSON.parse(this.dataStringify)
           // TODO is this the right write format?
-          fs.writeFile(this.processesFile, configObject, err => {
-            if (err) throw err
-          })
         } else {
           console.error(
             'processes.json file does not exist! (' + processesFile + ')'
@@ -259,6 +261,9 @@ class WickrIOConfigure {
   getCurrentValues() {
     var newObjectResult = {}
     var processes
+    if (this.fileType === 'CONFIG') {
+      return newObjectResult
+    }
     try {
       processes = fs.readFileSync(this.processesFile, 'utf-8')
       if (!processes) {
@@ -560,8 +565,10 @@ class WickrIOConfigure {
           newObjectResult[key] = obj
         }
       }
-      for (var key in this.dataParsed.apps[0].env.tokens) {
-        delete this.dataParsed.apps[0].env.tokens[key]
+      if (this.fileType === 'PROCESSES') {
+        for (var key in this.dataParsed.apps[0].env.tokens) {
+          delete this.dataParsed.apps[0].env.tokens[key]
+        }
       }
       try {
         if (this.processesFile.includes('processes.json')) {
@@ -576,22 +583,34 @@ class WickrIOConfigure {
           }
         }
 
-        //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
-        this.dataParsed.apps[0].name = newName
- 
-        var assign = Object.assign(
-          this.dataParsed.apps[0].env.tokens,
-          newObjectResult
-        )
+        if (this.fileType === 'PROCESSES') {
+          //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
+          this.dataParsed.apps[0].name = newName
+   
+          var assign = Object.assign(
+            this.dataParsed.apps[0].env.tokens,
+            newObjectResult
+          )
 
-        // TODO if bot config
-        this.dataParsed.config.clients[this.clientIndex].name = integrationName 
-        this.dataParsed.config.clients[this.clientIndex].integration = integration
+        } else if (this.fileType === 'CONFIG') {
+          let clientObj = {
+            name : '',
+            password : '',
+            integration : '',
+            tokens : newObjectResult
+          }
 
-        var assign = Object.assign(
-          this.dataParsed.config.clients[this.clientIndex].tokens,
-          newObjectResult
-        )
+          // TODO if bot config
+          clientObj.name = integrationName 
+          // clientObj.integration = integration
+
+          // var assign = Object.assign(
+          //   clientObj.tokens,
+          //   newObjectResult
+          // )
+          this.dataParsed.config.clients.push(clientObj)
+        }
+
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
           // TODO where is this set?
