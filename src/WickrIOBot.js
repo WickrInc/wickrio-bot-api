@@ -16,16 +16,13 @@ class WickrIOBot {
     this.myAdmins = null // admins dont populate until start
   }
 
-  messageService({ rawMessage }) {
+  messageService({ rawMessage, adminDMonly = false }) {
     return new MessageService({
       rawMessage,
-      // addUser: this.addUser,
-      // getUser: this.getUser,
-      // getUsers: this.getUsers,
-      // deleteUser: this.deleteUser,
       admins: this.myAdmins,
       adminOnly: this.adminOnly,
       wickrUsers: this.wickrUsers,
+      adminDMonly,
       wickrAPI: WickrIOAPI,
     })
   }
