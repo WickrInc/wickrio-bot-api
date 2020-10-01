@@ -46,7 +46,7 @@ class WickrIOConfigure {
       // TODO need more error checking here if file doesn't exist
       if (processesFile.includes('botConfig.json')) {
         this.fileType = 'CONFIG'
-      } else if (processesFile.include('processes.json')) {
+      } else if (processesFile.includes('processes.json')) {
         this.fileType = 'PROCESSES'
       }
       if (fs.existsSync(processesFile)) {
