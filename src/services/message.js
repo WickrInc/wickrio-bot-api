@@ -322,6 +322,10 @@ class MessageService {
     return this.user.currentState
   }
 
+  getUserCurrentCmdInfoConstructor() {
+    return this.user.currentCmdInfo
+  }
+
   getFile() {
     return this.file
   }
@@ -404,6 +408,28 @@ class MessageService {
     return false
   }
 
+  setUserCurrentCmdInfo({ currentCmdInfo }) {
+    let userWithState
+    this.wickrUsers = this.wickrUsers.map(user => {
+      userWithState = {
+        ...user,
+        currentCmdInfo,
+      }
+      this.user = userWithState
+      if (user.userEmail === this.userEmail) return userWithState
+      else return user
+    })
+    this.saveData()
+    console.log('Wickr cmdInfo added to db.')
+    return userWithState
+  }
+
+  getUserCurrentCmdInfo() {
+    const { userEmail } = this
+    const userInDB = this.getUserFromDB({ userEmail })
+    return userInDB.currentCmdInfo
+  }
+
   getOrCreateUser({ userEmail }) {
     // on every every message,
     // see if there is a submission in the bot for the user,
@@ -435,6 +461,7 @@ class MessageService {
         command,
         argument,
         currentState: null, // undefined
+        currentCmdInfo: null, // undefined
       })
       user = this.addUserToDB(wickrUser) // Add a new user to the database
     }
