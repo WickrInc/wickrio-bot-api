@@ -543,7 +543,14 @@ class WickrIOConfigure {
         delete this.dataParsed.apps[0].env.tokens[key]
       }
       try {
-        var cp = execSync('cp processes.json processes_backup.json')
+        var processesFileDir = path.dirname(this.processesFile)
+	if (processesFileDir === undefined || processesFileDir.length === 0)
+	      processesFileDir = '.'
+        const processesFileBackup = path.join(processesFileDir, 'processes_backup.json')
+
+        // backup the processes.json file
+        fs.copyFileSync(this.processesFile, processesFileBackup)
+
         if (process.env.WICKRIO_BOT_NAME !== undefined) {
           var newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
         } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
@@ -564,7 +571,7 @@ class WickrIOConfigure {
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
           var ps = fs.writeFileSync(
-            './processes.json',
+	      this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
@@ -592,7 +599,7 @@ class WickrIOConfigure {
           }
           // 4.
           data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd
-          fs.writeFileSync('./processes.json', JSON.stringify(data, null, 2))
+          fs.writeFileSync(this.processesFile, JSON.stringify(data, null, 2))
         }
       } catch (err) {
         console.log(err)
@@ -604,8 +611,12 @@ class WickrIOConfigure {
 
   async configureYourBot(integrationName) {
     try {
-      await this.inputTokens(integrationName)
-      console.log('Finished Configuring!')
+      if (!fs.existsSync(this.processesFile)) {
+        console.error('processes.json file does not exist!!')
+      } else {
+      	await this.inputTokens(integrationName)
+      	console.log('Finished Configuring!')
+      }
     } catch (err) {
       console.log(err)
     }
