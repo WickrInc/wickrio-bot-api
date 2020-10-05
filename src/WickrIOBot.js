@@ -75,7 +75,7 @@ class WickrIOBot {
         do {
           connected = WickrIOAPI.isConnected(10)
           console.log('isConnected:', connected)
-        } while (connected != true)
+        } while (connected !== true)
 
         console.log('isConnected: finally we are connected')
 
@@ -83,15 +83,15 @@ class WickrIOBot {
         do {
           cState = WickrIOAPI.getClientState()
           console.log('isConnected: client state is', cState)
-          if (cState != 'RUNNING') sleep(5000)
-        } while (cState != 'RUNNING')
+          if (cState !== 'RUNNING') sleep(5000)
+        } while (cState !== 'RUNNING')
         resolve(connected)
       })
     const processAdminUsers = async connected => {
       /*
        * Process the admin users
        */
-      const processes = JSON.parse(fs.readFileSync('processes.json'))
+      // const processes = JSON.parse(fs.readFileSync('processes.json'))
       const tokens = JSON.parse(process.env.tokens)
       let administrators
       if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
@@ -210,53 +210,105 @@ class WickrIOBot {
    * WickrIO API functions used: cmdEncryptString()
    */
   async encryptEnv() {
-    try {
-      const processes = JSON.parse(fs.readFileSync('processes.json'))
-      const tokens = JSON.parse(process.env.tokens)
-      // Create an encryptor:
-      let key
+    if (!this.dotenv) {
+      try {
+        const processes = JSON.parse(fs.readFileSync('processes.json'))
+        const tokens = JSON.parse(process.env.tokens)
+        // Create an encryptor:
+        let key
 
-      // if the encryption choice value is there and is 'no' then return
-      if (
-        tokens.DATABASE_ENCRYPTION_CHOICE === undefined ||
-        tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes'
-      ) {
-        console.log('WARNING: Configurations are not encrypted')
-        return true
-      }
-
-      if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
-        key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
-      } else {
-        key = tokens.DATABASE_ENCRYPTION_KEY.value
-      }
-
-      if (key.length < 16) {
-        console.log(
-          'WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long'
-        )
-        encryptorDefined = false
-        return true
-      }
-      encryptor = require('simple-encryptor')(key)
-      encryptorDefined = true
-      for (const i in tokens) {
-        if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
-        if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
-          tokens[i].encrypted = true
+        // if the encryption choice value is there and is 'no' then return
+        if (
+          tokens.DATABASE_ENCRYPTION_CHOICE === undefined ||
+          tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes'
+        ) {
+          console.log('WARNING: Configurations are not encrypted')
+          return true
         }
+
+        if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
+          key = WickrIOAPI.cmdDecryptString(
+            tokens.DATABASE_ENCRYPTION_KEY.value
+          )
+        } else {
+          key = tokens.DATABASE_ENCRYPTION_KEY.value
+        }
+
+        if (key.length < 16) {
+          console.log(
+            'WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long'
+          )
+          encryptorDefined = false
+          return true
+        }
+        encryptor = require('simple-encryptor')(key)
+        encryptorDefined = true
+        for (const i in tokens) {
+          if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
+          if (!tokens[i].encrypted) {
+            tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
+            tokens[i].encrypted = true
+          }
+        }
+        processes.apps[0].env.tokens = tokens
+        const ps = fs.writeFileSync(
+          './processes.json',
+          JSON.stringify(processes, null, 2)
+        )
+        // encrypt dotenv
+        console.log('Bot tokens encrypted successfully!')
+        return true
+      } catch (err) {
+        console.log('Unable to encrypt Bot Tokens:', err)
+        return false
       }
-      processes.apps[0].env.tokens = tokens
-      const ps = fs.writeFileSync(
-        './processes.json',
-        JSON.stringify(processes, null, 2)
-      )
-      console.log('Bot tokens encrypted successfully!')
-      return true
-    } catch (err) {
-      console.log('Unable to encrypt Bot Tokens:', err)
-      return false
+    } else {
+      try {
+        const tokens = JSON.parse(process.env.tokens)
+        // Create an encryptor:
+        let key
+
+        // if the encryption choice value is there and is 'no' then return
+        if (
+          tokens.DATABASE_ENCRYPTION_CHOICE === undefined ||
+          tokens.DATABASE_ENCRYPTION_CHOICE.value !== 'yes'
+        ) {
+          console.log('WARNING: Configurations are not encrypted')
+          return true
+        }
+
+        if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
+          key = WickrIOAPI.cmdDecryptString(
+            tokens.DATABASE_ENCRYPTION_KEY.value
+          )
+        } else {
+          key = tokens.DATABASE_ENCRYPTION_KEY.value
+        }
+
+        if (key.length < 16) {
+          console.log(
+            'WARNING: ENCRYPTION_KEY value is too short, must be at least 16 characters long'
+          )
+          encryptorDefined = false
+          return true
+        }
+        encryptor = require('simple-encryptor')(key)
+        encryptorDefined = true
+        for (const i in tokens) {
+          if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
+          if (!tokens[i].encrypted) {
+            tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
+            tokens[i].encrypted = true
+          }
+        }
+        const ps = fs.writeFileSync('./.env', JSON.stringify(tokens, null, 2))
+        // encrypt dotenv
+        console.log('Bot tokens encrypted successfully!')
+        return true
+      } catch (err) {
+        console.log('Unable to encrypt Bot Tokens:', err)
+        return false
+      }
     }
   }
 
@@ -354,7 +406,7 @@ class WickrIOBot {
       if (message.file.isvoicememo) {
         isVoiceMemo = true
         const voiceMemoDuration = message.file.voicememoduration
-        var parsedObj = {
+        const parsedObj = {
           file: message.file.localfilename,
           filename: message.file.filename,
           vgroupid: vGroupID,
@@ -372,7 +424,7 @@ class WickrIOBot {
           bor,
         }
       } else {
-        var parsedObj = {
+        const parsedObj = {
           file: message.file.localfilename,
           filename: message.file.filename,
           vgroupid: vGroupID,
@@ -391,7 +443,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.location) {
-      var parsedObj = {
+      const parsedObj = {
         latitude: message.location.latitude,
         longitude: message.location.longitude,
         vgroupid: vGroupID,
@@ -408,7 +460,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.call) {
-      var parsedObj = {
+      const parsedObj = {
         status: message.call.status,
         vgroupid: vGroupID,
         call: message.call,
@@ -424,7 +476,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.keyverify) {
-      var parsedObj = {
+      const parsedObj = {
         vgroupid: vGroupID,
         control,
         msgTS: msg_ts,
@@ -439,7 +491,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.control) {
-      var parsedObj = {
+      const parsedObj = {
         vgroupid: vGroupID,
         control,
         msgTS: msg_ts,
@@ -454,7 +506,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.edit) {
-      var parsedObj = {
+      const parsedObj = {
         vgroupid: vGroupID,
         edit,
         msgTS: msg_ts,
@@ -490,7 +542,7 @@ class WickrIOBot {
       localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
     }
 
-    var parsedObj = {
+    const parsedObj = {
       message: request,
       command: command,
       msgTS: msg_ts,

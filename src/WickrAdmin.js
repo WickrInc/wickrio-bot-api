@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { exec, execSync, execFileSync } = require('child_process')
+const { execSync } = require('child_process')
 const WickrIOAPI = require('wickrio_addon')
 const strings = require('./WickrStrings')
 
@@ -34,7 +34,7 @@ class WickrAdmin {
     }
 
     this.adminIDs.push(userID)
-    // var saved = this.saveData();
+    // let saved = this.saveData();
     console.log('New Wickr user added to database.')
 
     return this.adminIDs[this.adminIDs.indexOf(userID)]
@@ -63,160 +63,188 @@ class WickrAdmin {
   }
 
   updateAdminList() {
-    let processes
-    try {
-      processes = fs.readFileSync('./processes.json', 'utf-8')
-      if (!processes) {
-        console.log('Error reading processes.json!')
+    // add for dotenv
+    if (!this.dotenv) {
+      let processes
+      try {
+        processes = fs.readFileSync('./processes.json', 'utf-8')
+        if (!processes) {
+          console.log('Error reading processes.json!')
+          return
+        }
+      } catch (err) {
+        console.log(err)
         return
       }
-    } catch (err) {
-      console.log(err)
-      return
-    }
 
-    const pjson = JSON.parse(processes)
-    const wlUsers = this.adminIDs.join(',')
-    if (pjson.apps[0].env.tokens.ADMINISTRATORS.encrypted) {
-      const wlUsersEncrypted = WickrIOAPI.cmdEncryptString(wlUsers)
-      pjson.apps[0].env.tokens.ADMINISTRATORS.value = wlUsersEncrypted
+      const pjson = JSON.parse(processes)
+      const wlUsers = this.adminIDs.join(',')
+      if (pjson.apps[0].env.tokens.ADMINISTRATORS.encrypted) {
+        const wlUsersEncrypted = WickrIOAPI.cmdEncryptString(wlUsers)
+        pjson.apps[0].env.tokens.ADMINISTRATORS.value = wlUsersEncrypted
+      } else {
+        pjson.apps[0].env.tokens.ADMINISTRATORS.value = wlUsers
+      }
+
+      try {
+        const cp = execSync('cp processes.json processes_backup.json')
+        const ps = fs.writeFileSync(
+          './processes.json',
+          JSON.stringify(pjson, null, 2)
+        )
+      } catch (err) {
+        console.log(err)
+      }
     } else {
-      pjson.apps[0].env.tokens.ADMINISTRATORS.value = wlUsers
-    }
+      let processes
+      try {
+        processes = fs.readFileSync('./.env')
+        if (!processes) {
+          console.log('Error reading .env!')
+          return
+        }
+      } catch (err) {
+        console.log(err)
+        return
+      }
 
-    try {
-      const cp = execSync('cp processes.json processes_backup.json')
-      const ps = fs.writeFileSync(
-        './processes.json',
-        JSON.stringify(pjson, null, 2)
-      )
-    } catch (err) {
-      console.log(err)
+      const dotenv = JSON.parse(processes)
+      const wlUsers = this.adminIDs.join(',')
+      if (dotenv.tokens.ADMINISTRATORS.encrypted) {
+        const wlUsersEncrypted = WickrIOAPI.cmdEncryptString(wlUsers)
+        dotenv.tokens.ADMINISTRATORS.value = wlUsersEncrypted
+      } else {
+        dotenv.tokens.ADMINISTRATORS.value = wlUsers
+      }
+
+      try {
+        const cp = execSync('cp .env .env_backup.json')
+        const ps = fs.writeFileSync('./.env', JSON.stringify(dotenv, null, 2))
+      } catch (err) {
+        console.log(err)
+      }
     }
   }
 
   // This function will process admin commands from the incoming values.
   processAdminCommand(sender, vGroupID, command, argument) {
     if (command === '/admin') {
-      var action = argument.toLowerCase().trim()
+      const action = argument.toLowerCase().trim()
       if (action === 'list') {
-        var userList = this.adminIDs.join('\n')
-        var reply = strings.currentAdmins.replace('%{userList}', userList)
-        var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+        const userList = this.adminIDs.join('\n')
+        const reply = strings.currentAdmins.replace('%{userList}', userList)
+        const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
       } else if (action.startsWith('add')) {
         // Process the list of users to be added from the white list
-        var values = action.split(' ')
+        let values = action.split(' ')
         values.shift()
         values = this.removeDuplicates(values)
         const addFails = []
         if (values.length >= 1) {
-          for (var i = 0; i < values.length; i++) {
+          for (let i = 0; i < values.length; i++) {
             if (this.adminIDs.includes(values[i])) {
               addFails.push(values.splice(i, 1))
               i--
             }
           }
           if (addFails.length >= 1) {
-            var reply = strings.alreadyContains.replace(
+            const reply = strings.alreadyContains.replace(
               '%{user}',
               addFails.join('\n')
             )
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
           if (values.length >= 1) {
             // Send the initial response
-            var userList = values.join('\n')
-            var reply = strings.adminsToAdd.replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const userList = values.join('\n')
+            const reply = strings.adminsToAdd.replace('%{userList}', userList)
+            let uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
 
             // add the user(s) from the white list and update the config file
-            for (var i = 0; i < values.length; i++) {
+            for (let i = 0; i < values.length; i++) {
               this.adminIDs.push(values[i])
             }
             this.updateAdminList()
 
             // Send a message to all the current admin users
-            var donereply = strings.adminsAdded
+            const donereply = strings.adminsAdded
               .replace('%{sender}', sender)
               .replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSend1to1Message(
-              this.adminIDs,
-              donereply
-            )
+            uMessage = WickrIOAPI.cmdSend1to1Message(this.adminIDs, donereply)
           }
         } else {
-          var reply = strings.noNewAdmins
-          var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+          const reply = strings.noNewAdmins
+          const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
         }
       } else if (action.startsWith('remove')) {
         // Process the list of users to be removed from the white list
         // TODO potentially add buttons here?
-        var values = action.split(' ')
+        let values = action.split(' ')
         values.shift()
         values = this.removeDuplicates(values)
         const removeFails = []
         if (values.length >= 1) {
-          for (var i = 0; i < values.length; i++) {
+          for (let i = 0; i < values.length; i++) {
             if (!this.adminIDs.includes(values[i])) {
               removeFails.push(values.splice(i, 1))
               i--
             }
           }
           if (removeFails.length >= 1) {
-            var reply = strings.removeFail.replace(
+            const reply = strings.removeFail.replace(
               '%{user}',
               removeFails.join('\n')
             )
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
 
           // Send the initial response
-          var userList = values.join('\n')
+          const userList = values.join('\n')
           if (values.length >= 1) {
-            var reply = strings.adminsToDelete.replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const reply = strings.adminsToDelete.replace(
+              '%{userList}',
+              userList
+            )
+            let uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
 
             // Remove the user(s) from the white list and update the config file
-            for (var i = 0; i < values.length; i++) {
+            for (let i = 0; i < values.length; i++) {
               this.adminIDs.splice(this.adminIDs.indexOf(values[i]), 1)
             }
             this.updateAdminList()
 
             // Send a message to all the current admin users
-            var donereply = strings.adminsDeleted
+            const donereply = strings.adminsDeleted
               .replace('%{sender}', sender)
               .replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSend1to1Message(
-              this.adminIDs,
-              donereply
-            )
+            uMessage = WickrIOAPI.cmdSend1to1Message(this.adminIDs, donereply)
           }
         } else {
-          var reply = strings.noRemoveAdmins
-          var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+          const reply = strings.noRemoveAdmins
+          const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
         }
       } else {
-        var reply = strings.invalidAdminCommand
-        var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+        const reply = strings.invalidAdminCommand
+        const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
       }
     } else {
       if (this.verifyAutomatic !== true) {
         if (command === '/verify') {
-          var action = argument.toLowerCase().trim()
+          const action = argument.toLowerCase().trim()
           if (action.startsWith('getlist')) {
-            var values = action.split(' ')
+            const values = action.split(' ')
             values.shift()
-            var mode = values[0]
+            const mode = values[0]
 
             if (mode === 'all') {
-              var getVerifList = WickrIOAPI.cmdGetVerificationList(mode)
+              const getVerifList = WickrIOAPI.cmdGetVerificationList(mode)
             } else {
-              var getVerifList = WickrIOAPI.cmdGetVerificationList()
+              const getVerifList = WickrIOAPI.cmdGetVerificationList()
             }
             const verificationList = JSON.parse(getVerifList)
-            var reply = 'User Verification List'
+            let reply = 'User Verification List'
             if (verificationList.users) {
-              for (var i = 0; i < verificationList.users.length; i++) {
+              for (let i = 0; i < verificationList.users.length; i++) {
                 if (
                   verificationList.users[i].user &&
                   verificationList.users[i].reason
@@ -227,7 +255,7 @@ class WickrAdmin {
                     '  Reason: ' +
                     verificationList.users[i].reason
                   if (reply.length + userreply.length >= 10000) {
-                    var uMessage = WickrIOAPI.cmdSendRoomMessage(
+                    const uMessage = WickrIOAPI.cmdSendRoomMessage(
                       vGroupID,
                       reply
                     )
@@ -237,27 +265,27 @@ class WickrAdmin {
                 }
               }
             }
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           } else if (action === 'all') {
-            var reply = WickrIOAPI.cmdVerifyAll()
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const reply = WickrIOAPI.cmdVerifyAll()
+            const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           } else if (action === 'users') {
           } else if (action.startsWith('setmode')) {
             // get the mode to be set
-            var values = action.split(' ')
+            const values = action.split(' ')
             values.shift()
-            var mode = values[0]
+            const mode = values[0]
             if (mode === 'automatic' || mode === 'manual') {
               const response = WickrIOAPI.cmdSetVerificationMode(mode)
-              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, response)
+              const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, response)
             } else {
-              var reply =
+              const reply =
                 'Invalid mode, usage:\n/verify setmode automatic|manual'
-              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+              const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
             }
           } else {
-            var reply = strings.invalidVerifyCommand
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            const reply = strings.invalidVerifyCommand
+            const uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
         }
       }
@@ -269,10 +297,10 @@ class WickrAdmin {
   getHelp(helpString) {
     if (helpString.includes('{adminHelp}')) {
       if (this.verifyAutomatic === true) {
-        var reply = helpString.replace('%{adminHelp}', strings.adminHelp)
+        const reply = helpString.replace('%{adminHelp}', strings.adminHelp)
         return reply
       } else {
-        var reply = helpString.replace(
+        const reply = helpString.replace(
           '%{adminHelp}',
           strings.adminHelpWithVerify
         )
