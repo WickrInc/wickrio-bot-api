@@ -56,25 +56,8 @@ class WickrIOConfigure {
       console.error(err)
     }
 
-    this.verificationToken = {
-      token: 'VERIFY_USERS',
-      pattern: 'manual|automatic',
-      type: 'string',
-      description: 'Enter the mode to verify users',
-      message: 'Please enter either manual or automatic',
-      required: false,
-      default: 'automatic',
-    }
-
-    this.administratorsToken = {
-      token: 'ADMINISTRATORS',
-      pattern: '',
-      type: 'string',
-      description: 'Enter the list of administrators',
-      message: 'Cannot leave empty! Please enter a value',
-      required: true,
-      default: 'N/A',
-    }
+    this.verificationToken = WickrIOConfigure.getVerificationTokens()
+    this.administratorsToken = WickrIOConfigure.getAdminTokens()
 
     this.encryptToken = {
       token: 'DATABASE_ENCRYPTION_CHOICE',
@@ -121,6 +104,36 @@ class WickrIOConfigure {
       'WickrIOConfigure:constructor: tokenConfig: ' +
         util.inspect(this.tokenConfig, { showHidden: false, depth: null })
     )
+  }
+
+  /*
+   * function to return the 'verification' token(s)
+   */
+  static getVerificationTokens() {
+    return {
+      token: 'VERIFY_USERS',
+      pattern: 'manual|automatic',
+      type: 'string',
+      description: 'Enter the mode to verify users',
+      message: 'Please enter either manual or automatic',
+      required: false,
+      default: 'automatic',
+    }
+  }
+
+  /*
+   * function to return the 'admin' token(s)
+   */
+  static getAdminTokens() {
+    return {
+      token: 'ADMINISTRATORS',
+      pattern: '',
+      type: 'string',
+      description: 'Enter the list of administrators',
+      message: 'Cannot leave empty! Please enter a value',
+      required: true,
+      default: 'N/A',
+    }
   }
 
   getTokenList() {
@@ -544,8 +557,8 @@ class WickrIOConfigure {
       }
       try {
         var processesFileDir = path.dirname(this.processesFile)
-	if (processesFileDir === undefined || processesFileDir.length === 0)
-	      processesFileDir = '.'
+        if (processesFileDir === undefined || processesFileDir.length === 0)
+          processesFileDir = '.'
         const processesFileBackup = path.join(processesFileDir, 'processes_backup.json')
 
         // backup the processes.json file
@@ -571,7 +584,7 @@ class WickrIOConfigure {
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
           var ps = fs.writeFileSync(
-	      this.processesFile,
+             this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
@@ -614,8 +627,8 @@ class WickrIOConfigure {
       if (!fs.existsSync(this.processesFile)) {
         console.error('processes.json file does not exist!!')
       } else {
-      	await this.inputTokens(integrationName)
-      	console.log('Finished Configuring!')
+       await this.inputTokens(integrationName)
+       console.log('Finished Configuring!')
       }
     } catch (err) {
       console.log(err)
