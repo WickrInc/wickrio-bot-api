@@ -342,6 +342,7 @@ class WickrIOConfigure {
         requiredValue = false
       }
 
+
       if (tokenList[index].type === 'file') {
         schema.properties[tokenList[index].token] = {
           pattern: tokenList[index].pattern,
@@ -407,55 +408,60 @@ class WickrIOConfigure {
     for (let i = 0; i < this.tokenConfig.length; i++) {
       var inputPromise = new Promise((resolve, reject) => {
         this.inputPrompt = function (tokenEntry) {
+          var schema = {
+            properties: {},
+          }
+
           // For this token if it is defined in the environment
           // Then set the input value for the token
           if (process.env[tokenEntry.token] !== undefined) {
             var input = tokenEntry.token + '=' + process.env[tokenEntry.token]
             config.push(input)
-            return resolve('Complete for' + tokenEntry.token)
-          }
 
-          var dflt = newObjectResult[tokenEntry.token]
-          var requiredValue = tokenEntry.required
+            // If this token has a list and the answer was 'yes' then proceed into the list
+            if (tokenEntry.list === undefined || process.env[tokenEntry.token] === 'no') {
+            	return resolve('Complete for' + tokenEntry.token)
+            }
+          } else {
 
-          if (dflt === undefined || dflt === 'undefined') {
-            if (tokenEntry.default === undefined) {
-              dflt = ''
+            var dflt = newObjectResult[tokenEntry.token]
+            var requiredValue = tokenEntry.required
+
+            if (dflt === undefined || dflt === 'undefined') {
+              if (tokenEntry.default === undefined) {
+                dflt = ''
+              } else {
+                dflt = tokenEntry.default
+              }
             } else {
-              dflt = tokenEntry.default
+              requiredValue = false
             }
-          } else {
-            requiredValue = false
-          }
 
-          var schema = {
-            properties: {},
-          }
-
-          if (tokenEntry.type === 'file') {
-            schema.properties[tokenEntry.token] = {
-              pattern: tokenEntry.pattern,
-              type: 'string',
-              description: tokenEntry.description,
-              message: tokenEntry.message,
-              required: requiredValue,
-              default: dflt,
-              conform: function (filename) {
-                if (fs.existsSync(filename)) {
-                  return true
-                } else {
-                  return false
-                }
-              },
-            }
-          } else {
-            schema.properties[tokenEntry.token] = {
-              pattern: tokenEntry.pattern,
-              type: tokenEntry.type,
-              description: tokenEntry.description,
-              message: tokenEntry.message,
-              required: requiredValue,
-              default: dflt,
+            if (tokenEntry.type === 'file') {
+              schema.properties[tokenEntry.token] = {
+                pattern: tokenEntry.pattern,
+                type: 'string',
+                description: tokenEntry.description,
+                message: tokenEntry.message,
+                required: requiredValue,
+                default: dflt,
+                conform: function (filename) {
+                  if (fs.existsSync(filename)) {
+                    return true
+                  } else {
+                    return false
+                  }
+                },
+              }
+            } else {
+              schema.properties[tokenEntry.token] = {
+                pattern: tokenEntry.pattern,
+                type: tokenEntry.type,
+                description: tokenEntry.description,
+                message: tokenEntry.message,
+                required: requiredValue,
+                default: dflt,
+              }
             }
           }
 
