@@ -342,7 +342,6 @@ class WickrIOConfigure {
         requiredValue = false
       }
 
-
       if (tokenList[index].type === 'file') {
         schema.properties[tokenList[index].token] = {
           pattern: tokenList[index].pattern,
@@ -419,11 +418,13 @@ class WickrIOConfigure {
             config.push(input)
 
             // If this token has a list and the answer was 'yes' then proceed into the list
-            if (tokenEntry.list === undefined || process.env[tokenEntry.token] === 'no') {
-            	return resolve('Complete for' + tokenEntry.token)
+            if (
+              tokenEntry.list === undefined ||
+              process.env[tokenEntry.token] === 'no'
+            ) {
+              return resolve('Complete for' + tokenEntry.token)
             }
           } else {
-
             var dflt = newObjectResult[tokenEntry.token]
             var requiredValue = tokenEntry.required
 
@@ -565,7 +566,10 @@ class WickrIOConfigure {
         var processesFileDir = path.dirname(this.processesFile)
         if (processesFileDir === undefined || processesFileDir.length === 0)
           processesFileDir = '.'
-        const processesFileBackup = path.join(processesFileDir, 'processes_backup.json')
+        const processesFileBackup = path.join(
+          processesFileDir,
+          'processes_backup.json'
+        )
 
         // backup the processes.json file
         fs.copyFileSync(this.processesFile, processesFileBackup)
@@ -590,7 +594,7 @@ class WickrIOConfigure {
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
           var ps = fs.writeFileSync(
-             this.processesFile,
+            this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
@@ -633,8 +637,8 @@ class WickrIOConfigure {
       if (!fs.existsSync(this.processesFile)) {
         console.error('processes.json file does not exist!!')
       } else {
-       await this.inputTokens(integrationName)
-       console.log('Finished Configuring!')
+        await this.inputTokens(integrationName)
+        console.log('Finished Configuring!')
       }
     } catch (err) {
       console.log(err)
