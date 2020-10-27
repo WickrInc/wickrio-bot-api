@@ -1,3 +1,6 @@
 .babelrc
 .gitignore
 src
+.github
+.vscode
+.devcontainer
