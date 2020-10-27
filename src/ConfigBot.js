@@ -10,7 +10,7 @@ prompt.colors = false
 //   path: `.env.configure`,
 // })
 
-class WickrIOConfigure {
+class ConfigBot {
   constructor(
     tokens,
     processesFile,
@@ -54,8 +54,8 @@ class WickrIOConfigure {
       console.error(err)
     }
 
-    this.verificationToken = WickrIOConfigure.getVerificationTokens()
-    this.administratorsToken = WickrIOConfigure.getAdminTokens()
+    this.verificationToken = this.getVerificationTokens()
+    this.administratorsToken = this.getAdminTokens()
 
     this.encryptToken = {
       token: 'DATABASE_ENCRYPTION_CHOICE',
@@ -645,4 +645,4 @@ class WickrIOConfigure {
   }
 }
 
-module.exports = WickrIOConfigure
+export default ConfigBot

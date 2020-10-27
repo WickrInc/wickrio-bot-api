@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = {
+export default {
   currentAdmins: 'Current admins:\n%{userList}',
   alreadyContains: 'Failed, current list of admins already contains:\n%{user}',
   adminsToAdd: 'Going to add admins:\n%{userList}',

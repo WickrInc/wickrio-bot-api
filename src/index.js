@@ -1,5 +1,5 @@
 import * as WickrIOAPI from 'wickrio_addon'
-import WickrIOConfigure from './WickrIOConfigure'
+import ConfigBot from './ConfigBot'
 import WickrUser from './WickrUser'
 import WickrAdmin from './WickrAdmin'
 import MessageService from './services/message'
@@ -705,5 +705,5 @@ function sleep(ms) {
 export default {
   BotAPI,
   WickrUser,
-  WickrIOConfigure,
+  ConfigBot,
 }
