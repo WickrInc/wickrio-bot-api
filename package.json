@@ -1,6 +1,6 @@
 {
   "name": "wickrio-bot-api",
-  "version": "5.67.01",
+  "version": "5.65.01",
   "description": "The official Wickr IO Bot API Framework",
   "main": "./build/index.js",
   "dependencies": {
@@ -38,8 +38,8 @@
     "supertest": "^4.0.2"
   },
   "scripts": {
-    "start": "node ./build/WickrIOBot.js",
-    "dev": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/WickrIOBot.js'",
+    "start": "node ./build/index.js",
+    "dev": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/index.js'",
     "build": "rm -rf build && babel ./src --out-dir ./build --ignore node_modules",
     "lint": "eslint src/**/*.js --fix --color",
     "prettier": "prettier --write ./src"
