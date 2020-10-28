@@ -11,9 +11,9 @@ import path from 'path'
 
 prompt.colors = false
 
-require('dotenv').config({
-  path: `.env.configure`,
-})
+// require('dotenv').config({
+//   path: `.env.configure`,
+// })
 
 class ConfigBot {
   constructor(
