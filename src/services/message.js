@@ -272,12 +272,20 @@ class MessageService {
       }
 
       if (!this.adminDMonly) {
-        localWickrAdmins.processAdminCommand(
+        if(localWickrAdmins.processAdminCommand(
           userEmail,
           vGroupID,
           command,
           argument
-        )
+        )){
+          parsedMessage = {
+            ...parsedMessage,
+            command:'admin_command',
+            argument,
+          }
+          return parsedMessage 
+        }
+         
       }
     }
 
