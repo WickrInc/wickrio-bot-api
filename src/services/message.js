@@ -278,12 +278,7 @@ class MessageService {
           command,
           argument
         )){
-          parsedMessage = {
-            ...parsedMessage,
-            command:'admin_command',
-            argument,
-          }
-          return parsedMessage 
+          return 
         }
          
       }
