@@ -1,10 +1,10 @@
 import * as WickrIOAPI from 'wickrio_addon'
-import ConfigBot from './ConfigBot'
-import WickrUser from './WickrUser'
-import WickrAdmin from './WickrAdmin'
-import MessageService from './services/message'
+import ConfigBot from './ConfigBot.js'
+import WickrUser from './WickrUser.js'
+import WickrAdmin from './WickrAdmin.js'
+import MessageService from './services/message.js'
+import APIService from './services/api.js'
 import fs from 'fs'
-import APIService from './services/api'
 let encryptor
 let encryptorDefined = false
 
@@ -697,13 +697,8 @@ class BotAPI {
     return found
   }
 }
-
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export default {
-  BotAPI,
-  WickrUser,
-  ConfigBot,
-}
+export { BotAPI, WickrUser, ConfigBot }

@@ -1,5 +1,6 @@
-const fs = require('fs')
-const WickrUser = require('../WickrUser')
+import fs from 'fs'
+import WickrUser from '../WickrUser.js'
+
 let encryptor
 const encryptorDefined = false
 

@@ -1,14 +1,19 @@
+/* eslint-disable handle-callback-err */
+/* eslint-disable no-redeclare */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-var */
+/* eslint-disable eqeqeq */
 'use strict'
 import fs from 'fs'
 import util from 'util'
 import prompt from 'prompt'
 import path from 'path'
-// import dotenv from 'dotenv'
+
 prompt.colors = false
 
-// dotenv.config({
-//   path: `.env.configure`,
-// })
+require('dotenv').config({
+  path: `.env.configure`,
+})
 
 class ConfigBot {
   constructor(
@@ -107,7 +112,7 @@ class ConfigBot {
   /*
    * function to return the 'verification' token(s)
    */
-  static getVerificationTokens() {
+  getVerificationTokens() {
     return {
       token: 'VERIFY_USERS',
       pattern: 'manual|automatic',
@@ -122,7 +127,7 @@ class ConfigBot {
   /*
    * function to return the 'admin' token(s)
    */
-  static getAdminTokens() {
+  getAdminTokens() {
     return {
       token: 'ADMINISTRATORS',
       pattern: '',
@@ -170,7 +175,7 @@ class ConfigBot {
           ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token !== this.administratorsToken.token
+        token => token.token != this.administratorsToken.token
       )
     }
     return true
@@ -181,7 +186,7 @@ class ConfigBot {
 
     // If turning on the verification mode, check if administrators is set
     if (turnOn === undefined || turnOn === true) {
-      if (this.supportsAdministrators === true) {
+      if (this.supportsAdministrators == true) {
         this.supportsVerification = true
       } else {
         console.log(
@@ -208,7 +213,7 @@ class ConfigBot {
         'Removing ' + this.verificationToken.token + ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token !== this.verificationToken.token
+        token => token.token != this.verificationToken.token
       )
     }
     return true
@@ -240,7 +245,7 @@ class ConfigBot {
         'Removing ' + this.encryptToken.token + ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token !== this.encryptToken.token
+        token => token.token != this.encryptToken.token
       )
     }
     return true
@@ -327,7 +332,7 @@ class ConfigBot {
     const newObjectResult = this.getCurrentValues()
     for (let index = 0; index < tokenList.length; index++) {
       let tmpdflt = newObjectResult[tokenList[index].token]
-      let requiredValue
+      var requiredValue
       if (tmpdflt === undefined || tmpdflt === 'undefined') {
         requiredValue = tokenList[index].required
 
@@ -352,7 +357,7 @@ class ConfigBot {
             if (prompt.history(parentToken) === null) {
               return false
             }
-            // const name = prompt.history(parentToken).value
+            const name = prompt.history(parentToken).value
             return prompt.history(parentToken).value === 'yes'
           },
           conform: function (filename) {
@@ -375,7 +380,7 @@ class ConfigBot {
             if (prompt.history(parentToken) === null) {
               return false
             }
-            // const name = prompt.history(parentToken).value
+            const name = prompt.history(parentToken).value
             return prompt.history(parentToken).value === 'yes'
           },
         }
@@ -397,7 +402,7 @@ class ConfigBot {
    */
   async inputTokens(integrationName) {
     const config = []
-    // const i = 0
+    const i = 0
 
     const newObjectResult = this.getCurrentValues()
     const inputPromises = []
@@ -473,7 +478,6 @@ class ConfigBot {
           }
 
           prompt.get(schema, async function (err, answer) {
-            if (err) return err
             if (answer[tokenEntry.token] === '') {
               if (newObjectResult[tokenEntry.token] === undefined) {
                 answer[tokenEntry.token] = tokenEntry.default
@@ -481,7 +485,7 @@ class ConfigBot {
                 answer[tokenEntry.token] = newObjectResult[tokenEntry.token]
               }
             }
-            let input = tokenEntry.token + '=' + answer[tokenEntry.token]
+            var input = tokenEntry.token + '=' + answer[tokenEntry.token]
             config.push(input)
 
             if (tokenEntry.list !== undefined) {
@@ -512,7 +516,7 @@ class ConfigBot {
                     answer[tokens[tindex]] = newObjectResult[tokens[tindex]]
                   }
                 }
-                input = tokens[tindex] + '=' + answer[tokens[tindex]]
+                var input = tokens[tindex] + '=' + answer[tokens[tindex]]
                 config.push(input)
               }
             }
@@ -540,10 +544,10 @@ class ConfigBot {
       for (let j = 0; j < config.length; j++) {
         newObjectResult[objectKeyArray[j]] = objectValueArray[j]
       }
-      for (const key in newObjectResult) {
+      for (var key in newObjectResult) {
         // If the environment variable is set then use it
         if (process.env[key] !== undefined) {
-          const obj = {
+          var obj = {
             value: process.env[key],
             encrypted: false,
           }
@@ -551,14 +555,14 @@ class ConfigBot {
         }
         // Else use the value just entered by the user
         else {
-          const obj = {
+          var obj = {
             value: newObjectResult[key],
             encrypted: false,
           }
           newObjectResult[key] = obj
         }
       }
-      for (const key in this.dataParsed.apps[0].env.tokens) {
+      for (var key in this.dataParsed.apps[0].env.tokens) {
         delete this.dataParsed.apps[0].env.tokens[key]
       }
       try {
@@ -572,28 +576,27 @@ class ConfigBot {
 
         // backup the processes.json file
         fs.copyFileSync(this.processesFile, processesFileBackup)
-        let newName
+
         if (process.env.WICKRIO_BOT_NAME !== undefined) {
-          newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
+          var newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
         } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
-          newName =
+          var newName =
             integrationName + '_' + newObjectResult.WICKRIO_BOT_NAME.value
         } else {
-          newName = integrationName
+          var newName = integrationName
         }
 
         // var assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
 
-        // const assign = Object.assign(
-        //   this.dataParsed.apps[0].env.tokens,
-        //   newObjectResult
-        // )
-
+        const assign = Object.assign(
+          this.dataParsed.apps[0].env.tokens,
+          newObjectResult
+        )
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
-          fs.writeFileSync(
+          const ps = fs.writeFileSync(
             this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
