@@ -272,12 +272,15 @@ class MessageService {
       }
 
       if (!this.adminDMonly) {
-        localWickrAdmins.processAdminCommand(
+        if(localWickrAdmins.processAdminCommand(
           userEmail,
           vGroupID,
           command,
           argument
-        )
+        )){
+          return 
+        }
+         
       }
     }
 
