@@ -253,4 +253,4 @@ class APIService {
   }
 }
 
-module.exports = APIService
+export default APIService

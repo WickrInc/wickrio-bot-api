@@ -529,4 +529,4 @@ class MessageService {
   //   const buttons = [button1, button2]
 }
 
-module.exports = MessageService
+export default MessageService
