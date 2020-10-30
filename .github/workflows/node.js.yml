@@ -32,7 +32,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Run docker image
-      - run: docker run -v ~/opt/WickrIO:/opt/WickrIODebug -d --restart=always --name="WickrBotAPIContainer" -ti wickr/bot-cloud-alpha:5.68.01.08
+        run: docker run -v ~/opt/WickrIO:/opt/WickrIODebug -d --restart=always --name="WickrBotAPIContainer" -ti wickr/bot-cloud-alpha:5.68.01.08
 
       - uses: actions/checkout@v2
       - name: Checkout, Test Using Node.js ${{ matrix.node-version }}
