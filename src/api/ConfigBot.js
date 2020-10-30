@@ -531,6 +531,7 @@ class ConfigBot {
     }
 
     return Promise.all(inputPromises).then(answer => {
+      console.log({ answer })
       const objectKeyArray = []
       const objectValueArray = []
       for (let i = 0; i < config.length; i++) {

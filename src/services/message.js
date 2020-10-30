@@ -1,5 +1,5 @@
 import fs from 'fs'
-import WickrUser from '../WickrUser.js'
+import { WickrUser } from '../api'
 
 let encryptor
 const encryptorDefined = false

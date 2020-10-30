@@ -1,6 +1,6 @@
 import * as WickrIOAPI from 'wickrio_addon'
 import WickrAdmin from './index.js'
-import { MessageService, APIService } from './services.js'
+import { MessageService, APIService } from '../services'
 import fs from 'fs'
 let encryptor
 let encryptorDefined = false
