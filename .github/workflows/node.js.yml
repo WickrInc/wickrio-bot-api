@@ -6,7 +6,7 @@ name: Node.js CI
 on:
   push:
     # branches: [master]
-    branches: [babelDMonly]
+    branches: [babelDMonlyMerge]
   pull_request:
     # branches: [master]
 
@@ -24,8 +24,13 @@ jobs:
             experimental: true
         # - node: 14
         #   experimental: true
-
     steps:
+      # - name: Login to Docker
+      #   uses: azure/docker-login@v1
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Run docker image
         run: docker run -v ~/opt/WickrIO:/opt/WickrIODebug -d --restart=always --name="WickrBotAPIContainer" -ti wickr/bot-cloud-alpha:5.68.01.08
 
