@@ -192,6 +192,7 @@ class WickrAdmin {
         const reply = strings.invalidAdminCommand
         WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
       }
+      return true
     } else {
       if (this.verifyAutomatic !== true) {
         if (command === '/verify') {
@@ -249,6 +250,7 @@ class WickrAdmin {
             const reply = strings.invalidVerifyCommand
             WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
+          return true
         }
       }
     }

@@ -275,12 +275,19 @@ class MessageService {
         this.wickrAPI.cmdSendRoomMessage(vGroupID, reply)
         return
       }
-      localWickrAdmins.processAdminCommand(
-        userEmail,
-        vGroupID,
-        command,
-        argument
-      )
+
+      if (!this.adminDMonly) {
+        if (
+          localWickrAdmins.processAdminCommand(
+            userEmail,
+            vGroupID,
+            command,
+            argument
+          )
+        ) {
+          return
+        }
+      }
     }
 
     parsedMessage = {
