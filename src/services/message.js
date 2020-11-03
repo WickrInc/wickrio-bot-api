@@ -300,6 +300,11 @@ class MessageService {
   }
 
   // TODO why use getters and setters here??
+
+  getAdminList(){
+    return this.myAdmins
+  }
+
   getMessage() {
     return this.message
   }
