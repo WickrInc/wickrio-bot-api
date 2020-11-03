@@ -456,7 +456,7 @@ class WickrIOConfigure {
             } else {
               schema.properties[tokenEntry.token] = {
                 pattern: tokenEntry.pattern,
-                type: tokenEntry.type,
+                type: 'string',
                 description: tokenEntry.description,
                 message: tokenEntry.message,
                 required: requiredValue,
