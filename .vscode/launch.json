@@ -7,20 +7,20 @@
   "configurations": [
     {
       "name": "Develop",
-      "type": "node",
+      "type": "pwa-node",
       "request": "launch",
-      "protocol": "inspector",
-      "program": "${workspaceRoot}/src/broadcast-bot.js",
+      // "protocol": "inspector",
+      "program": "${workspaceRoot}/src/index.js",
       "stopOnEntry": false,
-      // "args": [],
       "cwd": "${workspaceRoot}",
-      "preLaunchTask": null,
+      // "preLaunchTask": null,
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/nodemon",
-      "args": ["${workspaceRoot}/broadcast-bot.js"],
       // "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/babel-node",
+      "args": ["${workspaceRoot}/src/index.js"],
       "runtimeArgs": ["--nolazy", "--require", "@babel/register"],
       "env": {
-        "NODE_ENV": "development"
+        // "tokens": "{\"WICKRIO_BOT_NAME\": { \"value\": \"localtestrecorderbot\" }}",
+        // "NODE_ENV": "development"
       },
       "console": "internalConsole",
       "sourceMaps": false,

@@ -1,5 +1,5 @@
 import * as WickrIOAPI from 'wickrio_addon'
-import WickrAdmin from './index.js'
+import { WickrAdmin } from './index'
 import { MessageService, APIService } from '../services'
 import fs from 'fs'
 let encryptor
@@ -11,6 +11,45 @@ class BotAPI {
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
+    // this.runHandlers()
+  }
+
+  exitHandler = async (options, err) => {
+    try {
+      this.close()
+      if (err || options.exit) {
+        console.error('Exit reason:', err)
+        process.exit()
+      } else if (options.pid) {
+        process.kill(process.pid)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  runHandlers = () => {
+    // STANDARDIZE BELOW -----------
+
+    process.stdin.resume() // so the program will not close instantly
+
+    process.stdin.resume() // so the program will not close instantly
+
+    // catches ctrl+c and stop.sh events
+    process.on('SIGINT', this.exitHandler.bind(null, { exit: true }))
+
+    // catches "kill pid" (for example: nodemon restart)
+    process.on('SIGUSR1', this.exitHandler.bind(null, { pid: true }))
+    process.on('SIGUSR2', this.exitHandler.bind(null, { pid: true }))
+
+    // TODO clear these values!
+    // TODO make these user variables??
+
+    // catches uncaught exceptions
+    // TODO make this more robust of a catch
+
+    process.on('uncaughtException', this.exitHandler.bind(null, { exit: true }))
+    // STANDARDIZE ABOVE -----------
   }
 
   messageService({ rawMessage, adminDMonly = false }) {
@@ -40,30 +79,32 @@ class BotAPI {
     cleardb = 'true',
     contactbackup = 'false',
     convobackup = 'false',
+    verifyusers = { encryption: false, value: 'automatic' },
   }) => {
     if (setAdminOnly === true || setAdminOnly === 'true') {
       setAdminOnly = 'true'
     }
 
     if (!status) {
-      // exitHandler(null, {
-      //   exit: true,
-      //   reason: 'Client not able to start',
-      // })
+      this.exitHandler(null, {
+        exit: true,
+        reason: 'Client not able to start',
+      })
     }
     this.setAdminOnly(setAdminOnly)
 
     // set the verification mode to true
-    let verifyUsersMode
-    const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
+    // let verifyUsersMode
+    // const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
 
-    if (VERIFY_USERS.encrypted) {
-      verifyUsersMode = WickrIOAPI.cmdDecryptString(VERIFY_USERS.value)
-    } else {
-      verifyUsersMode = VERIFY_USERS.value
+    if (verifyusers.encrypted) {
+      verifyusers.value = WickrIOAPI.cmdDecryptString(verifyusers.value)
     }
+    // else {
+    //   verifyUsersMode = VERIFY_USERS.value
+    // }
 
-    this.setVerificationMode(verifyUsersMode)
+    this.setVerificationMode(verifyusers.value)
 
     WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
     WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
@@ -124,8 +165,10 @@ class BotAPI {
         do {
           cState = WickrIOAPI.getClientState()
           console.log('isConnected: client state is', cState)
+
           if (cState !== 'RUNNING') sleep(5000)
         } while (cState !== 'RUNNING')
+
         resolve(connected)
       })
     const processAdminUsers = async connected => {

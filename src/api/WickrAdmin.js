@@ -1,6 +1,6 @@
 import fs from 'fs'
 import * as WickrIOAPI from 'wickrio_addon'
-import * as strings from './WickrStrings.js'
+import * as strings from './WickrStrings'
 
 class WickrAdmin {
   constructor() {

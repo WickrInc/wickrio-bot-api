@@ -4,3 +4,8 @@ src
 .github
 .vscode
 .devcontainer
+node_modules
+mysql_move_data.log
+mysqld.cnf
+package-lock.json
+README.md
