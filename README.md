@@ -12,49 +12,127 @@ npm install --save wickrio-bot-api
 
 ## Usage
 
+For a full usage and easy to get started example see: <https://github.com/WickrInc/wickrio-example-app>
+
+### Configuration
+
+```sh
+# ./configure.sh
+
+node ./build/config/index.js
+```
+
 ```js
-const WickrIOAPI = require('wickrio_addon') //WickrIO node.js addon which allows talking directly to our api
-const WickrIOBotAPI = require('wickrio-bot-api') //Development toolkit to help create bots/integrations
-const WickrUser = WickrIOBotAPI.WickrUser
+// ./src/config/index.js
+import { ConfigBot } from 'wickrio-bot-api'
+import tokens from './configTokens.json'
 
-var bot, tokens, bot_username, bot_client_port, bot_client_server
-var tokens = JSON.parse(process.env.tokens)
+const processes = process.cwd() + '../../processes.json'
+const config = new ConfigBot(
+  tokens.tokens,
+  processes,
+  tokens.supportAdministrators,
+  tokens.supportVerification
+)
 
-async function main() {
-  try {
-    bot_username = tokens.BOT_USERNAME.value
-    bot = new WickrIOBotAPI.WickrIOBot()
-    var status = await bot.start(bot_username)
-    if (!status) {
-      process.exit()
+await config.configureYourBot(tokens.integration)
+process.exit()
+```
+
+```json
+// ./processes.json
+{
+  "supportAdministrators": true,
+  "supportVerification": true,
+  "integration": "WickrIO-Recorder-Bot",
+  "tokens": [
+    {
+      "token": "DATABASE_USER",
+      "pattern": "",
+      "type": "string",
+      "description": "Please enter the user name for the database",
+      "message": "Cannot leave empty! Please enter a value",
+      "required": true,
+      "default": "ubuntu"
+    },
+    {
+      "token": "DATABASE_PASS",
+      "pattern": "",
+      "type": "string",
+      "description": "Please enter the password for the database",
+      "message": "Cannot leave empty! Please enter a value",
+      "required": true,
+      "default": "N/A"
     }
-    // Sending message to a room
-    var msg = "Hey, I'm a WickrBot. Lets do things!"
-    var vGroupID = 'example-vGroupID'
-    var sMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, msg)
-    console.log(sMessage) //if successful should print "Sending message"
-    var closed = await bot.close()
-  } catch (err) {
-    console.log(err)
-  }
+  ]
 }
 ```
 
-For a full usage and easy to get started example see: <https://github.com/WickrInc/wickrio-example-app>
+### Create and Run a Bot
+
+```js
+// ./src/index.js
+import { BotAPI } from 'wickrio-bot-api'
+const bot = new BotAPI()
+const status = await bot.start(tokens.WICKRIO_BOT_NAME.value)
+await bot.provision({
+  status,
+  setAdminOnly: false,
+  attachLifeMinutes: '0',
+  doreceive: 'true',
+  duration: '0',
+  readreceipt: 'true',
+  cleardb: 'false',
+  contactbackup: 'false',
+  convobackup: 'false',
+  verifyusers: tokens.VERIFY_USERS,
+  // verifyusers = { encryption: false, value: 'automatic' },
+})
+```
 
 ## Message Parsing
 
 The WickrIO Node.js Bot API Framework provides an API to parse incoming messages. This API will return an object which can be used to process an incoming messages:
 
 ```js
-import * as WickrIOBotAPI from 'wickrio-bot-api'
-const bot = new WickrIOBotAPI.WickrIOBot()
-
-async function listen(message) {
+// ./src/index.js
+await bot.startListening(listen) // Passes a callback function that will receive incoming messages into the bot client
+async function listen(rawMessage) {
   try {
     // Parses an incoming message
     // returns an object with fields specific to message type
-    const parsedMessage = bot.parseMessage(message)
+    const messageService = bot.messageService({
+      rawMessage,
+      adminDMonly: false,
+    })
+    const {
+      time,
+      messageID,
+      users,
+      ttl,
+      bor,
+      control,
+      msgTS,
+      receiver,
+      file,
+      filename,
+      message,
+      command,
+      argument,
+      vGroupID,
+      convoType,
+      msgType,
+      userEmail,
+      isAdmin,
+      latitude,
+      longitude,
+      isVoiceMemo,
+      voiceMemoDuration,
+    } = messageService
+  } catch (err) {
+    console.log({ err })
+  }
+}
 ```
 
 The return value depends on the type of message being parsed. Each of the messages types supported will be shown below.
