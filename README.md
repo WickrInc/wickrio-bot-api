@@ -40,7 +40,7 @@ process.exit()
 ```
 
 ```json
-// ./processes.json
+// ./src/config/configTokens.json
 {
   "supportAdministrators": true,
   "supportVerification": true,
