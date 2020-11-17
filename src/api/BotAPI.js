@@ -1,19 +1,55 @@
-const WickrIOAPI = require('wickrio_addon')
-const WickrIOConfigure = require('./WickrIOConfigure')
-const WickrUser = require('./WickrUser')
-const WickrAdmin = require('./WickrAdmin')
-const MessageService = require('./services/message')
-const fs = require('fs')
-const APIService = require('./services/api')
+import * as WickrIOAPI from 'wickrio_addon'
+import { WickrAdmin } from './index'
+import { MessageService, APIService } from '../services'
+import fs from 'fs'
 let encryptor
 let encryptorDefined = false
 
-class WickrIOBot {
+class BotAPI {
   constructor() {
     this.wickrUsers = [] // wickrusers populate on load data which happens on start, or on addUser()
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
+    // this.runHandlers()
+  }
+
+  exitHandler = async (options, err) => {
+    try {
+      this.close()
+      if (err || options.exit) {
+        console.error('Exit reason:', err)
+        process.exit()
+      } else if (options.pid) {
+        process.kill(process.pid)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  runHandlers = () => {
+    // STANDARDIZE BELOW -----------
+
+    process.stdin.resume() // so the program will not close instantly
+
+    process.stdin.resume() // so the program will not close instantly
+
+    // catches ctrl+c and stop.sh events
+    process.on('SIGINT', this.exitHandler.bind(null, { exit: true }))
+
+    // catches "kill pid" (for example: nodemon restart)
+    process.on('SIGUSR1', this.exitHandler.bind(null, { pid: true }))
+    process.on('SIGUSR2', this.exitHandler.bind(null, { pid: true }))
+
+    // TODO clear these values!
+    // TODO make these user variables??
+
+    // catches uncaught exceptions
+    // TODO make this more robust of a catch
+
+    process.on('uncaughtException', this.exitHandler.bind(null, { exit: true }))
+    // STANDARDIZE ABOVE -----------
   }
 
   messageService({ rawMessage, adminDMonly = false }) {
@@ -31,6 +67,52 @@ class WickrIOBot {
     return new APIService({
       WickrIOAPI,
     })
+  }
+
+  provision = async ({
+    status,
+    setAdminOnly = false,
+    attachLifeMinutes = '0',
+    doreceive = 'true',
+    duration = '0',
+    readreceipt = 'true',
+    cleardb = 'true',
+    contactbackup = 'false',
+    convobackup = 'false',
+    verifyusers = { encryption: false, value: 'automatic' },
+  }) => {
+    if (setAdminOnly === true || setAdminOnly === 'true') {
+      setAdminOnly = 'true'
+    }
+
+    if (!status) {
+      this.exitHandler(null, {
+        exit: true,
+        reason: 'Client not able to start',
+      })
+    }
+    this.setAdminOnly(setAdminOnly)
+
+    // set the verification mode to true
+    // let verifyUsersMode
+    // const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
+
+    if (verifyusers.encrypted) {
+      verifyusers.value = WickrIOAPI.cmdDecryptString(verifyusers.value)
+    }
+    // else {
+    //   verifyUsersMode = VERIFY_USERS.value
+    // }
+
+    this.setVerificationMode(verifyusers.value)
+
+    WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
+    WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
+    WickrIOAPI.cmdSetControl('duration', duration.toString())
+    WickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
+    WickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
+    WickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
+    WickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
   }
 
   /*
@@ -75,7 +157,7 @@ class WickrIOBot {
         do {
           connected = WickrIOAPI.isConnected(10)
           console.log('isConnected:', connected)
-        } while (connected != true)
+        } while (connected !== true)
 
         console.log('isConnected: finally we are connected')
 
@@ -83,15 +165,17 @@ class WickrIOBot {
         do {
           cState = WickrIOAPI.getClientState()
           console.log('isConnected: client state is', cState)
-          if (cState != 'RUNNING') sleep(5000)
-        } while (cState != 'RUNNING')
+
+          if (cState !== 'RUNNING') sleep(5000)
+        } while (cState !== 'RUNNING')
+
         resolve(connected)
       })
     const processAdminUsers = async connected => {
       /*
        * Process the admin users
        */
-      const processes = JSON.parse(fs.readFileSync('processes.json'))
+      // const processes = JSON.parse(fs.readFileSync('processes.json'))
       const tokens = JSON.parse(process.env.tokens)
       let administrators
       if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
@@ -107,7 +191,7 @@ class WickrIOBot {
         // Make sure there are no white spaces on the whitelisted users
         for (let i = 0; i < administrators.length; i++) {
           const administrator = administrators[i].trim()
-          const admin = myLocalAdmins.addAdmin(administrator)
+          myLocalAdmins.addAdmin(administrator)
         }
       }
 
@@ -117,8 +201,8 @@ class WickrIOBot {
         return true
       }
       if (connected) {
-        const encrypted = await this.encryptEnv()
-        const loaded = await this.loadData()
+        await this.encryptEnv()
+        await this.loadData()
         return true
       } else {
         console.log('not connected, not processing admin users')
@@ -171,7 +255,7 @@ class WickrIOBot {
       const settings = JSON.parse(fs.readFileSync('package.json'))
       // Checks if bot supports a user database saving feature
       if (settings.database) {
-        const saved = await this.saveData()
+        await this.saveData()
       }
       return new Promise(function (resolve, reject) {
         let stopMessaging = 'not needed'
@@ -248,10 +332,7 @@ class WickrIOBot {
         }
       }
       processes.apps[0].env.tokens = tokens
-      const ps = fs.writeFileSync(
-        './processes.json',
-        JSON.stringify(processes, null, 2)
-      )
+      fs.writeFileSync('./processes.json', JSON.stringify(processes, null, 2))
       console.log('Bot tokens encrypted successfully!')
       return true
     } catch (err) {
@@ -310,7 +391,7 @@ class WickrIOBot {
       }
 
       const encrypted = WickrIOAPI.cmdEncryptString(serialusers)
-      const saved = fs.writeFileSync('users.txt', encrypted, 'utf-8')
+      fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
       return true
     } catch (err) {
@@ -323,10 +404,10 @@ class WickrIOBot {
    * This function parses an incoming message
    */
   parseMessage(message) {
-    const tokens = JSON.parse(process.env.tokens)
+    // const tokens = JSON.parse(process.env.tokens)
     message = JSON.parse(message)
     const { edit, control, msg_ts, time, receiver, sender, ttl, bor } = message
-    const msgtype = message.msgtype
+    // const msgtype = message.msgtype
     const vGroupID = message.vgroupid
     let convoType = ''
 
@@ -348,13 +429,14 @@ class WickrIOBot {
     if (vGroupID.charAt(0) === 'S') convoType = 'room'
     else if (vGroupID.charAt(0) === 'G') convoType = 'groupconvo'
     else convoType = 'personal'
+    let parsedObj
 
     if (message.file) {
       let isVoiceMemo = false
       if (message.file.isvoicememo) {
         isVoiceMemo = true
         const voiceMemoDuration = message.file.voicememoduration
-        var parsedObj = {
+        parsedObj = {
           file: message.file.localfilename,
           filename: message.file.filename,
           vgroupid: vGroupID,
@@ -372,7 +454,7 @@ class WickrIOBot {
           bor,
         }
       } else {
-        var parsedObj = {
+        parsedObj = {
           file: message.file.localfilename,
           filename: message.file.filename,
           vgroupid: vGroupID,
@@ -391,7 +473,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.location) {
-      var parsedObj = {
+      parsedObj = {
         latitude: message.location.latitude,
         longitude: message.location.longitude,
         vgroupid: vGroupID,
@@ -408,7 +490,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.call) {
-      var parsedObj = {
+      parsedObj = {
         status: message.call.status,
         vgroupid: vGroupID,
         call: message.call,
@@ -424,7 +506,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.keyverify) {
-      var parsedObj = {
+      parsedObj = {
         vgroupid: vGroupID,
         control,
         msgTS: msg_ts,
@@ -439,7 +521,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.control) {
-      var parsedObj = {
+      parsedObj = {
         vgroupid: vGroupID,
         control,
         msgTS: msg_ts,
@@ -454,7 +536,7 @@ class WickrIOBot {
       }
       return parsedObj
     } else if (message.edit) {
-      var parsedObj = {
+      parsedObj = {
         vgroupid: vGroupID,
         edit,
         msgTS: msg_ts,
@@ -490,7 +572,7 @@ class WickrIOBot {
       localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
     }
 
-    var parsedObj = {
+    parsedObj = {
       message: request,
       command: command,
       msgTS: msg_ts,
@@ -526,7 +608,7 @@ class WickrIOBot {
       ttl,
       location,
       vgroupid: vGroupID,
-      msgtype: msgType,
+      // msgtype: msgType,
       call,
       users,
       keyverify,
@@ -674,7 +756,7 @@ class WickrIOBot {
    */
   addUser(wickrUser) {
     this.wickrUsers.push(wickrUser)
-    const saved = this.saveData()
+    this.saveData()
     console.log('New Wickr user added to database.')
     return wickrUser
   }
@@ -699,13 +781,8 @@ class WickrIOBot {
     return found
   }
 }
-
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-module.exports = {
-  WickrIOBot,
-  WickrUser,
-  WickrIOConfigure,
-}
+export default BotAPI

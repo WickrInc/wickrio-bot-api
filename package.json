@@ -2,10 +2,11 @@
   "name": "wickrio-bot-api",
   "version": "5.68.4",
   "description": "The official Wickr IO Bot API Framework",
-  "main": "src/WickrIOBot.js",
+  "main": "./build/index.js",
   "dependencies": {
     "dotenv": "^8.2.0",
     "fs": "0.0.2",
+    "prompt": "^1.0.0",
     "simple-encryptor": "^3.0.0",
     "wickrio_addon": "5.68.x"
   },
@@ -38,8 +39,8 @@
     "supertest": "^4.0.2"
   },
   "scripts": {
-    "start": "node ./build/WickrIOBot.js",
-    "dev": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/WickrIOBot.js'",
+    "start": "node ./build/index.js",
+    "dev": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/index.js'",
     "build": "rm -rf build && babel ./src --out-dir ./build --ignore node_modules",
     "lint": "eslint src/**/*.js --fix --color",
     "prettier": "prettier --write ./src"
@@ -93,7 +94,24 @@
   },
   "babel": {
     "env": {
-      "test": {
+      "production": {
+        "ignore": [
+          "**/__tests__"
+        ],
+        "presets": [
+          "@babel/preset-env"
+        ],
+        "plugins": [
+          "@babel/plugin-proposal-optional-chaining",
+          "@babel/plugin-transform-runtime",
+          "@babel/plugin-transform-modules-commonjs",
+          "@babel/plugin-proposal-class-properties"
+        ]
+      },
+      "development": {
+        "ignore": [
+          "**/__tests__"
+        ],
         "presets": [
           "@babel/preset-env"
         ],
@@ -106,18 +124,7 @@
         "sourceMaps": "inline",
         "retainLines": true
       },
-      "production": {
-        "presets": [
-          "@babel/preset-env"
-        ],
-        "plugins": [
-          "@babel/plugin-proposal-optional-chaining",
-          "@babel/plugin-transform-runtime",
-          "@babel/plugin-transform-modules-commonjs",
-          "@babel/plugin-proposal-class-properties"
-        ]
-      },
-      "development": {
+      "test": {
         "presets": [
           "@babel/preset-env"
         ],

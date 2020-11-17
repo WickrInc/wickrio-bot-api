@@ -1,5 +1,6 @@
-const fs = require('fs')
-const WickrUser = require('../WickrUser')
+import fs from 'fs'
+import { WickrUser } from '../api'
+
 let encryptor
 const encryptorDefined = false
 
@@ -264,23 +265,28 @@ class MessageService {
     // If this is an admin then process any admin commands
     // if adminDMonly is false
 
-    if (isAdmin) {
-      if (this.adminDMonly && this.convoType !== 'personal') {
+    if (
+      isAdmin &&
+      this.adminDMonly &&
+      (message.includes('/admin') || message.includes('/verify'))
+    ) {
+      if (convoType !== 'personal') {
         const reply = `Hey admin commands should be sent in direct message to the bot, not in a room`
-        this.wickrAPI.cmdSendRoomMessage(this.messageService.vGroupID, reply)
+        this.wickrAPI.cmdSendRoomMessage(vGroupID, reply)
         return
       }
 
       if (!this.adminDMonly) {
-        if(localWickrAdmins.processAdminCommand(
-          userEmail,
-          vGroupID,
-          command,
-          argument
-        )){
-          return 
+        if (
+          localWickrAdmins.processAdminCommand(
+            userEmail,
+            vGroupID,
+            command,
+            argument
+          )
+        ) {
+          return
         }
-         
       }
     }
 
@@ -295,7 +301,7 @@ class MessageService {
 
   // TODO why use getters and setters here??
 
-  getAdminList(){
+  getAdminList() {
     return this.myAdmins
   }
 
@@ -535,4 +541,4 @@ class MessageService {
   //   const buttons = [button1, button2]
 }
 
-module.exports = MessageService
+export default MessageService

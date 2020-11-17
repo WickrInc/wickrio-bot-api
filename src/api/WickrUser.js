@@ -12,4 +12,4 @@ class WickrUser {
   }
 }
 
-module.exports = WickrUser
+export default WickrUser

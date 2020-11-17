@@ -3,4 +3,5 @@ package-lock.json
 /test
 /lib
 build
-.github
+mysqld.cnf
+mysql_move_data.log
