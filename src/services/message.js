@@ -265,13 +265,7 @@ class MessageService {
     // if adminDMonly is false
 
     if (isAdmin) {
-      if (this.adminDMonly && this.convoType !== 'personal') {
-        const reply = `Hey admin commands should be sent in direct message to the bot, not in a room`
-        this.wickrAPI.cmdSendRoomMessage(this.messageService.vGroupID, reply)
-        return
-      }
-
-      if (!this.adminDMonly) {
+      if (!this.adminDMonly || convoType === 'personal') {
         if(localWickrAdmins.processAdminCommand(
           userEmail,
           vGroupID,
@@ -280,7 +274,6 @@ class MessageService {
         )){
           return 
         }
-         
       }
     }
 
@@ -536,3 +529,4 @@ class MessageService {
 }
 
 module.exports = MessageService
+
