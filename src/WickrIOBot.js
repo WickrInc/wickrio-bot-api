@@ -698,6 +698,14 @@ class WickrIOBot {
     this.wickrUsers.splice(index, 1)
     return found
   }
+
+  /*
+   * Admin functions
+   */
+  getAdmins() {
+    const localWickrAdmins = this.myAdmins
+    return localWickrAdmins.getAdmins()
+  }
 }
 
 function sleep(ms) {
