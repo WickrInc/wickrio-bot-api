@@ -3,6 +3,8 @@
 module.exports = {
   currentAdmins: 'Current admins:\n%{userList}',
   alreadyContains: 'Failed, current list of admins already contains:\n%{user}',
+  notInNetwork: 'Failed, the following users were not found in your network:\n%{userList}',
+  invalidEmail: 'Failed, the following users are not valid email addresses:\n%{userList}',
   adminsToAdd: 'Going to add admins:\n%{userList}',
   adminsAdded: '%{sender} has added the following admins:\n%{userList}',
   noNewAdmins: 'Command contains no user names to add!',

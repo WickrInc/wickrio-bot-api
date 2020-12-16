@@ -1,13 +1,14 @@
 {
   "name": "wickrio-bot-api",
-  "version": "5.70.3",
+  "version": "5.70.4",
   "description": "The official Wickr IO Bot API Framework",
   "main": "src/WickrIOBot.js",
   "dependencies": {
     "dotenv": "^8.2.0",
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
-    "wickrio_addon": "5.70.x"
+    "wickrio_addon": "5.70.x",
+    "xregexp": "^4.4.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
