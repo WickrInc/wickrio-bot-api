@@ -110,6 +110,7 @@ class WickrAdmin {
         values = this.removeDuplicates(values)
         const addFails = []
         if (values.length >= 1) {
+          //check to see if a user already  exists in the admin list
           for (var i = 0; i < values.length; i++) {
             if (this.adminIDs.includes(values[i])) {
               addFails.push(values.splice(i, 1))
@@ -124,25 +125,32 @@ class WickrAdmin {
             var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
           if (values.length >= 1) {
-            // Send the initial response
-            var userList = values.join('\n')
-            var reply = strings.adminsToAdd.replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+            // if the users exist in your network add them
+            const userInfoData = JSON.parse(WickrIOAPI.cmdGetUserInfo(values))
+            if(userInfoData.failed === undefined || userInfoData.failed.length === 0){
+              // Send the initial response
+              var userList = values.join('\n')
+              var reply = strings.adminsToAdd.replace('%{userList}', userList)
+              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
 
-            // add the user(s) from the white list and update the config file
-            for (var i = 0; i < values.length; i++) {
-              this.adminIDs.push(values[i])
-            }
-            this.updateAdminList()
+              // add the user(s) from the white list and update the config file
+              for (var i = 0; i < values.length; i++) {
+                this.adminIDs.push(values[i])
+              }
+              this.updateAdminList()
 
-            // Send a message to all the current admin users
-            var donereply = strings.adminsAdded
+              // Send a message to all the current admin users
+              var donereply = strings.adminsAdded
               .replace('%{sender}', sender)
               .replace('%{userList}', userList)
-            var uMessage = WickrIOAPI.cmdSend1to1Message(
-              this.adminIDs,
-              donereply
-            )
+              var uMessage = WickrIOAPI.cmdSend1to1Message(
+                this.adminIDs,
+                donereply
+                )
+              } else {
+                reply = strings.notInNetwork.replace('%{userList}',userInfoData.failed)
+                WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+              }
           }
         } else {
           var reply = strings.noNewAdmins
