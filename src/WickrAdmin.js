@@ -2,7 +2,6 @@ const fs = require('fs')
 const { exec, execSync, execFileSync } = require('child_process')
 const WickrIOAPI = require('wickrio_addon')
 const strings = require('./WickrStrings')
-const XRegExp = require('xregexp')
 
 class WickrAdmin {
   constructor() {
@@ -126,45 +125,32 @@ class WickrAdmin {
             var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           }
           if (values.length >= 1) {
-            // check to see if users are in valid email format
-            const emailFails = []
-            for(let i = 0; i < values.length; i++){
-              if(!this.emailRegexTest(values[i])){
-                emailFails.push(values[i])
+            // if the users exist in your network add them
+            const userInfoData = JSON.parse(WickrIOAPI.cmdGetUserInfo(values))
+            if(userInfoData.failed === undefined || userInfoData.failed.length === 0){
+              // Send the initial response
+              var userList = values.join('\n')
+              var reply = strings.adminsToAdd.replace('%{userList}', userList)
+              var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+
+              // add the user(s) from the white list and update the config file
+              for (var i = 0; i < values.length; i++) {
+                this.adminIDs.push(values[i])
               }
-            }
-            // if all emails are valid proceed to check if they exist in  the network
-            if(emailFails.length === undefined || emailFails.length === 0){
-              // if the users exist in your network add them
-              const userInfoData = JSON.parse(WickrIOAPI.cmdGetUserInfo(values))
-              if(userInfoData.failed === undefined || userInfoData.failed.length === 0){
-                  // Send the initial response
-                  var userList = values.join('\n')
-                  var reply = strings.adminsToAdd.replace('%{userList}', userList)
-                  var uMessage = WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
+              this.updateAdminList()
 
-                  // add the user(s) from the white list and update the config file
-                  for (var i = 0; i < values.length; i++) {
-                    this.adminIDs.push(values[i])
-                  }
-                  this.updateAdminList()
-
-                  // Send a message to all the current admin users
-                  var donereply = strings.adminsAdded
-                  .replace('%{sender}', sender)
-                  .replace('%{userList}', userList)
-                  var uMessage = WickrIOAPI.cmdSend1to1Message(
-                    this.adminIDs,
-                    donereply
-                  )
+              // Send a message to all the current admin users
+              var donereply = strings.adminsAdded
+              .replace('%{sender}', sender)
+              .replace('%{userList}', userList)
+              var uMessage = WickrIOAPI.cmdSend1to1Message(
+                this.adminIDs,
+                donereply
+                )
               } else {
                 reply = strings.notInNetwork.replace('%{userList}',userInfoData.failed)
                 WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
               }
-            } else {
-              reply  = strings.invalidEmail.replace('%{userList}',emailFails)
-              WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
-            }
           }
         } else {
           var reply = strings.noNewAdmins
@@ -317,21 +303,6 @@ class WickrAdmin {
     }
     return uniqueUsers
   }
-
-  /*
-      Function that checks and see if a users email is valid using the following regex from https://www.w3resource.com/javascript/form/email-validation.php
-      ^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$
-  */
- emailRegexTest(user){
-  const emailRegex = XRegExp(/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/)
-    if (!emailRegex.test(user)) {
-        console.log(user, ' did not pass the email regex test')
-        return false
-    }
-    console.log(user,' passed the email regex test')
-    return true
-}
-
 }
 
 module.exports = WickrAdmin

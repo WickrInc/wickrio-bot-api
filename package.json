@@ -7,8 +7,7 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
-    "wickrio_addon": "5.70.x",
-    "xregexp": "^4.4.1"
+    "wickrio_addon": "5.70.x"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
