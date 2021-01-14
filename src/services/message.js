@@ -148,7 +148,7 @@ class MessageService {
     // This doesn't capture @ mentions
 
     if (message) {
-      const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+      const parsedData = message.match(/^(\/[a-zA-Z]+)([\s\S]*)$/)
 
       if (parsedData !== null) {
         command = parsedData[1]

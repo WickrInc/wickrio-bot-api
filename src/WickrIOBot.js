@@ -33,6 +33,52 @@ class WickrIOBot {
     })
   }
 
+  provision = async ({
+    status,
+    setAdminOnly = false,
+    attachLifeMinutes = '0',
+    doreceive = 'true',
+    duration = '0',
+    readreceipt = 'true',
+    cleardb = 'true',
+    contactbackup = 'false',
+    convobackup = 'false',
+    verifyusers = { encryption: false, value: 'automatic' },
+  }) => {
+    if (setAdminOnly === true || setAdminOnly === 'true') {
+      setAdminOnly = 'true'
+    }
+
+    if (!status) {
+      this.exitHandler(null, {
+        exit: true,
+        reason: 'Client not able to start',
+      })
+    }
+    this.setAdminOnly(setAdminOnly)
+
+    // set the verification mode to true
+    // let verifyUsersMode
+    // const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
+
+    if (verifyusers.encrypted) {
+      verifyusers.value = WickrIOAPI.cmdDecryptString(verifyusers.value)
+    }
+    // else {
+    //   verifyUsersMode = VERIFY_USERS.value
+    // }
+
+    this.setVerificationMode(verifyusers.value)
+
+    WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
+    WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
+    WickrIOAPI.cmdSetControl('duration', duration.toString())
+    WickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
+    WickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
+    WickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
+    WickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
+  }
+
   /*
    * Return the version of the addon that the bot-api is using
    */

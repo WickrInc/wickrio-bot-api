@@ -2,15 +2,13 @@
 const fs = require('fs')
 const util = require('util')
 const prompt = require('prompt')
-var path = require('path')
+const path = require('path')
 
 prompt.colors = false
 
 require('dotenv').config({
   path: `.env.configure`,
 })
-
-const { exec, execSync, execFileSync } = require('child_process')
 
 class WickrIOConfigure {
   constructor(
@@ -81,7 +79,7 @@ class WickrIOConfigure {
     }
 
     if (tokens !== undefined) {
-      for (var i = 0; i < tokens.length; i++) {
+      for (let i = 0; i < tokens.length; i++) {
         this.tokenConfig.push(tokens[i])
       }
     }
@@ -141,7 +139,7 @@ class WickrIOConfigure {
   }
 
   setAdministrators(turnOn) {
-    var oldValue = this.supportsAdministrators
+    const oldValue = this.supportsAdministrators
 
     if (turnOn === undefined || turnOn === true) {
       this.supportsAdministrators = true
@@ -172,18 +170,18 @@ class WickrIOConfigure {
           ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token != this.administratorsToken.token
+        token => token.token !== this.administratorsToken.token
       )
     }
     return true
   }
 
   setVerification(turnOn) {
-    var oldValue = this.supportsVerification
+    const oldValue = this.supportsVerification
 
     // If turning on the verification mode, check if administrators is set
     if (turnOn === undefined || turnOn === true) {
-      if (this.supportsAdministrators == true) {
+      if (this.supportsAdministrators === true) {
         this.supportsVerification = true
       } else {
         console.log(
@@ -210,7 +208,7 @@ class WickrIOConfigure {
         'Removing ' + this.verificationToken.token + ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token != this.verificationToken.token
+        token => token.token !== this.verificationToken.token
       )
     }
     return true
@@ -218,7 +216,7 @@ class WickrIOConfigure {
 
   setEncrypt(turnOn) {
     this.supportsEncrypt = false
-    var oldValue = this.supportsEncrypt
+    const oldValue = this.supportsEncrypt
 
     // If turning on the encrypt mode
     if (turnOn === undefined || turnOn === false) {
@@ -242,15 +240,15 @@ class WickrIOConfigure {
         'Removing ' + this.encryptToken.token + ' from the list of tokens'
       )
       this.tokenConfig = this.tokenConfig.filter(
-        token => token.token != this.encryptToken.token
+        token => token.token !== this.encryptToken.token
       )
     }
     return true
   }
 
   getCurrentValues() {
-    var newObjectResult = {}
-    var processes
+    const newObjectResult = {}
+    let processes
     try {
       processes = fs.readFileSync(this.processesFile, 'utf-8')
       if (!processes) {
@@ -262,13 +260,13 @@ class WickrIOConfigure {
       return newObjectResult
     }
 
-    var pjson = JSON.parse(processes)
+    const pjson = JSON.parse(processes)
     if (pjson.apps[0].env.tokens === undefined) {
       return newObjectResult
     }
 
     // Create a mapping of the list of tokens and their values
-    for (var attributename in pjson.apps[0].env.tokens) {
+    for (const attributename in pjson.apps[0].env.tokens) {
       if (!pjson.apps[0].env.tokens[attributename].encrypted)
         newObjectResult[attributename] =
           pjson.apps[0].env.tokens[attributename].value
@@ -285,7 +283,7 @@ class WickrIOConfigure {
   processConfiguredTokenList(pjson, tokenList) {
     // Check if the value for any of the tokens is not set
     // If it is not set then return false
-    for (var i = 0; i < tokenList.length; i++) {
+    for (let i = 0; i < tokenList.length; i++) {
       if (pjson.apps[0].env.tokens[tokenList[i].token] === undefined) {
         return false
       }
@@ -304,7 +302,7 @@ class WickrIOConfigure {
    * If any tokens do not have values assigned then a false value is returned.
    */
   processConfigured() {
-    var processes
+    let processes
     try {
       processes = fs.readFileSync(this.processesFile, 'utf-8')
       if (!processes) {
@@ -316,7 +314,7 @@ class WickrIOConfigure {
       return false
     }
 
-    var pjson = JSON.parse(processes)
+    const pjson = JSON.parse(processes)
     if (pjson.apps[0].env.tokens === undefined) {
       return false
     }
@@ -326,10 +324,10 @@ class WickrIOConfigure {
   }
 
   processTokenList(tokenList, parentToken, schema) {
-    var newObjectResult = this.getCurrentValues()
+    const newObjectResult = this.getCurrentValues()
     for (let index = 0; index < tokenList.length; index++) {
-      var tmpdflt = newObjectResult[tokenList[index].token]
-      var requiredValue
+      let tmpdflt = newObjectResult[tokenList[index].token]
+      let requiredValue
       if (tmpdflt === undefined || tmpdflt === 'undefined') {
         requiredValue = tokenList[index].required
 
@@ -355,7 +353,7 @@ class WickrIOConfigure {
             if (prompt.history(parentToken) === null) {
               return false
             }
-            var name = prompt.history(parentToken).value
+            // const name = prompt.history(parentToken).value
             return prompt.history(parentToken).value === 'yes'
           },
           conform: function (filename) {
@@ -378,7 +376,7 @@ class WickrIOConfigure {
             if (prompt.history(parentToken) === null) {
               return false
             }
-            var name = prompt.history(parentToken).value
+            // const name = prompt.history(parentToken).value
             return prompt.history(parentToken).value === 'yes'
           },
         }
@@ -399,23 +397,22 @@ class WickrIOConfigure {
    *
    */
   async inputTokens(integrationName) {
-    var config = []
-    var i = 0
+    const config = []
 
-    var newObjectResult = this.getCurrentValues()
+    const newObjectResult = this.getCurrentValues()
     const inputPromises = []
 
     for (let i = 0; i < this.tokenConfig.length; i++) {
-      var inputPromise = new Promise((resolve, reject) => {
+      const inputPromise = new Promise((resolve, reject) => {
         this.inputPrompt = function (tokenEntry) {
-          var schema = {
+          let schema = {
             properties: {},
           }
 
           // For this token if it is defined in the environment
           // Then set the input value for the token
           if (process.env[tokenEntry.token] !== undefined) {
-            var input = tokenEntry.token + '=' + process.env[tokenEntry.token]
+            const input = tokenEntry.token + '=' + process.env[tokenEntry.token]
             config.push(input)
 
             // If this token has a list and the answer was 'yes' then proceed into the list
@@ -424,8 +421,8 @@ class WickrIOConfigure {
             }
           } else {
 
-            var dflt = newObjectResult[tokenEntry.token]
-            var requiredValue = tokenEntry.required
+            let dflt = newObjectResult[tokenEntry.token]
+            let requiredValue = tokenEntry.required
 
             if (dflt === undefined || dflt === 'undefined') {
               if (tokenEntry.default === undefined) {
@@ -481,12 +478,12 @@ class WickrIOConfigure {
                 answer[tokenEntry.token] = newObjectResult[tokenEntry.token]
               }
             }
-            var input = tokenEntry.token + '=' + answer[tokenEntry.token]
+            const input = tokenEntry.token + '=' + answer[tokenEntry.token]
             config.push(input)
 
             if (tokenEntry.list !== undefined) {
-              var tokens = []
-              var tokendefault = {}
+              const tokens = []
+              const tokendefault = {}
               for (let index = 0; index < tokenEntry.list.length; index++) {
                 tokens.push(tokenEntry.list[index].token)
                 tokendefault[tokenEntry.list[index].token] =
@@ -512,7 +509,7 @@ class WickrIOConfigure {
                     answer[tokens[tindex]] = newObjectResult[tokens[tindex]]
                   }
                 }
-                var input = tokens[tindex] + '=' + answer[tokens[tindex]]
+                const input = tokens[tindex] + '=' + answer[tokens[tindex]]
                 config.push(input)
               }
             }
@@ -527,23 +524,23 @@ class WickrIOConfigure {
     }
 
     return Promise.all(inputPromises).then(answer => {
-      let objectKeyArray = []
-      let objectValueArray = []
-      for (var i = 0; i < config.length; i++) {
-        let locationEqual = config[i].indexOf('=')
-        let objectKey = config[i].slice(0, locationEqual)
-        let objectValue = config[i].slice(locationEqual + 1, config[i].length) //Input value
+      const objectKeyArray = []
+      const objectValueArray = []
+      for (let i = 0; i < config.length; i++) {
+        const locationEqual = config[i].indexOf('=')
+        const objectKey = config[i].slice(0, locationEqual)
+        const objectValue = config[i].slice(locationEqual + 1, config[i].length) // Input value
         objectKeyArray.push(objectKey)
         objectValueArray.push(objectValue)
       }
-      var newObjectResult = {}
-      for (var j = 0; j < config.length; j++) {
+      const newObjectResult = {}
+      for (let j = 0; j < config.length; j++) {
         newObjectResult[objectKeyArray[j]] = objectValueArray[j]
       }
-      for (var key in newObjectResult) {
+      for (const key in newObjectResult) {
         // If the environment variable is set then use it
         if (process.env[key] !== undefined) {
-          var obj = {
+          const obj = {
             value: process.env[key],
             encrypted: false,
           }
@@ -551,18 +548,18 @@ class WickrIOConfigure {
         }
         // Else use the value just entered by the user
         else {
-          var obj = {
+          const obj = {
             value: newObjectResult[key],
             encrypted: false,
           }
           newObjectResult[key] = obj
         }
       }
-      for (var key in this.dataParsed.apps[0].env.tokens) {
+      for (const key in this.dataParsed.apps[0].env.tokens) {
         delete this.dataParsed.apps[0].env.tokens[key]
       }
       try {
-        var processesFileDir = path.dirname(this.processesFile)
+        let processesFileDir = path.dirname(this.processesFile)
         if (processesFileDir === undefined || processesFileDir.length === 0)
           processesFileDir = '.'
         const processesFileBackup = path.join(processesFileDir, 'processes_backup.json')
@@ -570,26 +567,27 @@ class WickrIOConfigure {
         // backup the processes.json file
         fs.copyFileSync(this.processesFile, processesFileBackup)
 
+        let newName
         if (process.env.WICKRIO_BOT_NAME !== undefined) {
-          var newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
+          newName = integrationName + '_' + process.env.WICKRIO_BOT_NAME
         } else if (newObjectResult.WICKRIO_BOT_NAME !== undefined) {
-          var newName =
+          newName =
             integrationName + '_' + newObjectResult.WICKRIO_BOT_NAME.value
         } else {
-          var newName = integrationName
+          newName = integrationName
         }
 
-        //var assign = Object.assign(this.dataParsed.apps[0].name, newName);
+        // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
 
-        var assign = Object.assign(
+        const assign = Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
         )
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
-          var ps = fs.writeFileSync(
+          fs.writeFileSync(
              this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
@@ -604,11 +602,11 @@ class WickrIOConfigure {
                     */
 
           // 1.
-          var data = JSON.parse(fs.readFileSync(this.processesFile, 'utf-8'))
+          const data = JSON.parse(fs.readFileSync(this.processesFile, 'utf-8'))
           // 2.
           const adminArray = this.getCurrentValues().ADMINISTRATORS.split(',')
           // 3.
-          var objToAdd = {}
+          const objToAdd = {}
           let i
           for (i = 0; i < adminArray.length; i++) {
             const userSecurityGroups = this.dataParsed.apps[0].env.tokens[
@@ -623,8 +621,8 @@ class WickrIOConfigure {
       } catch (err) {
         console.log(err)
       }
-      //console.log(answer);
-      return
+      // console.log(answer);
+      
     })
   }
 
