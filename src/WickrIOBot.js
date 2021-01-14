@@ -33,7 +33,7 @@ class WickrIOBot {
     })
   }
 
-  provision = async ({
+  async provision({
     status,
     setAdminOnly = false,
     attachLifeMinutes = '0',
@@ -44,7 +44,7 @@ class WickrIOBot {
     contactbackup = 'false',
     convobackup = 'false',
     verifyusers = { encryption: false, value: 'automatic' },
-  }) => {
+  }) {
     if (setAdminOnly === true || setAdminOnly === 'true') {
       setAdminOnly = 'true'
     }
