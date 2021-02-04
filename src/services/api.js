@@ -62,6 +62,18 @@ class APIService {
     )
   }
 
+  sendSecurityGroupMessageButtons(securityGroups, message, ttl, bor, messageID, flags, buttons) {
+    return this.WickrIOAPI.cmdSendSecurityGroupMessage(
+      message,
+      securityGroups,
+      ttl,
+      bor,
+      messageID,
+      flags,
+      buttons
+    )
+  }
+
   sendNetworkVoiceMemo(voiceMemo, duration, ttl, bor, messageID, sentBy) {
     return this.WickrIOAPI.cmdSendNetworkVoiceMemo(
       voiceMemo,
@@ -224,6 +236,19 @@ class APIService {
 
   send1to1MessageLowPriority(userArray, reply, ttl, bor, messageID, flags) {
     const buttons = []
+    return this.WickrIOAPI.cmdSend1to1Message(
+      userArray,
+      reply,
+      ttl,
+      bor,
+      messageID,
+      flags,
+      buttons,
+      true
+    )
+  }
+
+  send1to1MessageLowPriorityButtons(userArray, reply, ttl, bor, messageID, flags, buttons) {
     return this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,
