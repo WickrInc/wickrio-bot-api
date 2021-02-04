@@ -1,4 +1,5 @@
 const fs = require('fs')
+const { exec, execSync, execFileSync } = require('child_process')
 const WickrIOAPI = require('wickrio_addon')
 const strings = require('./WickrStrings')
 

@@ -148,7 +148,7 @@ class MessageService {
     // This doesn't capture @ mentions
 
     if (message) {
-      const parsedData = message.match(/^(\/[a-zA-Z]+)([\s\S]*)$/)
+      const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
 
       if (parsedData !== null) {
         command = parsedData[1]
@@ -167,7 +167,7 @@ class MessageService {
     // not an admin, then drop the message
     if (this.adminOnly === true && admin === undefined) {
       console.log('Dropping message from non-admin user!')
-      return
+      return {}
     }
 
     // Set the isAdmin flag
@@ -258,7 +258,7 @@ class MessageService {
       }
       return parsedMessage
     } else if (message === undefined) {
-      return
+      return {}
     }
 
     // If this is an admin then process any admin commands
@@ -272,7 +272,7 @@ class MessageService {
           command,
           argument
         )){
-          return 
+          return {}
         }
       }
     }
