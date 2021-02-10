@@ -32,6 +32,30 @@ class APIService {
     )
   }
 
+  sendSecurityGroupVoiceMemoButtons(
+    securityGroups,
+    voiceMemo,
+    duration,
+    ttl,
+    bor,
+    messageID,
+    sentBy,
+    buttons
+  ) {
+    // TODO add time sent to VoiceMemo String?
+    return this.WickrIOAPI.cmdSendSecurityGroupVoiceMemo(
+      securityGroups,
+      voiceMemo,
+      'VoiceMemo',
+      duration,
+      ttl,
+      bor,
+      messageID,
+      sentBy,
+      buttons
+    )
+  }
+
   sendSecurityGroupAttachment(
     securityGroups,
     filename,
@@ -49,6 +73,28 @@ class APIService {
       bor,
       messageID,
       sentBy
+    )
+  }
+
+  sendSecurityGroupAttachmentButtons(
+    securityGroups,
+    filename,
+    displayName,
+    ttl,
+    bor,
+    messageID,
+    sentBy,
+    buttons
+  ) {
+    return this.WickrIOAPI.cmdSendSecurityGroupAttachment(
+      securityGroups,
+      filename,
+      displayName,
+      ttl,
+      bor,
+      messageID,
+      sentBy,
+      buttons
     )
   }
 
@@ -86,6 +132,19 @@ class APIService {
     )
   }
 
+  sendNetworkVoiceMemoButtons(voiceMemo, duration, ttl, bor, messageID, sentBy, buttons) {
+    return this.WickrIOAPI.cmdSendNetworkVoiceMemo(
+      voiceMemo,
+      'VoiceMemo',
+      duration,
+      ttl,
+      bor,
+      messageID,
+      sentBy,
+      buttons
+    )
+  }
+
   sendNetworkAttachment(filename, displayName, ttl, bor, messageID, sentBy) {
     return this.WickrIOAPI.cmdSendNetworkAttachment(
       filename,
@@ -97,8 +156,25 @@ class APIService {
     )
   }
 
+  sendNetworkAttachmentButtons(filename, displayName, ttl, bor, messageID, sentBy, flags, buttons) {
+    return this.WickrIOAPI.cmdSendNetworkAttachment(
+      filename,
+      displayName,
+      ttl,
+      bor,
+      messageID,
+      sentBy,
+      flags,
+      buttons
+    )
+  }
+
   sendNetworkMessage(message, ttl, bor, messageID) {
     return this.WickrIOAPI.cmdSendNetworkMessage(message, ttl, bor, messageID)
+  }
+
+  sendNetworkMessageButtons(message, ttl, bor, messageID, flags, buttons) {
+    return this.WickrIOAPI.cmdSendNetworkMessage(message, ttl, bor, messageID, flags, buttons)
   }
 
   writeMessageIDDB(messageId, sender, target, dateSent, messageContent) {
