@@ -156,7 +156,7 @@ class APIService {
     )
   }
 
-  sendNetworkAttachmentButtons(filename, displayName, ttl, bor, messageID, sentBy, flags, buttons) {
+  sendNetworkAttachmentButtons(filename, displayName, ttl, bor, messageID, sentBy, buttons) {
     return this.WickrIOAPI.cmdSendNetworkAttachment(
       filename,
       displayName,
@@ -164,7 +164,6 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      flags,
       buttons
     )
   }
