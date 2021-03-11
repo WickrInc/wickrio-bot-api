@@ -195,10 +195,13 @@ class WickrAdmin {
           const reply = strings.noRemoveAdmins
           WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
         }
+      } else if(action === 'help'){
+        return false
       } else {
         const reply = strings.invalidAdminCommand
         WickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
       }
+      
       return true
     } else {
       if (this.verifyAutomatic !== true) {
