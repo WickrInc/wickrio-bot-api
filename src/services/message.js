@@ -1,4 +1,5 @@
 const fs = require('fs')
+const util = require('util')
 const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
@@ -118,6 +119,8 @@ class MessageService {
 
   parseRawMsg({ rawMessage }) {
     const jsonmsg = JSON.parse(rawMessage)
+console.log("jsonmsg: " + util.inspect(jsonmsg, {depth: null}))
+
     const {
       message_id: messageID,
       message,
@@ -131,7 +134,7 @@ class MessageService {
       ttl,
       location,
       vgroupid: vGroupID,
-      // msgtype: msgType,
+      msgtype: rawMsgType,
       call,
       users,
       keyverify,
@@ -193,7 +196,7 @@ class MessageService {
       ttl,
       bor,
     }
-    if (file) {
+    if (rawMsgType === 6000) {     // file transfer msgtype
       if (file.isvoicememo) {
         parsedMessage = {
           ...parsedMessage,
@@ -214,7 +217,7 @@ class MessageService {
         }
       }
       return parsedMessage
-    } else if (location) {
+    } else if (rawMsgType === 8000) {    // location msgtype
       parsedMessage = {
         ...parsedMessage,
         latitude: location.latitude,
@@ -230,28 +233,20 @@ class MessageService {
         msgType: 'call',
       }
       return parsedMessage
-    } else if (keyverify) {
+    } else if (rawMsgType === 3000) {   // verification msgtype
       parsedMessage = {
         ...parsedMessage,
         control,
         msgType: 'keyverify',
       }
       return parsedMessage
-    } else if (control) {
-      if (control.isrecall) {
-        parsedMessage = {
-          ...parsedMessage,
-          msgType: 'delete',
-        }
-      } else {
-        parsedMessage = {
-          ...parsedMessage,
-          control,
-          msgType: 'edit',
-        }
+    } else if (rawMsgType >= 4000 && rawMsgType <= 5000) {    // control messages
+      parsedMessage = {
+        ...parsedMessage,
+        msgType: 'control',
       }
       return parsedMessage
-    } else if (edit) {
+    } else if (rawMsgType === 9000) {   // edit message
       parsedMessage = {
         ...parsedMessage,
         msgType: 'edit',
@@ -529,4 +524,3 @@ class MessageService {
 }
 
 module.exports = MessageService
-
