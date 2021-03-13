@@ -245,6 +245,17 @@ class APIService {
     )
   }
 
+  sendMessageUserHashFileButtons(filePath, message, ttl, bor, messageID, buttons) {
+    return this.WickrIOAPI.cmdSendMessageUserHashFile(
+      filePath,
+      message,
+      ttl,
+      bor,
+      messageID,
+      buttons
+    )
+  }
+
   sendMessageUserNameFile(filePath, message, ttl, bor, messageID) {
     return this.WickrIOAPI.cmdSendMessageUserNameFile(
       filePath,
@@ -252,6 +263,18 @@ class APIService {
       ttl,
       bor,
       messageID
+    )
+  }
+
+  sendMessageUserNameFileButtons(filePath, message, ttl, bor, messageID, flags, buttons) {
+    return this.WickrIOAPI.cmdSendMessageUserNameFile(
+      filePath,
+      message,
+      ttl,
+      bor,
+      messageID,
+      flags,
+      buttons
     )
   }
 
@@ -273,6 +296,26 @@ class APIService {
     )
   }
 
+  sendAttachmentUserHashFileButtons(
+    filePath,
+    attachment,
+    display,
+    ttl,
+    bor,
+    messageID,
+    buttons
+  ) {
+    return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
+      filePath,
+      attachment,
+      display,
+      ttl,
+      bor,
+      messageID,
+      buttons
+    )
+  }
+
   sendAttachmentUserNameFile(
     filePath,
     attachment,
@@ -288,6 +331,26 @@ class APIService {
       ttl,
       bor,
       messageID
+    )
+  }
+
+  sendAttachmentUserNameFileButtons(
+    filePath,
+    attachment,
+    display,
+    ttl,
+    bor,
+    messageID,
+    buttons
+  ) {
+    return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
+      filePath,
+      attachment,
+      display,
+      ttl,
+      bor,
+      messageID,
+      buttons
     )
   }
 
