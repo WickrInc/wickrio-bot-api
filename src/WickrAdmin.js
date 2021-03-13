@@ -1,5 +1,4 @@
 const fs = require('fs')
-const { exec, execSync, execFileSync } = require('child_process')
 const WickrIOAPI = require('wickrio_addon')
 const strings = require('./WickrStrings')
 
@@ -85,7 +84,8 @@ class WickrAdmin {
     }
 
     try {
-      fs.execSync('cp processes.json processes_backup.json')
+      fs.copyFileSync('./processes.json', './processes_backup.json')
+
       fs.writeFileSync(
         './processes.json',
         JSON.stringify(pjson, null, 2)
