@@ -1,5 +1,4 @@
 const fs = require('fs')
-const util = require('util')
 const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
@@ -119,7 +118,6 @@ class MessageService {
 
   parseRawMsg({ rawMessage }) {
     const jsonmsg = JSON.parse(rawMessage)
-console.log("jsonmsg: " + util.inspect(jsonmsg, {depth: null}))
 
     const {
       message_id: messageID,
