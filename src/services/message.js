@@ -265,7 +265,12 @@ class MessageService {
           command,
           argument
         )){
-          return {}
+          // If this admin command was processed then return the msgtype as 'admin'
+          parsedMessage = {
+            ...parsedMessage,
+            msgType: 'admin',
+          }
+          return parsedMessage
         }
       }
     }
