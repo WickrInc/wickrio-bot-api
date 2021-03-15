@@ -149,13 +149,12 @@ class MessageService {
     // This doesn't capture @ mentions
 
     if (message) {
-      const parsedData = message.match(/(\/[a-zA-Z]+)([\s\S]*)$/)
+      const parsedData = message.trim().match(/^(\/[a-zA-Z]+)([\s\S]*)$/)
 
       if (parsedData !== null) {
         command = parsedData[1]
         if (parsedData[2] !== '') {
-          argument = parsedData[2]
-          argument = argument.trim()
+          argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
         }
       }
     }
