@@ -5,6 +5,7 @@ const WickrAdmin = require('./WickrAdmin')
 const MessageService = require('./services/message')
 const fs = require('fs')
 const APIService = require('./services/api')
+const path = require('path')
 let encryptor
 let encryptorDefined = false
 
@@ -80,7 +81,7 @@ class WickrIOBot {
   }
 
   /*
-   * Return the version of the addon that the bot-api is using
+   * Return the WickrIO addon API
    */
   getWickrIOAddon() {
     return WickrIOAPI
@@ -363,6 +364,78 @@ class WickrIOBot {
       console.log(err)
       return false
     }
+  }
+
+  /*
+   * Return the versions of all associated software component
+   */
+  getVersions(packageFile) {
+
+    let reply = '*Versions*'
+
+    /*
+     * Add the Docker tag
+     */
+    const dockerInfoFile = '/usr/lib/wickr/docker_info.json'
+    if (fs.existsSync(dockerInfoFile)) {
+      const dockerinfo = JSON.parse(fs.readFileSync(dockerInfoFile, 'utf-8'))
+      const imagetag = dockerinfo.tag
+
+      if (imagetag) {
+        reply += `\nDocker Tag: ${imagetag}`
+      }
+    }
+
+    /*
+     * Get the bot client's version information
+     */
+    let clientVersion=''
+    const clientInfoJSON = WickrIOAPI.cmdGetClientInfo()
+    if (clientInfoJSON) {
+      const clientInfo = JSON.parse(clientInfoJSON)
+      if (clientInfo.version) {
+        clientVersion = clientInfo.version
+      }
+    }
+    if (clientVersion !== '')
+      reply += `\nBot Client: ${clientVersion}`
+
+    /*
+     * Add the Integration's version
+     */
+    try {
+      const packageJson  = JSON.parse(fs.readFileSync(packageFile, 'utf-8'))
+      if (packageJson.version)
+        reply += `\nIntegration: ${packageJson.version}`
+    } catch (err) {
+      console.log('getVersions: error getting: ' + packageFile + '\n' + err)
+    }
+
+    /*
+     * Add the WickrIO Addon's version
+     */
+    const addonFile = path.join(process.cwd(), 'node_modules/wickrio_addon/package.json')
+    try {
+      const addonJson  = JSON.parse(fs.readFileSync(addonFile, 'utf-8'))
+      if (addonJson.version)
+        reply += `\nWickrIO Addon: ${addonJson.version}` 
+    } catch (err) {
+      console.log('getVersions: error getting: ' + addonFile + '\n' + err)
+    }
+
+    /*
+     * Add the WickrIO bot API's version
+     */
+    const botApiFile = path.join(process.cwd(), 'node_modules/wickrio-bot-api/package.json')
+    try {
+      const botApiJson  = JSON.parse(fs.readFileSync(botApiFile, 'utf-8'))
+      if (botApiJson.version)
+        reply += `\nWickrIO API: ${botApiJson.version}` 
+    } catch (err) {
+      console.log('getVersions: error getting: ' + botApiFile + '\n' + err)
+    }
+
+    return reply
   }
 
   /*
