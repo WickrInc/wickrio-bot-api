@@ -3,6 +3,8 @@ const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
 
+const util = require('util')
+
 class MessageService {
   constructor({
     rawMessage,
@@ -11,6 +13,7 @@ class MessageService {
     wickrUsers,
     wickrAPI,
     adminDMonly = false,
+    testOnly = false,
   }) {
     this.rawMessage = rawMessage
     this.adminDMonly = adminDMonly
@@ -19,6 +22,7 @@ class MessageService {
     this.wickrUsers = wickrUsers
     this.wickrAPI = wickrAPI
     this.user = null
+    this.testOnly = testOnly
     const {
       time,
       messageID,
@@ -43,6 +47,8 @@ class MessageService {
       isVoiceMemo,
       voiceMemoDuration,
     } = this.parseRawMsg({ rawMessage: this.rawMessage })
+
+console.log("process.env.tokens: " + util.inspect(process.env.tokens, {depth: null}))
 
     // OG MSG DATA
     this.time = time || null
@@ -149,19 +155,26 @@ class MessageService {
     // This doesn't capture @ mentions
 
     if (message) {
+      console.log('got message')
       const parsedData = message.trim().match(/^(\/[a-zA-Z]+)([\s\S]*)$/)
 
       if (parsedData !== null) {
         command = parsedData[1]
+      console.log('command='+command)
         if (parsedData[2] !== '') {
           argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
         }
       }
+    } else {
+      console.log('NO message')
     }
 
     // Get the admin, if this is an admin user
     const localWickrAdmins = this.myAdmins
-    const admin = localWickrAdmins.getAdmin(userEmail)
+    let admin
+    if (localWickrAdmins) {
+      admin = localWickrAdmins.getAdmin(userEmail)
+    }
 
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
@@ -280,6 +293,7 @@ class MessageService {
       argument,
     }
 
+console.log('returning parsedMessage: ' + JSON.stringify(parsedMessage, null, 4))
     return parsedMessage
   }
 
@@ -489,6 +503,12 @@ class MessageService {
 
   async saveData() {
     try {
+      // If this is a test then do not save data
+      if (this.testOnly) {
+        console.log('saveData: test, not saving!')
+        return
+      }
+
       console.log('Encrypting user database...')
       // console.log({ storingTheseUsers: this.wickrUsers })
       if (this.wickrUsers.length === 0) {
