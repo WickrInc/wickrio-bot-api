@@ -17,30 +17,8 @@ class APIService {
     ttl,
     bor,
     messageID,
-    sentBy
-  ) {
-    // TODO add time sent to VoiceMemo String?
-    return this.WickrIOAPI.cmdSendSecurityGroupVoiceMemo(
-      securityGroups,
-      voiceMemo,
-      'VoiceMemo',
-      duration,
-      ttl,
-      bor,
-      messageID,
-      sentBy
-    )
-  }
-
-  sendSecurityGroupVoiceMemoButtons(
-    securityGroups,
-    voiceMemo,
-    duration,
-    ttl,
-    bor,
-    messageID,
     sentBy,
-    buttons
+    messageMeta=''
   ) {
     // TODO add time sent to VoiceMemo String?
     return this.WickrIOAPI.cmdSendSecurityGroupVoiceMemo(
@@ -52,7 +30,7 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      buttons
+      messageMeta
     )
   }
 
@@ -63,28 +41,8 @@ class APIService {
     ttl,
     bor,
     messageID,
-    sentBy
-  ) {
-    return this.WickrIOAPI.cmdSendSecurityGroupAttachment(
-      securityGroups,
-      filename,
-      displayName,
-      ttl,
-      bor,
-      messageID,
-      sentBy
-    )
-  }
-
-  sendSecurityGroupAttachmentButtons(
-    securityGroups,
-    filename,
-    displayName,
-    ttl,
-    bor,
-    messageID,
     sentBy,
-    buttons
+    messageMeta
   ) {
     return this.WickrIOAPI.cmdSendSecurityGroupAttachment(
       securityGroups,
@@ -94,21 +52,11 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      buttons
+      messageMeta
     )
   }
 
-  sendSecurityGroupMessage(securityGroups, message, ttl, bor, messageID) {
-    return this.WickrIOAPI.cmdSendSecurityGroupMessage(
-      message,
-      securityGroups,
-      ttl,
-      bor,
-      messageID
-    )
-  }
-
-  sendSecurityGroupMessageButtons(securityGroups, message, ttl, bor, messageID, flags, buttons) {
+  sendSecurityGroupMessage(securityGroups, message, ttl, bor, messageID, flags=[], messageMeta='') {
     return this.WickrIOAPI.cmdSendSecurityGroupMessage(
       message,
       securityGroups,
@@ -116,23 +64,11 @@ class APIService {
       bor,
       messageID,
       flags,
-      buttons
+      messageMeta
     )
   }
 
-  sendNetworkVoiceMemo(voiceMemo, duration, ttl, bor, messageID, sentBy) {
-    return this.WickrIOAPI.cmdSendNetworkVoiceMemo(
-      voiceMemo,
-      'VoiceMemo',
-      duration,
-      ttl,
-      bor,
-      messageID,
-      sentBy
-    )
-  }
-
-  sendNetworkVoiceMemoButtons(voiceMemo, duration, ttl, bor, messageID, sentBy, buttons) {
+  sendNetworkVoiceMemo(voiceMemo, duration, ttl, bor, messageID, sentBy, messageMeta='') {
     return this.WickrIOAPI.cmdSendNetworkVoiceMemo(
       voiceMemo,
       'VoiceMemo',
@@ -141,22 +77,11 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      buttons
+      messageMeta
     )
   }
 
-  sendNetworkAttachment(filename, displayName, ttl, bor, messageID, sentBy) {
-    return this.WickrIOAPI.cmdSendNetworkAttachment(
-      filename,
-      displayName,
-      ttl,
-      bor,
-      messageID,
-      sentBy
-    )
-  }
-
-  sendNetworkAttachmentButtons(filename, displayName, ttl, bor, messageID, sentBy, flags, buttons) {
+  sendNetworkAttachment(filename, displayName, ttl, bor, messageID, sentBy, flags=[], messageMeta='') {
     return this.WickrIOAPI.cmdSendNetworkAttachment(
       filename,
       displayName,
@@ -165,16 +90,12 @@ class APIService {
       messageID,
       sentBy,
       flags,
-      buttons
+      messageMeta
     )
   }
 
-  sendNetworkMessage(message, ttl, bor, messageID) {
-    return this.WickrIOAPI.cmdSendNetworkMessage(message, ttl, bor, messageID)
-  }
-
-  sendNetworkMessageButtons(message, ttl, bor, messageID, flags, buttons) {
-    return this.WickrIOAPI.cmdSendNetworkMessage(message, ttl, bor, messageID, flags, buttons)
+  sendNetworkMessage(message, ttl, bor, messageID, flags=[], messageMeta='') {
+    return this.WickrIOAPI.cmdSendNetworkMessage(message, ttl, bor, messageID, flags, messageMeta)
   }
 
   writeMessageIDDB(messageId, sender, target, dateSent, messageContent) {
@@ -235,38 +156,18 @@ class APIService {
     return this.WickrIOAPI.cmdSendRoomAttachment(vGroupID, attachment, display)
   }
 
-  sendMessageUserHashFile(filePath, message, ttl, bor, messageID) {
-    return this.WickrIOAPI.cmdSendMessageUserHashFile(
-      filePath,
-      message,
-      ttl,
-      bor,
-      messageID
-    )
-  }
-
-  sendMessageUserHashFileButtons(filePath, message, ttl, bor, messageID, buttons) {
+  sendMessageUserHashFile(filePath, message, ttl, bor, messageID, messageMeta) {
     return this.WickrIOAPI.cmdSendMessageUserHashFile(
       filePath,
       message,
       ttl,
       bor,
       messageID,
-      buttons
+      messageMeta
     )
   }
 
-  sendMessageUserNameFile(filePath, message, ttl, bor, messageID) {
-    return this.WickrIOAPI.cmdSendMessageUserNameFile(
-      filePath,
-      message,
-      ttl,
-      bor,
-      messageID
-    )
-  }
-
-  sendMessageUserNameFileButtons(filePath, message, ttl, bor, messageID, flags, buttons) {
+  sendMessageUserNameFile(filePath, message, ttl, bor, messageID, flags=[], messageMeta='') {
     return this.WickrIOAPI.cmdSendMessageUserNameFile(
       filePath,
       message,
@@ -274,7 +175,7 @@ class APIService {
       bor,
       messageID,
       flags,
-      buttons
+      messageMeta
     )
   }
 
@@ -284,26 +185,8 @@ class APIService {
     display,
     ttl,
     bor,
-    messageID
-  ) {
-    return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
-      filePath,
-      attachment,
-      display,
-      ttl,
-      bor,
-      messageID
-    )
-  }
-
-  sendAttachmentUserHashFileButtons(
-    filePath,
-    attachment,
-    display,
-    ttl,
-    bor,
     messageID,
-    buttons
+    messageMeta
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
       filePath,
@@ -312,7 +195,7 @@ class APIService {
       ttl,
       bor,
       messageID,
-      buttons
+      messageMeta
     )
   }
 
@@ -322,26 +205,8 @@ class APIService {
     display,
     ttl,
     bor,
-    messageID
-  ) {
-    return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
-      filePath,
-      attachment,
-      display,
-      ttl,
-      bor,
-      messageID
-    )
-  }
-
-  sendAttachmentUserNameFileButtons(
-    filePath,
-    attachment,
-    display,
-    ttl,
-    bor,
     messageID,
-    buttons
+    messageMeta
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
       filePath,
@@ -350,7 +215,7 @@ class APIService {
       ttl,
       bor,
       messageID,
-      buttons
+      messageMeta
     )
   }
 
@@ -373,8 +238,7 @@ class APIService {
     )
   }
 
-  send1to1MessageLowPriority(userArray, reply, ttl, bor, messageID, flags) {
-    const buttons = []
+  send1to1MessageLowPriority(userArray, reply, ttl, bor, messageID, flags, messageMeta='') {
     return this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,
@@ -382,20 +246,7 @@ class APIService {
       bor,
       messageID,
       flags,
-      buttons,
-      true
-    )
-  }
-
-  send1to1MessageLowPriorityButtons(userArray, reply, ttl, bor, messageID, flags, buttons) {
-    return this.WickrIOAPI.cmdSend1to1Message(
-      userArray,
-      reply,
-      ttl,
-      bor,
-      messageID,
-      flags,
-      buttons,
+      messageMeta,
       true
     )
   }
