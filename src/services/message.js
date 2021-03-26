@@ -511,18 +511,6 @@ class MessageService {
     }
   }
 
-  // function replyWithButtons(message) {
-  //   const button1 = {
-  //     type: 'message',
-  //     text: 'Yes',
-  //     message: 'yes',
-  //   }
-  //   const button2 = {
-  //     type: 'message',
-  //     text: 'No',
-  //     message: 'no',
-  //   }
-  //   const buttons = [button1, button2]
 }
 
 module.exports = MessageService
