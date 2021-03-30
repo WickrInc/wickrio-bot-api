@@ -17,7 +17,7 @@ class WickrIOBot {
     this.myAdmins = null // admins dont populate until start
   }
 
-  messageService({ rawMessage, adminDMonly = false }) {
+  messageService({ rawMessage, adminDMonly = false, testOnly = false }) {
     return new MessageService({
       rawMessage,
       admins: this.myAdmins,
@@ -25,6 +25,7 @@ class WickrIOBot {
       wickrUsers: this.wickrUsers,
       adminDMonly,
       wickrAPI: WickrIOAPI,
+      testOnly,
     })
   }
 
@@ -182,6 +183,15 @@ class WickrIOBot {
         return processAdminUsers(connection)
       }
     }
+  }
+
+  /*
+   * This start function is specific to the testing scripts
+   */
+  async startForTesting(client_username) {
+    const myLocalAdmins = new WickrAdmin()
+    console.log('test starting bot')
+    this.myAdmins = myLocalAdmins
   }
 
   /*

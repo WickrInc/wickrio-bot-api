@@ -3,6 +3,8 @@ const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
 
+const util = require('util')
+
 class MessageService {
   constructor({
     rawMessage,
@@ -11,6 +13,7 @@ class MessageService {
     wickrUsers,
     wickrAPI,
     adminDMonly = false,
+    testOnly = false,
   }) {
     this.rawMessage = rawMessage
     this.adminDMonly = adminDMonly
@@ -19,6 +22,7 @@ class MessageService {
     this.wickrUsers = wickrUsers
     this.wickrAPI = wickrAPI
     this.user = null
+    this.testOnly = testOnly
     const {
       time,
       messageID,
@@ -161,7 +165,10 @@ class MessageService {
 
     // Get the admin, if this is an admin user
     const localWickrAdmins = this.myAdmins
-    const admin = localWickrAdmins.getAdmin(userEmail)
+    let admin
+    if (localWickrAdmins) {
+      admin = localWickrAdmins.getAdmin(userEmail)
+    }
 
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
@@ -489,6 +496,12 @@ class MessageService {
 
   async saveData() {
     try {
+      // If this is a test then do not save data
+      if (this.testOnly) {
+        console.log('saveData: test, not saving!')
+        return
+      }
+
       console.log('Encrypting user database...')
       // console.log({ storingTheseUsers: this.wickrUsers })
       if (this.wickrUsers.length === 0) {
