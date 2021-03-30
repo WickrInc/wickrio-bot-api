@@ -48,8 +48,6 @@ class MessageService {
       voiceMemoDuration,
     } = this.parseRawMsg({ rawMessage: this.rawMessage })
 
-console.log("process.env.tokens: " + util.inspect(process.env.tokens, {depth: null}))
-
     // OG MSG DATA
     this.time = time || null
     this.botName = JSON.parse(process.env.tokens).WICKRIO_BOT_NAME.value || null
@@ -155,18 +153,14 @@ console.log("process.env.tokens: " + util.inspect(process.env.tokens, {depth: nu
     // This doesn't capture @ mentions
 
     if (message) {
-      console.log('got message')
       const parsedData = message.trim().match(/^(\/[a-zA-Z]+)([\s\S]*)$/)
 
       if (parsedData !== null) {
         command = parsedData[1]
-      console.log('command='+command)
         if (parsedData[2] !== '') {
           argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
         }
       }
-    } else {
-      console.log('NO message')
     }
 
     // Get the admin, if this is an admin user
@@ -293,7 +287,6 @@ console.log("process.env.tokens: " + util.inspect(process.env.tokens, {depth: nu
       argument,
     }
 
-console.log('returning parsedMessage: ' + JSON.stringify(parsedMessage, null, 4))
     return parsedMessage
   }
 
