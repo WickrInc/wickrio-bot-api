@@ -377,6 +377,38 @@ class WickrIOBot {
   }
 
   /*
+   * Get the transmit queue information. Returns an object that contains
+   * the following formated information:
+   * {
+   *      estimated_time: 9999,                 // estimated time in seconds
+   *      count: 99999,                         // total number of messages left
+   *      tx_queue: [                           // array of pending transmits
+   *          {
+   *              message_id: '<messageID>',    // Associated message ID
+   *              count: 9999,                  // number of transmits
+   *              created: '<date>',            // date the broadcast was created
+   *              sender: '<sender>',           // sender of the message
+   *              estimated_time: 9999,         // estimated time in seconds
+   *          }
+   *      ]
+   * }
+   */
+  getTransmitQueueInfo() {
+    try {
+      const txQInfo = WickrIOAPI.cmdGetTransmitQueueInfo()
+      console.log('Transmit Queue Info:' + txQInfo)
+      if (txQInfo) {
+        return JSON.parse(txQInfo)
+      } else {
+        return {}
+      }
+    } catch (err) {
+      console.log(err)
+      return {}
+    }
+  }
+
+  /*
    * Return the versions of all associated software component
    */
   getVersions(packageFile) {
