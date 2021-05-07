@@ -142,7 +142,8 @@ class WickrIOBot {
       const processes = JSON.parse(fs.readFileSync('processes.json'))
       const tokens = JSON.parse(process.env.tokens)
       let administrators
-      if (tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
+      if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && 
+        tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
         if (tokens.ADMINISTRATORS.encrypted) {
           administrators = WickrIOAPI.cmdDecryptString(
             tokens.ADMINISTRATORS.value
@@ -646,7 +647,7 @@ class WickrIOBot {
     }
 
     // If this is an admin then process any admin commands
-    if (admin !== undefined) {
+    if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && admin !== undefined) {
       localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
     }
 
