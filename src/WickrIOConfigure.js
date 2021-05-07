@@ -17,16 +17,23 @@ class WickrIOConfigure {
     supportAdministrators,
     supportVerification,
     supportEncrypt,
-    addOnToJSON
+    addOnToJSON,
+    adminsOptional,
   ) {
     this.supportsVerification = false
     this.supportsAdministrators = false
     this.supportsEncrypt = false
     this.addOnToJSON = false
+    this.adminsOptional = false
 
     if (addOnToJSON === undefined || addOnToJSON !== true)
       this.addOnToJSON = false
     else this.addOnToJSON = true
+
+    if (adminsOptional !== undefined)
+      this.adminsOptional = adminsOptional
+
+console.log('adminsOptional='+this.adminsOptional)
 
     this.tokenConfig = [
       {
@@ -55,7 +62,8 @@ class WickrIOConfigure {
     }
 
     this.verificationToken = WickrIOConfigure.getVerificationTokens()
-    this.administratorsToken = WickrIOConfigure.getAdminTokens()
+    this.administratorsToken = WickrIOConfigure.getAdminTokens(this.adminsOptional)
+console.log('adminsOptional='+this.adminsOptional)
 
     this.encryptToken = {
       token: 'DATABASE_ENCRYPTION_CHOICE',
@@ -122,15 +130,38 @@ class WickrIOConfigure {
   /*
    * function to return the 'admin' token(s)
    */
-  static getAdminTokens() {
-    return {
-      token: 'ADMINISTRATORS',
-      pattern: '',
-      type: 'string',
-      description: 'Enter the list of administrators',
-      message: 'Cannot leave empty! Please enter a value',
-      required: true,
-      default: 'N/A',
+  static getAdminTokens(adminsOptional) {
+    if (adminsOptional) {
+      return {
+        token: 'ADMINISTRATORS_CHOICE',
+        pattern: 'yes|no',
+        type: 'string',
+        description: 'Do you want to use administrators [yes|no]',
+        message: 'Please enter either yes or no',
+        required: true,
+        default: 'yes',
+        list: [
+          {
+            token: 'ADMINISTRATORS',
+            pattern: '',
+            type: 'string',
+            description: 'Enter the list of administrators',
+            message: 'Cannot leave empty! Please enter a value',
+            required: true,
+            default: 'N/A',
+          }
+        ]
+      }
+    } else {
+      return {
+        token: 'ADMINISTRATORS',
+        pattern: '',
+        type: 'string',
+        description: 'Enter the list of administrators',
+        message: 'Cannot leave empty! Please enter a value',
+        required: true,
+        default: 'N/A',
+      }
     }
   }
 
@@ -162,7 +193,7 @@ class WickrIOConfigure {
       console.log(
         'Adding ' + this.administratorsToken.token + ' to the list of tokens'
       )
-      this.tokenConfig.push(this.administratorsToken)
+      this.tokenConfig.unshift(this.administratorsToken)
     } else {
       console.log(
         'Removing ' +
