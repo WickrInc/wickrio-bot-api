@@ -247,6 +247,7 @@ class MessageService {
     } else if (rawMsgType >= 4000 && rawMsgType <= 5000) {    // control messages
       parsedMessage = {
         ...parsedMessage,
+        control,
         msgType: 'control',
       }
       return parsedMessage
