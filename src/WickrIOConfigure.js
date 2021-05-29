@@ -57,6 +57,17 @@ console.log('adminsOptional='+this.adminsOptional)
           'processes.json file does not exist! (' + processesFile + ')'
         )
       }
+      const foreverFile = processesFile.replace('processes.json', 'forever.json')
+      if (fs.existsSync(foreverFile)) {
+        this.foreverFile = foreverFile
+        this.forever = require(foreverFile)
+        this.foreverDataStringify = JSON.stringify(this.forever)
+        this.foreverDataParsed = JSON.parse(this.foreverDataStringify)
+      } else {
+        console.error(
+          'forever.json file does not exist! (' + foreverFile + ')'
+        )
+      }
     } catch (err) {
       console.error(err)
     }
@@ -607,6 +618,7 @@ console.log('adminsOptional='+this.adminsOptional)
         } else {
           newName = integrationName
         }
+        this.uid = newName
 
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
@@ -657,13 +669,32 @@ console.log('adminsOptional='+this.adminsOptional)
     })
   }
 
+  async configureForever() {
+    try {
+      if (!fs.existsSync(this.foreverFile)) {
+        console.error('forever.json file does not exist!!')
+      } else {
+        this.foreverDataParsed.uid = this.uid
+        this.foreverDataParsed.sourceDir = this.processesFile.replace('processes.json', '')
+        this.foreverDataParsed.logFile = this.processesFile.replace('processes.json', 'log.output')
+        this.foreverDataParsed.outFile = this.processesFile.replace('processes.json', 'outfile.output')
+        this.foreverDataParsed.errFile = this.processesFile.replace('processes.json', 'err.output')
+        fs.writeFileSync(this.foreverFile, JSON.stringify(this.foreverDataParsed, null, 2))
+        console.log('Finished Configuring forever!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   async configureYourBot(integrationName) {
     try {
       if (!fs.existsSync(this.processesFile)) {
         console.error('processes.json file does not exist!!')
       } else {
-       await this.inputTokens(integrationName)
-       console.log('Finished Configuring!')
+        await this.inputTokens(integrationName)
+        await this.configureForever()
+        console.log('Finished Configuring!')
       }
     } catch (err) {
       console.log(err)
