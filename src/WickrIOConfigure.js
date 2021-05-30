@@ -57,6 +57,17 @@ console.log('adminsOptional='+this.adminsOptional)
           'processes.json file does not exist! (' + processesFile + ')'
         )
       }
+      const packageFile = processesFile.replace('processes.json', 'package.json')
+      if (fs.existsSync(packageFile)) {
+        this.packageFile = packageFile
+        this.package = require(packageFile)
+        this.packageDataStringify = JSON.stringify(this.package)
+        this.packageDataParsed = JSON.parse(this.packageDataStringify)
+      } else {
+        console.error(
+          'package.json file does not exist! (' + packageFile + ')'
+        )
+      }
       const foreverFile = processesFile.replace('processes.json', 'forever.json')
       if (fs.existsSync(foreverFile)) {
         this.foreverFile = foreverFile
@@ -669,6 +680,20 @@ console.log('adminsOptional='+this.adminsOptional)
     })
   }
 
+  async configurePackage() {
+    try {
+      if (!fs.existsSync(this.packageFile)) {
+        console.error('package.json file does not exist!!')
+      } else {
+        this.packageDataParsed.scripts.stop = `forever stop ${this.uid}`
+        fs.writeFileSync(this.packageFile, JSON.stringify(this.packageDataParsed, null, 2))
+        console.log('Finished Configuring package!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   async configureForever() {
     try {
       if (!fs.existsSync(this.foreverFile)) {
@@ -693,6 +718,7 @@ console.log('adminsOptional='+this.adminsOptional)
         console.error('processes.json file does not exist!!')
       } else {
         await this.inputTokens(integrationName)
+        await this.configurePackage()
         await this.configureForever()
         console.log('Finished Configuring!')
       }
