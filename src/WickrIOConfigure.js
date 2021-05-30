@@ -686,6 +686,7 @@ console.log('adminsOptional='+this.adminsOptional)
         console.error('package.json file does not exist!!')
       } else {
         this.packageDataParsed.scripts.stop = `forever stop ${this.uid}`
+        this.packageDataParsed.scripts.restart = `forever restart ${this.uid}`
         fs.writeFileSync(this.packageFile, JSON.stringify(this.packageDataParsed, null, 2))
         console.log('Finished Configuring package!')
       }
