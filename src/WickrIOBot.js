@@ -140,23 +140,25 @@ class WickrIOBot {
        * Process the admin users
        */
       const processes = JSON.parse(fs.readFileSync('processes.json'))
-      const tokens = JSON.parse(process.env.tokens)
-      let administrators
-      if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && 
-        tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
-        if (tokens.ADMINISTRATORS.encrypted) {
-          administrators = WickrIOAPI.cmdDecryptString(
-            tokens.ADMINISTRATORS.value
-          )
-        } else {
-          administrators = tokens.ADMINISTRATORS.value
-        }
-        administrators = administrators.split(/[ ,]+/)
+      if (process.env.tokens !== undefined) {
+        const tokens = JSON.parse(process.env.tokens)
+        let administrators
+        if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && 
+          tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
+          if (tokens.ADMINISTRATORS.encrypted) {
+            administrators = WickrIOAPI.cmdDecryptString(
+              tokens.ADMINISTRATORS.value
+            )
+          } else {
+            administrators = tokens.ADMINISTRATORS.value
+          }
+          administrators = administrators.split(/[ ,]+/)
 
-        // Make sure there are no white spaces on the whitelisted users
-        for (let i = 0; i < administrators.length; i++) {
-          const administrator = administrators[i].trim()
-          const admin = myLocalAdmins.addAdmin(administrator)
+          // Make sure there are no white spaces on the whitelisted users
+          for (let i = 0; i < administrators.length; i++) {
+            const administrator = administrators[i].trim()
+            const admin = myLocalAdmins.addAdmin(administrator)
+          }
         }
       }
 
@@ -268,6 +270,9 @@ class WickrIOBot {
    * WickrIO API functions used: cmdEncryptString()
    */
   async encryptEnv() {
+    if (process.env.tokens === undefined) {
+      return true
+    }
     try {
       const processes = JSON.parse(fs.readFileSync('processes.json'))
       const tokens = JSON.parse(process.env.tokens)
@@ -485,7 +490,12 @@ class WickrIOBot {
    * This function parses an incoming message
    */
   parseMessage(message) {
-    const tokens = JSON.parse(process.env.tokens)
+    let tokens
+    if (process.env.tokens !== undefined) {
+      tokens = JSON.parse(process.env.tokens)
+    } else {
+      tokens = {}
+    }
     message = JSON.parse(message)
     const { edit, control, msg_ts, time, receiver, sender, ttl, bor } = message
     const msgtype = message.msgtype
@@ -865,6 +875,28 @@ class WickrIOBot {
   getAdmins() {
     const localWickrAdmins = this.myAdmins
     return localWickrAdmins.getAdmins()
+  }
+
+  /*
+   * copy processes.json tokens to process.env
+   */
+  processesJsonToProcessEnv() {
+    console.log('Copying processes.json tokens to process.env')
+    // Read in the processes.json file
+    const processesJsonFile = path.join(process.cwd(), 'processes.json')
+    if (!fs.existsSync(processesJsonFile)) {
+      console.error(processesJsonFile + ' does not exist!')
+      return false
+    }
+    const processesJson = fs.readFileSync(processesJsonFile);
+    //console.log('processes.json=' + processesJson)
+    const processesJsonObject = JSON.parse(processesJson)
+
+    process.env['tokens'] = JSON.stringify(processesJsonObject.apps[0].env.tokens)
+
+    //console.log('end process.env=' + JSON.stringify(process.env))
+    //console.log('end process.env.tokens=' + process.env.tokens)
+    return true
   }
 }
 
