@@ -876,6 +876,28 @@ class WickrIOBot {
     const localWickrAdmins = this.myAdmins
     return localWickrAdmins.getAdmins()
   }
+
+  /*
+   * copy processes.json tokens to process.env
+   */
+  processesJsonToProcessEnv() {
+    console.log('Copying processes.json tokens to process.env')
+    // Read in the processes.json file
+    const processesJsonFile = path.join(process.cwd(), 'processes.json')
+    if (!fs.existsSync(processesJsonFile)) {
+      console.error(processesJsonFile + ' does not exist!')
+      return false
+    }
+    const processesJson = fs.readFileSync(processesJsonFile);
+    //console.log('processes.json=' + processesJson)
+    const processesJsonObject = JSON.parse(processesJson)
+
+    process.env['tokens'] = JSON.stringify(processesJsonObject.apps[0].env.tokens)
+
+    //console.log('end process.env=' + JSON.stringify(process.env))
+    //console.log('end process.env.tokens=' + process.env.tokens)
+    return true
+  }
 }
 
 function sleep(ms) {
