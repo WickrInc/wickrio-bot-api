@@ -143,8 +143,10 @@ class WickrIOBot {
       if (process.env.tokens !== undefined) {
         const tokens = JSON.parse(process.env.tokens)
         let administrators
-        if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && 
-          tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value) {
+        if (
+          (!tokens.ADMINISTRATORS_CHOICE || (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes')) && 
+          tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value
+        ) {
           if (tokens.ADMINISTRATORS.encrypted) {
             administrators = WickrIOAPI.cmdDecryptString(
               tokens.ADMINISTRATORS.value
