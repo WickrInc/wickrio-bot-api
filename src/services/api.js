@@ -148,12 +148,23 @@ class APIService {
     return this.WickrIOAPI.cmdGetMessageIDTable(page, size, sender)
   }
 
-  sendRoomMessage(vGroupID, message) {
-    return this.WickrIOAPI.cmdSendRoomMessage(vGroupID, message)
+  sendRoomMessage(vGroupID, message, ttl, bor, messageID, flags, messagemeta) {
+    return this.WickrIOAPI.cmdSendRoomMessage(vGroupID,
+                                              message,
+                                              ttl === undefined ? "" : ttl,
+                                              bor === undefined ? "" : bor,
+                                              messageID === undefined ? "" : messageID,
+                                              flags === undefined ? [] : flags,
+                                              messagemeta === undefined ? "" : messagemeta)
   }
 
-  sendRoomAttachment(vGroupID, attachment, display) {
-    return this.WickrIOAPI.cmdSendRoomAttachment(vGroupID, attachment, display)
+  sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta) {
+    return this.WickrIOAPI.cmdSendRoomAttachment(vGroupID,
+                                                 attachment,
+                                                 display,
+                                                 ttl === undefined ? "" : ttl,
+                                                 bor === undefined ? "" : bor,
+                                                 messagemeta === undefined ? "" : messagemeta)
   }
 
   sendMessageUserHashFile(filePath, message, ttl, bor, messageID, messageMeta) {
