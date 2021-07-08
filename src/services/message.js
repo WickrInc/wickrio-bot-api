@@ -158,7 +158,10 @@ class MessageService {
       if (parsedData !== null) {
         command = parsedData[1]
         if (parsedData[2] !== '') {
-          argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
+          argument = parsedData[2]
+            .trim()
+            .replace(/^@[^ ]+ /, '')
+            .trim()
         }
       }
     }
@@ -200,7 +203,8 @@ class MessageService {
       ttl,
       bor,
     }
-    if (rawMsgType === 6000) {     // file transfer msgtype
+    if (rawMsgType === 6000) {
+      // file transfer msgtype
       if (file.isvoicememo) {
         parsedMessage = {
           ...parsedMessage,
@@ -221,7 +225,8 @@ class MessageService {
         }
       }
       return parsedMessage
-    } else if (rawMsgType === 8000) {    // location msgtype
+    } else if (rawMsgType === 8000) {
+      // location msgtype
       parsedMessage = {
         ...parsedMessage,
         latitude: location.latitude,
@@ -237,21 +242,24 @@ class MessageService {
         msgType: 'call',
       }
       return parsedMessage
-    } else if (rawMsgType === 3000) {   // verification msgtype
+    } else if (rawMsgType === 3000) {
+      // verification msgtype
       parsedMessage = {
         ...parsedMessage,
         control,
         msgType: 'keyverify',
       }
       return parsedMessage
-    } else if (rawMsgType >= 4000 && rawMsgType <= 5000) {    // control messages
+    } else if (rawMsgType >= 4000 && rawMsgType <= 5000) {
+      // control messages
       parsedMessage = {
         ...parsedMessage,
         control,
         msgType: 'control',
       }
       return parsedMessage
-    } else if (rawMsgType === 9000) {   // edit message
+    } else if (rawMsgType === 9000) {
+      // edit message
       parsedMessage = {
         ...parsedMessage,
         msgType: 'edit',
@@ -266,12 +274,14 @@ class MessageService {
 
     if (isAdmin) {
       if (!this.adminDMonly || convoType === 'personal') {
-        if(localWickrAdmins.processAdminCommand(
-          userEmail,
-          vGroupID,
-          command,
-          argument
-        )){
+        if (
+          localWickrAdmins.processAdminCommand(
+            userEmail,
+            vGroupID,
+            command,
+            argument
+          )
+        ) {
           // If this admin command was processed then return the msgtype as 'admin'
           parsedMessage = {
             ...parsedMessage,
@@ -293,7 +303,7 @@ class MessageService {
 
   // TODO why use getters and setters here??
 
-  getAdminList(){
+  getAdminList() {
     return this.myAdmins
   }
 
@@ -308,8 +318,12 @@ class MessageService {
     return { fromDate, toDate }
   }
 
-  getArguments() {
-    return this.arguments
+  getArgument() {
+    return this.argument
+  }
+
+  getIsAdmin() {
+    return this.isAdmin
   }
 
   getUserEmail() {
@@ -408,10 +422,7 @@ class MessageService {
       userEmail,
     })
 
-    if (userCurrentState === commandState) {
-      return true
-    }
-    return false
+    return userCurrentState === commandState
   }
 
   setUserCurrentCmdInfo({ currentCmdInfo }) {
@@ -524,7 +535,6 @@ class MessageService {
       return false
     }
   }
-
 }
 
 module.exports = MessageService
