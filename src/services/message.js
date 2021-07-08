@@ -318,10 +318,14 @@ class MessageService {
     return { fromDate, toDate }
   }
 
+  // A getter for the argument to a command
+  // The argument is the message minus the /command
   getArgument() {
     return this.argument
   }
 
+  // A getter for the isAdmin field returns true if the current user
+  // has admin privilliges
   getIsAdmin() {
     return this.isAdmin
   }
