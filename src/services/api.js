@@ -290,13 +290,15 @@ class APIService {
     )
   }
 
-  send1to1Message(userArray, reply, ttl, bor, messageID) {
+  send1to1Message(userArray, reply, ttl, bor, messageID, flags, messagemeta) {
     return this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,
-      ttl,
-      bor,
-      messageID
+      ttl === undefined ? '' : ttl,
+      bor === undefined ? '' : bor,
+      messageID === undefined ? '' : messageID,
+      flags === undefined ? [] : flags,
+      messagemeta === undefined ? '' : messagemeta
     )
   }
 
