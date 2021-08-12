@@ -248,7 +248,8 @@ class APIService {
     ttl,
     bor,
     messageID,
-    messageMeta
+    messageMeta,
+    message = ''
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
       filePath,
@@ -257,7 +258,8 @@ class APIService {
       ttl,
       bor,
       messageID,
-      messageMeta
+      messageMeta,
+      message
     )
   }
 
@@ -268,7 +270,8 @@ class APIService {
     ttl,
     bor,
     messageID,
-    messageMeta
+    messageMeta,
+    message = ''
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
       filePath,
@@ -277,7 +280,8 @@ class APIService {
       ttl,
       bor,
       messageID,
-      messageMeta
+      messageMeta,
+      message
     )
   }
 
