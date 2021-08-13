@@ -287,49 +287,47 @@ class APIService {
 
   sendVoiceMemoUserNameFile(
     filePath,
-    attachment,
-    display,
+    voiceMemo,
     duration,
     ttl,
     bor,
     messageID,
     messageMeta,
-    message = ''
+    sentBy = ''
   ) {
     return this.WickrIOAPI.cmdSendVoiceMemoUserNameFile(
       filePath,
-      attachment,
-      display,
+      voiceMemo,
+      'VoiceMemo',
       duration,
       ttl,
       bor,
       messageID,
       messageMeta,
-      message
+      sentBy
     )
   }
 
   sendVoiceMemoUserHashFile(
     filePath,
-    attachment,
-    display,
+    voiceMemo,
     duration,
     ttl,
     bor,
     messageID,
     messageMeta,
-    message = ''
+    sentBy = ''
   ) {
     return this.WickrIOAPI.cmdSendVoiceMemoUserHashFile(
       filePath,
-      attachment,
-      display,
+      voiceMemo,
+      'VoiceMemo',
       duration,
       ttl,
       bor,
       messageID,
       messageMeta,
-      message
+      sentBy
     )
   }
 
