@@ -285,6 +285,54 @@ class APIService {
     )
   }
 
+  sendVoiceMemoUserNameFile(
+    filePath,
+    attachment,
+    display,
+    duration,
+    ttl,
+    bor,
+    messageID,
+    messageMeta,
+    message = ''
+  ) {
+    return this.WickrIOAPI.cmdSendVoiceMemoUserNameFile(
+      filePath,
+      attachment,
+      display,
+      duration,
+      ttl,
+      bor,
+      messageID,
+      messageMeta,
+      message
+    )
+  }
+
+  sendVoiceMemoUserHashFile(
+    filePath,
+    attachment,
+    display,
+    duration,
+    ttl,
+    bor,
+    messageID,
+    messageMeta,
+    message = ''
+  ) {
+    return this.WickrIOAPI.cmdSendVoiceMemoUserHashFile(
+      filePath,
+      attachment,
+      display,
+      duration,
+      ttl,
+      bor,
+      messageID,
+      messageMeta,
+      message
+    )
+  }
+
   setMessageStatus(messageID, userID, statusNumber, statusMessage) {
     return this.WickrIOAPI.cmdSetMessageStatus(
       messageID,
