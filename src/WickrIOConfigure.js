@@ -702,9 +702,6 @@ console.log('adminsOptional='+this.adminsOptional)
       } else {
         this.foreverDataParsed.uid = this.uid
         this.foreverDataParsed.sourceDir = this.processesFile.replace('processes.json', '')
-        this.foreverDataParsed.logFile = this.processesFile.replace('processes.json', 'log.output')
-        this.foreverDataParsed.outFile = this.processesFile.replace('processes.json', 'outfile.output')
-        this.foreverDataParsed.errFile = this.processesFile.replace('processes.json', 'err.output')
         fs.writeFileSync(this.foreverFile, JSON.stringify(this.foreverDataParsed, null, 2))
         console.log('Finished Configuring forever!')
       }
