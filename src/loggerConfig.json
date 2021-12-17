@@ -1,0 +1,13 @@
+{
+  "log_tokens" : {
+    "LOG_LEVEL": {
+      "value": "info"
+    },
+    "LOG_FILE_SIZE": {
+      "value": "10m"
+    },
+    "LOG_MAX_FILES": {
+      "value": "5"
+    }
+  }
+}

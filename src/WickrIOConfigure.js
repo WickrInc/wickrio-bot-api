@@ -465,6 +465,8 @@ console.log('adminsOptional='+this.adminsOptional)
           // For this token if it is defined in the environment
           // Then set the input value for the token
           if (process.env[tokenEntry.token] !== undefined) {
+            console.log('toren')
+            console.log(util.inspect(this.tokenConfig, { showHidden: false, depth: null }))
             const input = tokenEntry.token + '=' + process.env[tokenEntry.token]
             config.push(input)
 
@@ -633,11 +635,18 @@ console.log('adminsOptional='+this.adminsOptional)
 
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
+        this.configureLogger(newObjectResult)
 
-        const assign = Object.assign(
+        //TODO can we just assign all of env?
+        Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
         )
+        Object.assign(
+          this.dataParsed.apps[0].env.config_tokens,
+          newObjectResult
+        )
+
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
@@ -670,6 +679,11 @@ console.log('adminsOptional='+this.adminsOptional)
           }
           // 4.
           data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd
+          this.configureLogger(data)
+          Object.assign(
+            this.data.apps[0].env.config_tokens,
+            data
+          )
           fs.writeFileSync(this.processesFile, JSON.stringify(data, null, 2))
         }
       } catch (err) {
@@ -711,6 +725,16 @@ console.log('adminsOptional='+this.adminsOptional)
     } catch (err) {
       console.error(err)
     }
+  }
+
+  configureLogger(currentValuesObject) {
+    for (let token in this.configTokens) {
+      if (currentValuesObject.apps[0].env.config_tokens[token] === undefined ||
+          currentValuesObject.apps[0].env.config_tokens[token].value === undefined) {
+        currentValuesObject.apps[0].env.config_tokens[token] = token
+      } 
+    }
+    return currentValuesObject
   }
 
   async configureYourBot(integrationName) {
