@@ -25,6 +25,11 @@ class WickrIOConfigure {
     this.supportsEncrypt = false
     this.addOnToJSON = false
     this.adminsOptional = false
+    this.loggerConfig = {
+      LOG_LEVEL: 'info',
+      LOG_FILE_SIZE: '10m',
+      LOG_MAX_FILES: '5',
+    }
 
     if (addOnToJSON === undefined || addOnToJSON !== true)
       this.addOnToJSON = false
@@ -465,8 +470,6 @@ console.log('adminsOptional='+this.adminsOptional)
           // For this token if it is defined in the environment
           // Then set the input value for the token
           if (process.env[tokenEntry.token] !== undefined) {
-            console.log('toren')
-            console.log(util.inspect(this.tokenConfig, { showHidden: false, depth: null }))
             const input = tokenEntry.token + '=' + process.env[tokenEntry.token]
             config.push(input)
 
@@ -635,23 +638,27 @@ console.log('adminsOptional='+this.adminsOptional)
 
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
-        this.configureLogger(newObjectResult)
 
-        //TODO can we just assign all of env?
+        // TODO can we just assign all of env?
+        console.log('TOREN')
+        console.log(this.dataParsed.apps[0].env.tokens)
+        console.log(newObjectResult)
         Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
         )
-        Object.assign(
-          this.dataParsed.apps[0].env.config_tokens,
-          newObjectResult
-        )
+        const configData = this.configureLogger(this.dataParsed)
+        if (this.dataParsed.apps[0].env.config_tokens === undefined) {
+          this.dataParsed.apps[0].env.config_tokens = this.loggerConfig
+        } else {
+          Object.assign(this.dataParsed.apps[0].env.config_tokens, configData)
+        }
 
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
           fs.writeFileSync(
-             this.processesFile,
+            this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
@@ -679,11 +686,12 @@ console.log('adminsOptional='+this.adminsOptional)
           }
           // 4.
           data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd
-          this.configureLogger(data)
-          Object.assign(
-            this.data.apps[0].env.config_tokens,
-            data
-          )
+          // TODO fix in this case
+          // this.configureLogger(data)
+          // Object.assign(
+          //   this.data.apps[0].env.config_tokens,
+          //   data
+          // )
           fs.writeFileSync(this.processesFile, JSON.stringify(data, null, 2))
         }
       } catch (err) {
@@ -716,9 +724,6 @@ console.log('adminsOptional='+this.adminsOptional)
       } else {
         this.foreverDataParsed.uid = this.uid
         this.foreverDataParsed.sourceDir = this.processesFile.replace('processes.json', '')
-        this.foreverDataParsed.logFile = this.processesFile.replace('processes.json', 'log.output')
-        this.foreverDataParsed.outFile = this.processesFile.replace('processes.json', 'outfile.output')
-        this.foreverDataParsed.errFile = this.processesFile.replace('processes.json', 'err.output')
         fs.writeFileSync(this.foreverFile, JSON.stringify(this.foreverDataParsed, null, 2))
         console.log('Finished Configuring forever!')
       }
@@ -727,14 +732,20 @@ console.log('adminsOptional='+this.adminsOptional)
     }
   }
 
-  configureLogger(currentValuesObject) {
-    for (let token in this.configTokens) {
-      if (currentValuesObject.apps[0].env.config_tokens[token] === undefined ||
-          currentValuesObject.apps[0].env.config_tokens[token].value === undefined) {
-        currentValuesObject.apps[0].env.config_tokens[token] = token
-      } 
+  configureLogger(data) {
+    const retObj = {}
+    if (data.apps[0].env.config_tokens === undefined) {
+      return this.loggerConfig
     }
-    return currentValuesObject
+    for (const token in this.loggerConfig) {
+      console.log('Toren')
+      console.log(token)
+      console.log(this.loggerConfig[token])
+      if (data.apps[0].env.config_tokens[token] === undefined) {
+        retObj[token] = this.loggerConfig[token]
+      }
+    }
+    return retObj
   }
 
   async configureYourBot(integrationName) {
