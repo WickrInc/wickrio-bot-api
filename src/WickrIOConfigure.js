@@ -648,10 +648,10 @@ console.log('adminsOptional='+this.adminsOptional)
           newObjectResult
         )
         const configData = this.configureLogger(this.dataParsed)
-        if (this.dataParsed.apps[0].env.config_tokens === undefined) {
-          this.dataParsed.apps[0].env.config_tokens = this.loggerConfig
+        if (this.dataParsed.apps[0].env.log_tokens === undefined) {
+          this.dataParsed.apps[0].env.log_tokens = this.loggerConfig
         } else {
-          Object.assign(this.dataParsed.apps[0].env.config_tokens, configData)
+          Object.assign(this.dataParsed.apps[0].env.log_tokens, configData)
         }
 
         // If addOnToJSON is false write the file,
@@ -734,14 +734,14 @@ console.log('adminsOptional='+this.adminsOptional)
 
   configureLogger(data) {
     const retObj = {}
-    if (data.apps[0].env.config_tokens === undefined) {
+    if (data.apps[0].env.log_tokens === undefined) {
       return this.loggerConfig
     }
     for (const token in this.loggerConfig) {
       console.log('Toren')
       console.log(token)
       console.log(this.loggerConfig[token])
-      if (data.apps[0].env.config_tokens[token] === undefined) {
+      if (data.apps[0].env.log_tokens[token] === undefined) {
         retObj[token] = this.loggerConfig[token]
       }
     }

@@ -2,6 +2,7 @@ const WickrIOAPI = require('wickrio_addon')
 const WickrIOConfigure = require('./WickrIOConfigure')
 const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
+const WickrLogger = require('./WickrLogger')
 const MessageService = require('./services/message')
 const fs = require('fs')
 const APIService = require('./services/api')
@@ -910,4 +911,5 @@ module.exports = {
   WickrIOBot,
   WickrUser,
   WickrIOConfigure,
+  WickrLogger,
 }

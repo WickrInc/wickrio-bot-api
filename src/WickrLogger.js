@@ -1,11 +1,21 @@
-import fs from 'fs'
-import path from 'path'
-
+const fs = require('fs')
+const path = require('path')
 const winston = require('winston')
 const DailyRotateFile = require('winston-daily-rotate-file')
 
+const logDir = 'logs'
+
 class WickrLogger {
-  constructor(logDir, level, maxSize, maxFiles) {
+  constructor() {
+    let level = 'info'
+    let maxSize = '10m'
+    let maxFiles = '5'
+    if (process.env.log_tokens !== undefined) {
+      const logTokens = JSON.parse(process.env.log_tokens)
+      level = logTokens.LOG_LEVEL
+      maxSize = logTokens.LOG_FILE_SIZE
+      maxFiles = logTokens.LOG_MAX_FILES
+    }
     if (!fs.existsSync(logDir)) {
       // Create the directory if it does not exist
       fs.mkdirSync(logDir)
@@ -45,7 +55,12 @@ class WickrLogger {
         )
       ),
     }
+
     this.logger = winston.createLogger(logConfiguration)
+  }
+
+  getLogger() {
+    return this.logger
   }
 }
 
