@@ -640,7 +640,6 @@ console.log('adminsOptional='+this.adminsOptional)
         this.dataParsed.apps[0].name = newName
 
         // TODO can we just assign all of env?
-        console.log('TOREN')
         console.log(this.dataParsed.apps[0].env.tokens)
         console.log(newObjectResult)
         Object.assign(
@@ -738,9 +737,6 @@ console.log('adminsOptional='+this.adminsOptional)
       return this.loggerConfig
     }
     for (const token in this.loggerConfig) {
-      console.log('Toren')
-      console.log(token)
-      console.log(this.loggerConfig[token])
       if (data.apps[0].env.log_tokens[token] === undefined) {
         retObj[token] = this.loggerConfig[token]
       }
