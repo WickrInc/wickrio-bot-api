@@ -640,8 +640,6 @@ console.log('adminsOptional='+this.adminsOptional)
         this.dataParsed.apps[0].name = newName
 
         // TODO can we just assign all of env?
-        console.log(this.dataParsed.apps[0].env.tokens)
-        console.log(newObjectResult)
         Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
@@ -685,12 +683,8 @@ console.log('adminsOptional='+this.adminsOptional)
           }
           // 4.
           data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd
-          // TODO fix in this case
-          // this.configureLogger(data)
-          // Object.assign(
-          //   this.data.apps[0].env.config_tokens,
-          //   data
-          // )
+          const configData = this.configureLogger(data)
+          Object.assign(data.apps[0].env.config_tokens, configData)
           fs.writeFileSync(this.processesFile, JSON.stringify(data, null, 2))
         }
       } catch (err) {
