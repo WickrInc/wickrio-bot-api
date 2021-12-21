@@ -1,5 +1,0 @@
-{
-  "LOG_LEVEL": "info",
-  "LOG_FILE_SIZE": "10m",
-  "LOG_MAX_FILES":  "5"
-}
