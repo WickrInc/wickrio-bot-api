@@ -25,6 +25,11 @@ class WickrIOConfigure {
     this.supportsEncrypt = false
     this.addOnToJSON = false
     this.adminsOptional = false
+    this.loggerConfig = {
+      LOG_LEVEL: 'info',
+      LOG_FILE_SIZE: '10m',
+      LOG_MAX_FILES: '5',
+    }
 
     if (addOnToJSON === undefined || addOnToJSON !== true)
       this.addOnToJSON = false
@@ -634,15 +639,23 @@ console.log('adminsOptional='+this.adminsOptional)
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
 
-        const assign = Object.assign(
+        // TODO can we just assign all of env?
+        Object.assign(
           this.dataParsed.apps[0].env.tokens,
           newObjectResult
         )
+        const configData = this.configureLogger(this.dataParsed)
+        if (this.dataParsed.apps[0].env.log_tokens === undefined) {
+          this.dataParsed.apps[0].env.log_tokens = this.loggerConfig
+        } else {
+          Object.assign(this.dataParsed.apps[0].env.log_tokens, configData)
+        }
+
         // If addOnToJSON is false write the file,
         // else add on the exisitng JSON file and then append to it.
         if (this.addOnToJSON === false) {
           fs.writeFileSync(
-             this.processesFile,
+            this.processesFile,
             JSON.stringify(this.dataParsed, null, 2)
           )
         } else {
@@ -670,6 +683,8 @@ console.log('adminsOptional='+this.adminsOptional)
           }
           // 4.
           data.apps[0].env.tokens.SECURITY_GROUP_ACCESS = objToAdd
+          const configData = this.configureLogger(data)
+          Object.assign(data.apps[0].env.config_tokens, configData)
           fs.writeFileSync(this.processesFile, JSON.stringify(data, null, 2))
         }
       } catch (err) {
@@ -702,15 +717,25 @@ console.log('adminsOptional='+this.adminsOptional)
       } else {
         this.foreverDataParsed.uid = this.uid
         this.foreverDataParsed.sourceDir = this.processesFile.replace('processes.json', '')
-        this.foreverDataParsed.logFile = this.processesFile.replace('processes.json', 'log.output')
-        this.foreverDataParsed.outFile = this.processesFile.replace('processes.json', 'outfile.output')
-        this.foreverDataParsed.errFile = this.processesFile.replace('processes.json', 'err.output')
         fs.writeFileSync(this.foreverFile, JSON.stringify(this.foreverDataParsed, null, 2))
         console.log('Finished Configuring forever!')
       }
     } catch (err) {
       console.error(err)
     }
+  }
+
+  configureLogger(data) {
+    const retObj = {}
+    if (data.apps[0].env.log_tokens === undefined) {
+      return this.loggerConfig
+    }
+    for (const token in this.loggerConfig) {
+      if (data.apps[0].env.log_tokens[token] === undefined) {
+        retObj[token] = this.loggerConfig[token]
+      }
+    }
+    return retObj
   }
 
   async configureYourBot(integrationName) {
