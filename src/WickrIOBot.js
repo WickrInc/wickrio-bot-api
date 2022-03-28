@@ -2,11 +2,13 @@ const WickrIOAPI = require('wickrio_addon')
 const WickrIOConfigure = require('./WickrIOConfigure')
 const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
-const WickrLogger = require('./WickrLogger')
 const MessageService = require('./services/message')
 const fs = require('fs')
 const APIService = require('./services/api')
 const path = require('path')
+const util = require('util')
+const logger = require('./WickrLogger')
+
 let encryptor
 let encryptorDefined = false
 
@@ -16,6 +18,12 @@ class WickrIOBot {
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
+    console.log = function () {
+      logger.info(util.format.apply(null, arguments))
+    }
+    console.error = function () {
+      logger.error(util.format.apply(null, arguments))
+    }
   }
 
   messageService({ rawMessage, adminDMonly = false, testOnly = false }) {
@@ -110,6 +118,7 @@ class WickrIOBot {
   async start(client_username) {
     const myLocalAdmins = new WickrAdmin()
     console.log('starting bot')
+    logger.info('starting bot')
     this.myAdmins = myLocalAdmins
 
     const clientinitPromise = client_username =>
@@ -145,8 +154,11 @@ class WickrIOBot {
         const tokens = JSON.parse(process.env.tokens)
         let administrators
         if (
-          (!tokens.ADMINISTRATORS_CHOICE || (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes')) && 
-          tokens.ADMINISTRATORS && tokens.ADMINISTRATORS.value
+          (!tokens.ADMINISTRATORS_CHOICE ||
+            (tokens.ADMINISTRATORS_CHOICE &&
+              tokens.ADMINISTRATORS_CHOICE.value === 'yes')) &&
+          tokens.ADMINISTRATORS &&
+          tokens.ADMINISTRATORS.value
         ) {
           if (tokens.ADMINISTRATORS.encrypted) {
             administrators = WickrIOAPI.cmdDecryptString(
@@ -221,7 +233,7 @@ class WickrIOBot {
           return false
         })
     } catch (err) {
-      console.log(err)
+      console.error(err)
     }
   }
 
@@ -257,14 +269,14 @@ class WickrIOBot {
               return true
             })
             .catch(error => {
-              console.log(error)
+              console.error(error)
             })
         })
         .catch(error => {
-          console.log(error)
+          console.error(error)
         })
     } catch (err) {
-      console.log(err)
+      console.error(err)
       return false
     }
   }
@@ -321,7 +333,7 @@ class WickrIOBot {
       console.log('Bot tokens encrypted successfully!')
       return true
     } catch (err) {
-      console.log('Unable to encrypt Bot Tokens:', err)
+      console.error('Unable to encrypt Bot Tokens:', err)
       return false
     }
   }
@@ -352,7 +364,7 @@ class WickrIOBot {
         this.wickrUsers = JSON.parse(ciphertext)
       }
     } catch (err) {
-      console.log(err)
+      console.error(err)
     }
   }
 
@@ -380,7 +392,7 @@ class WickrIOBot {
       console.log('User database saved to file!')
       return true
     } catch (err) {
-      console.log(err)
+      console.error(err)
       return false
     }
   }
@@ -412,7 +424,7 @@ class WickrIOBot {
         return {}
       }
     } catch (err) {
-      console.log(err)
+      console.error(err)
       return {}
     }
   }
@@ -421,7 +433,6 @@ class WickrIOBot {
    * Return the versions of all associated software component
    */
   getVersions(packageFile) {
-
     let reply = '*Versions*'
 
     /*
@@ -440,7 +451,7 @@ class WickrIOBot {
     /*
      * Get the bot client's version information
      */
-    let clientVersion=''
+    let clientVersion = ''
     const clientInfoJSON = WickrIOAPI.cmdGetClientInfo()
     if (clientInfoJSON) {
       const clientInfo = JSON.parse(clientInfoJSON)
@@ -448,42 +459,44 @@ class WickrIOBot {
         clientVersion = clientInfo.version
       }
     }
-    if (clientVersion !== '')
-      reply += `\nBot Client: ${clientVersion}`
+    if (clientVersion !== '') reply += `\nBot Client: ${clientVersion}`
 
     /*
      * Add the Integration's version
      */
     try {
-      const packageJson  = JSON.parse(fs.readFileSync(packageFile, 'utf-8'))
-      if (packageJson.version)
-        reply += `\nIntegration: ${packageJson.version}`
+      const packageJson = JSON.parse(fs.readFileSync(packageFile, 'utf-8'))
+      if (packageJson.version) reply += `\nIntegration: ${packageJson.version}`
     } catch (err) {
-      console.log('getVersions: error getting: ' + packageFile + '\n' + err)
+      console.error('getVersions: error getting: ' + packageFile + '\n' + err)
     }
 
     /*
      * Add the WickrIO Addon's version
      */
-    const addonFile = path.join(process.cwd(), 'node_modules/wickrio_addon/package.json')
+    const addonFile = path.join(
+      process.cwd(),
+      'node_modules/wickrio_addon/package.json'
+    )
     try {
-      const addonJson  = JSON.parse(fs.readFileSync(addonFile, 'utf-8'))
-      if (addonJson.version)
-        reply += `\nWickrIO Addon: ${addonJson.version}` 
+      const addonJson = JSON.parse(fs.readFileSync(addonFile, 'utf-8'))
+      if (addonJson.version) reply += `\nWickrIO Addon: ${addonJson.version}`
     } catch (err) {
-      console.log('getVersions: error getting: ' + addonFile + '\n' + err)
+      console.error('getVersions: error getting: ' + addonFile + '\n' + err)
     }
 
     /*
      * Add the WickrIO bot API's version
      */
-    const botApiFile = path.join(process.cwd(), 'node_modules/wickrio-bot-api/package.json')
+    const botApiFile = path.join(
+      process.cwd(),
+      'node_modules/wickrio-bot-api/package.json'
+    )
     try {
-      const botApiJson  = JSON.parse(fs.readFileSync(botApiFile, 'utf-8'))
-      if (botApiJson.version)
-        reply += `\nWickrIO API: ${botApiJson.version}` 
+      const botApiJson = JSON.parse(fs.readFileSync(botApiFile, 'utf-8'))
+      if (botApiJson.version) reply += `\nWickrIO API: ${botApiJson.version}`
     } catch (err) {
-      console.log('getVersions: error getting: ' + botApiFile + '\n' + err)
+      console.error('getVersions: error getting: ' + botApiFile + '\n' + err)
     }
 
     return reply
@@ -512,7 +525,7 @@ class WickrIOBot {
     // If ONLY admins can receive and handle messages and this is
     // not an admin, then drop the message
     if (this.adminOnly === true && admin === undefined) {
-      console.log('Dropping message from non-admin user!')
+      console.error('Dropping message from non-admin user!')
       return
     }
 
@@ -655,12 +668,19 @@ class WickrIOBot {
     if (parsedData !== null) {
       command = parsedData[1]
       if (parsedData[2] !== '') {
-        argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
+        argument = parsedData[2]
+          .trim()
+          .replace(/^@[^ ]+ /, '')
+          .trim()
       }
     }
 
     // If this is an admin then process any admin commands
-    if (tokens.ADMINISTRATORS_CHOICE && tokens.ADMINISTRATORS_CHOICE.value === 'yes' && admin !== undefined) {
+    if (
+      tokens.ADMINISTRATORS_CHOICE &&
+      tokens.ADMINISTRATORS_CHOICE.value === 'yes' &&
+      admin !== undefined
+    ) {
       localWickrAdmins.processAdminCommand(sender, vGroupID, command, argument)
     }
 
@@ -819,7 +839,10 @@ class WickrIOBot {
     if (parsedData !== null) {
       command = parsedData[1]
       if (parsedData[2] !== '') {
-        argument = parsedData[2].trim().replace(/^@[^ ]+ /, "").trim()
+        argument = parsedData[2]
+          .trim()
+          .replace(/^@[^ ]+ /, '')
+          .trim()
       }
     }
 
@@ -891,14 +914,14 @@ class WickrIOBot {
       console.error(processesJsonFile + ' does not exist!')
       return false
     }
-    const processesJson = fs.readFileSync(processesJsonFile);
-    //console.log('processes.json=' + processesJson)
+    const processesJson = fs.readFileSync(processesJsonFile)
+    // console.log('processes.json=' + processesJson)
     const processesJsonObject = JSON.parse(processesJson)
 
-    process.env['tokens'] = JSON.stringify(processesJsonObject.apps[0].env.tokens)
+    process.env.tokens = JSON.stringify(processesJsonObject.apps[0].env.tokens)
 
-    //console.log('end process.env=' + JSON.stringify(process.env))
-    //console.log('end process.env.tokens=' + process.env.tokens)
+    // console.log('end process.env=' + JSON.stringify(process.env))
+    // console.log('end process.env.tokens=' + process.env.tokens)
     return true
   }
 }
@@ -911,5 +934,5 @@ module.exports = {
   WickrIOBot,
   WickrUser,
   WickrIOConfigure,
-  WickrLogger,
+  logger,
 }
