@@ -2,15 +2,16 @@ const WickrIOAPI = require('wickrio_addon')
 const WickrIOConfigure = require('./WickrIOConfigure')
 const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
+const WickrLogger = require('./WickrLogger')
 const MessageService = require('./services/message')
 const fs = require('fs')
 const APIService = require('./services/api')
 const path = require('path')
 const util = require('util')
-const logger = require('./WickrLogger')
 
 let encryptor
 let encryptorDefined = false
+const logger = new WickrLogger().logger
 
 class WickrIOBot {
   constructor() {
@@ -118,7 +119,6 @@ class WickrIOBot {
   async start(client_username) {
     const myLocalAdmins = new WickrAdmin()
     console.log('starting bot')
-    logger.info('starting bot')
     this.myAdmins = myLocalAdmins
 
     const clientinitPromise = client_username =>
