@@ -1,13 +1,13 @@
 {
   "name": "wickrio-bot-api",
-  "version": "5.112.1",
+  "version": "5.113.1",
   "description": "The official Wickr IO Bot API Framework",
   "main": "src/WickrIOBot.js",
   "dependencies": {
     "dotenv": "^8.2.0",
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
-    "wickrio_addon": "5.112.x",
+    "wickrio_addon": "5.113.x",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.5.5"
   },
