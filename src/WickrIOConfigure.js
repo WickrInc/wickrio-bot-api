@@ -85,6 +85,23 @@ class WickrIOConfigure {
       } else {
         console.error('forever.json file does not exist! (' + foreverFile + ')')
       }
+      const wpmFile = processesFile.replace('processes.json', 'wpm.json')
+      if (fs.existsSync(wpmFile)) {
+        this.wpmFile = wpmFile
+        this.wpm = require(wpmFile)
+        this.wpmDataStringify = JSON.stringify(this.wpm)
+        this.wpmDataParsed = JSON.parse(this.wpmDataStringify)
+      } else {
+        console.error('wpm.json file does not exist! (' + wpmFile + ')')
+      }
+      const pidFile = processesFile.replace(
+        'processes.json',
+        'pidLocation.json'
+      )
+      if (fs.existsSync(pidFile)) {
+        this.pidFile = pidFile
+        console.error('pidLocation.json file does not exist! (' + pidFile + ')')
+      }
     } catch (err) {
       console.error(err)
     }
@@ -642,6 +659,7 @@ class WickrIOConfigure {
           newName = integrationName
         }
         this.uid = newName
+        this.wpmName = newName
 
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
@@ -737,6 +755,39 @@ class WickrIOConfigure {
     }
   }
 
+  async configureWpm() {
+    try {
+      if (!fs.existsSync(this.wpmFile)) {
+        console.error('wpm.json file does not exist!!')
+      } else {
+        this.wpmDataParsed.name = this.wpmName
+        fs.writeFileSync(
+          this.wpmFile,
+          JSON.stringify(this.wpmDataParsed, null, 2)
+        )
+        console.log('Finished Configuring WPM!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async configurePid() {
+    try {
+      if (!fs.existsSync(this.pidFile)) {
+        console.error('pidLocation.json file does not exist!!')
+      } else {
+        this.wpmDataParsed.name = this.wpmName
+        const pidLocationString = '/tmp/' + this.uid + '.pid'
+        fs.closeSync(fs.openSync(pidLocationString, 'w'))
+        fs.writeFileSync(this.pidFile, pidLocationString)
+        console.log('Finished Configuring pid location file!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   configureLogger(data) {
     const retObj = {}
     if (data.apps[0].env.log_tokens === undefined) {
@@ -758,6 +809,8 @@ class WickrIOConfigure {
         await this.inputTokens(integrationName)
         await this.configurePackage()
         await this.configureForever()
+        await this.configureWpm()
+        await this.configurePid()
         console.log('Finished Configuring!')
       }
     } catch (err) {
