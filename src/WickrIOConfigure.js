@@ -18,7 +18,7 @@ class WickrIOConfigure {
     supportVerification,
     supportEncrypt,
     addOnToJSON,
-    adminsOptional,
+    adminsOptional
   ) {
     this.supportsVerification = false
     this.supportsAdministrators = false
@@ -35,10 +35,9 @@ class WickrIOConfigure {
       this.addOnToJSON = false
     else this.addOnToJSON = true
 
-    if (adminsOptional !== undefined)
-      this.adminsOptional = adminsOptional
+    if (adminsOptional !== undefined) this.adminsOptional = adminsOptional
 
-console.log('adminsOptional='+this.adminsOptional)
+    console.log('adminsOptional=' + this.adminsOptional)
 
     this.tokenConfig = [
       {
@@ -62,35 +61,56 @@ console.log('adminsOptional='+this.adminsOptional)
           'processes.json file does not exist! (' + processesFile + ')'
         )
       }
-      const packageFile = processesFile.replace('processes.json', 'package.json')
+      const packageFile = processesFile.replace(
+        'processes.json',
+        'package.json'
+      )
       if (fs.existsSync(packageFile)) {
         this.packageFile = packageFile
         this.package = require(packageFile)
         this.packageDataStringify = JSON.stringify(this.package)
         this.packageDataParsed = JSON.parse(this.packageDataStringify)
       } else {
-        console.error(
-          'package.json file does not exist! (' + packageFile + ')'
-        )
+        console.error('package.json file does not exist! (' + packageFile + ')')
       }
-      const foreverFile = processesFile.replace('processes.json', 'forever.json')
+      const foreverFile = processesFile.replace(
+        'processes.json',
+        'forever.json'
+      )
       if (fs.existsSync(foreverFile)) {
         this.foreverFile = foreverFile
         this.forever = require(foreverFile)
         this.foreverDataStringify = JSON.stringify(this.forever)
         this.foreverDataParsed = JSON.parse(this.foreverDataStringify)
       } else {
-        console.error(
-          'forever.json file does not exist! (' + foreverFile + ')'
-        )
+        console.error('forever.json file does not exist! (' + foreverFile + ')')
+      }
+      const wpmFile = processesFile.replace('processes.json', 'wpm.json')
+      if (fs.existsSync(wpmFile)) {
+        this.wpmFile = wpmFile
+        this.wpm = require(wpmFile)
+        this.wpmDataStringify = JSON.stringify(this.wpm)
+        this.wpmDataParsed = JSON.parse(this.wpmDataStringify)
+      } else {
+        console.error('wpm.json file does not exist! (' + wpmFile + ')')
+      }
+      const pidFile = processesFile.replace(
+        'processes.json',
+        'pidLocation.json'
+      )
+      if (fs.existsSync(pidFile)) {
+        this.pidFile = pidFile
+        console.error('pidLocation.json file does not exist! (' + pidFile + ')')
       }
     } catch (err) {
       console.error(err)
     }
 
     this.verificationToken = WickrIOConfigure.getVerificationTokens()
-    this.administratorsToken = WickrIOConfigure.getAdminTokens(this.adminsOptional)
-console.log('adminsOptional='+this.adminsOptional)
+    this.administratorsToken = WickrIOConfigure.getAdminTokens(
+      this.adminsOptional
+    )
+    console.log('adminsOptional=' + this.adminsOptional)
 
     this.encryptToken = {
       token: 'DATABASE_ENCRYPTION_CHOICE',
@@ -176,8 +196,8 @@ console.log('adminsOptional='+this.adminsOptional)
             message: 'Cannot leave empty! Please enter a value',
             required: true,
             default: 'N/A',
-          }
-        ]
+          },
+        ],
       }
     } else {
       return {
@@ -398,7 +418,6 @@ console.log('adminsOptional='+this.adminsOptional)
         requiredValue = false
       }
 
-
       if (tokenList[index].type === 'file') {
         schema.properties[tokenList[index].token] = {
           pattern: tokenList[index].pattern,
@@ -474,11 +493,13 @@ console.log('adminsOptional='+this.adminsOptional)
             config.push(input)
 
             // If this token has a list and the answer was 'yes' then proceed into the list
-            if (tokenEntry.list === undefined || process.env[tokenEntry.token] === 'no') {
-            	return resolve('Complete for' + tokenEntry.token)
+            if (
+              tokenEntry.list === undefined ||
+              process.env[tokenEntry.token] === 'no'
+            ) {
+              return resolve('Complete for' + tokenEntry.token)
             }
           } else {
-
             let dflt = newObjectResult[tokenEntry.token]
             let requiredValue = tokenEntry.required
 
@@ -620,7 +641,10 @@ console.log('adminsOptional='+this.adminsOptional)
         let processesFileDir = path.dirname(this.processesFile)
         if (processesFileDir === undefined || processesFileDir.length === 0)
           processesFileDir = '.'
-        const processesFileBackup = path.join(processesFileDir, 'processes_backup.json')
+        const processesFileBackup = path.join(
+          processesFileDir,
+          'processes_backup.json'
+        )
 
         // backup the processes.json file
         fs.copyFileSync(this.processesFile, processesFileBackup)
@@ -635,15 +659,13 @@ console.log('adminsOptional='+this.adminsOptional)
           newName = integrationName
         }
         this.uid = newName
+        this.wpmName = newName
 
         // let assign = Object.assign(this.dataParsed.apps[0].name, newName);
         this.dataParsed.apps[0].name = newName
 
         // TODO can we just assign all of env?
-        Object.assign(
-          this.dataParsed.apps[0].env.tokens,
-          newObjectResult
-        )
+        Object.assign(this.dataParsed.apps[0].env.tokens, newObjectResult)
         const configData = this.configureLogger(this.dataParsed)
         if (this.dataParsed.apps[0].env.log_tokens === undefined) {
           this.dataParsed.apps[0].env.log_tokens = this.loggerConfig
@@ -691,7 +713,6 @@ console.log('adminsOptional='+this.adminsOptional)
         console.log(err)
       }
       // console.log(answer);
-      
     })
   }
 
@@ -702,7 +723,10 @@ console.log('adminsOptional='+this.adminsOptional)
       } else {
         this.packageDataParsed.scripts.stop = `forever stop ${this.uid}`
         this.packageDataParsed.scripts.restart = `forever restart ${this.uid}`
-        fs.writeFileSync(this.packageFile, JSON.stringify(this.packageDataParsed, null, 2))
+        fs.writeFileSync(
+          this.packageFile,
+          JSON.stringify(this.packageDataParsed, null, 2)
+        )
         console.log('Finished Configuring package!')
       }
     } catch (err) {
@@ -716,9 +740,48 @@ console.log('adminsOptional='+this.adminsOptional)
         console.error('forever.json file does not exist!!')
       } else {
         this.foreverDataParsed.uid = this.uid
-        this.foreverDataParsed.sourceDir = this.processesFile.replace('processes.json', '')
-        fs.writeFileSync(this.foreverFile, JSON.stringify(this.foreverDataParsed, null, 2))
+        this.foreverDataParsed.sourceDir = this.processesFile.replace(
+          'processes.json',
+          ''
+        )
+        fs.writeFileSync(
+          this.foreverFile,
+          JSON.stringify(this.foreverDataParsed, null, 2)
+        )
         console.log('Finished Configuring forever!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async configureWpm() {
+    try {
+      if (!fs.existsSync(this.wpmFile)) {
+        console.error('wpm.json file does not exist!!')
+      } else {
+        this.wpmDataParsed.name = this.wpmName
+        fs.writeFileSync(
+          this.wpmFile,
+          JSON.stringify(this.wpmDataParsed, null, 2)
+        )
+        console.log('Finished Configuring WPM!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async configurePid() {
+    try {
+      if (!fs.existsSync(this.pidFile)) {
+        console.error('pidLocation.json file does not exist!!')
+      } else {
+        this.wpmDataParsed.name = this.wpmName
+        const pidLocationString = '/tmp/' + this.uid + '.pid'
+        fs.closeSync(fs.openSync(pidLocationString, 'w'))
+        fs.writeFileSync(this.pidFile, pidLocationString)
+        console.log('Finished Configuring pid location file!')
       }
     } catch (err) {
       console.error(err)
@@ -746,6 +809,8 @@ console.log('adminsOptional='+this.adminsOptional)
         await this.inputTokens(integrationName)
         await this.configurePackage()
         await this.configureForever()
+        await this.configureWpm()
+        await this.configurePid()
         console.log('Finished Configuring!')
       }
     } catch (err) {
