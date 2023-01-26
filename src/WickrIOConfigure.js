@@ -98,9 +98,9 @@ class WickrIOConfigure {
         'processes.json',
         'pidLocation.json'
       )
-      if (fs.existsSync(pidFile)) {
-        this.pidFile = pidFile
-        console.error('pidLocation.json file does not exist! (' + pidFile + ')')
+      this.pidFile = pidFile
+      if (!fs.existsSync(pidFile)) {
+        fs.closeSync(fs.openSync(pidFile, 'w'))
       }
     } catch (err) {
       console.error(err)
