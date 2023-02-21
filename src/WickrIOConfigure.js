@@ -98,10 +98,7 @@ class WickrIOConfigure {
         'processes.json',
         'pidLocation.json'
       )
-      if (fs.existsSync(pidFile)) {
-        this.pidFile = pidFile
-        console.error('pidLocation.json file does not exist! (' + pidFile + ')')
-      }
+      this.pidFile = pidFile
     } catch (err) {
       console.error(err)
     }
@@ -775,8 +772,6 @@ class WickrIOConfigure {
   async configurePid() {
     try {
       if (!fs.existsSync(this.pidFile)) {
-        console.error('pidLocation.json file does not exist!!')
-      } else {
         this.wpmDataParsed.name = this.wpmName
         const pidLocationString = '/tmp/' + this.uid + '.pid'
         fs.closeSync(fs.openSync(pidLocationString, 'w'))
@@ -807,7 +802,7 @@ class WickrIOConfigure {
         console.error('processes.json file does not exist!!')
       } else {
         await this.inputTokens(integrationName)
-        await this.configurePackage()
+        // await this.configurePackage()
         await this.configureForever()
         await this.configureWpm()
         await this.configurePid()
