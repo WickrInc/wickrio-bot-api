@@ -347,6 +347,7 @@ class WickrIOConfigure {
           pjson.apps[0].env.tokens[attributename].value
     }
 
+    this.processManager = pjson.apps[0].process_manager
     return newObjectResult
   }
 
@@ -802,10 +803,16 @@ class WickrIOConfigure {
         console.error('processes.json file does not exist!!')
       } else {
         await this.inputTokens(integrationName)
-        // await this.configurePackage()
-        await this.configureForever()
-        await this.configureWpm()
-        await this.configurePid()
+        if (
+          this.processManager === undefined ||
+          this.processManager === 'forever'
+        ) {
+          await this.configurePackage()
+          await this.configureForever()
+        } else if (this.processManager === 'wpm') {
+          await this.configureWpm()
+          await this.configurePid()
+        }
         console.log('Finished Configuring!')
       }
     } catch (err) {
