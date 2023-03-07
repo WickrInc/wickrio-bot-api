@@ -70,6 +70,10 @@ class WickrIOConfigure {
         this.package = require(packageFile)
         this.packageDataStringify = JSON.stringify(this.package)
         this.packageDataParsed = JSON.parse(this.packageDataStringify)
+        this.foreverFlag = this.packageDataParsed.scripts.start.includes(
+          'forever'
+        )
+        this.wpmFlag = this.packageDataParsed.scripts.start.includes('wpm')
       } else {
         console.error('package.json file does not exist! (' + packageFile + ')')
       }
@@ -347,7 +351,6 @@ class WickrIOConfigure {
           pjson.apps[0].env.tokens[attributename].value
     }
 
-    this.processManager = pjson.apps[0].process_manager
     return newObjectResult
   }
 
@@ -803,13 +806,10 @@ class WickrIOConfigure {
         console.error('processes.json file does not exist!!')
       } else {
         await this.inputTokens(integrationName)
-        if (
-          this.processManager === undefined ||
-          this.processManager === 'forever'
-        ) {
+        if (this.foreverFlag) {
           await this.configurePackage()
           await this.configureForever()
-        } else if (this.processManager === 'wpm') {
+        } else if (this.wpmFlag) {
           await this.configureWpm()
           await this.configurePid()
         }
