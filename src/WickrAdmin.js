@@ -27,6 +27,9 @@ class WickrAdmin {
   }
 
   async addAdmin(userID) {
+    if (userID === undefined || userID.length === 0)
+      return undefined
+
     const found = this.adminIDs.includes(userID)
     if (found === true) {
       return found
