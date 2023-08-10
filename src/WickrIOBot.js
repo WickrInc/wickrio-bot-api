@@ -636,7 +636,7 @@ class WickrIOBot {
         userEmail: sender,
         convotype: convoType,
         isAdmin: isAdmin,
-        msgtype: 'edit',
+        msgtype: 'control',
         ttl,
         bor,
       }
@@ -652,6 +652,22 @@ class WickrIOBot {
         convotype: convoType,
         isAdmin: isAdmin,
         msgtype: 'edit',
+        ttl,
+        bor,
+      }
+      return parsedObj
+    } else if (message.msgtype === 4003 || message.msgtype === 4005) {  // Control leave or remove message
+      const controlNew={ msgtype: message.msgtype }
+      var parsedObj = {
+        vgroupid: vGroupID,
+        control: controlNew,
+        msgTS: msg_ts,
+        time,
+        receiver,
+        userEmail: sender,
+        convotype: convoType,
+        isAdmin: isAdmin,
+        msgtype: 'control',
         ttl,
         bor,
       }
