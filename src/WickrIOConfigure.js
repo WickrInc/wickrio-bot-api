@@ -86,8 +86,6 @@ class WickrIOConfigure {
         this.forever = require(foreverFile)
         this.foreverDataStringify = JSON.stringify(this.forever)
         this.foreverDataParsed = JSON.parse(this.foreverDataStringify)
-      } else {
-        console.error('forever.json file does not exist! (' + foreverFile + ')')
       }
       const wpmFile = processesFile.replace('processes.json', 'wpm.json')
       if (fs.existsSync(wpmFile)) {
@@ -95,8 +93,6 @@ class WickrIOConfigure {
         this.wpm = require(wpmFile)
         this.wpmDataStringify = JSON.stringify(this.wpm)
         this.wpmDataParsed = JSON.parse(this.wpmDataStringify)
-      } else {
-        console.error('wpm.json file does not exist! (' + wpmFile + ')')
       }
       const pidFile = processesFile.replace(
         'processes.json',
