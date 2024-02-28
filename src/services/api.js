@@ -42,7 +42,8 @@ class APIService {
     bor,
     messageID,
     sentBy,
-    messageMeta
+    messageMeta,
+    deleteWhenSent = false
   ) {
     return this.WickrIOAPI.cmdSendSecurityGroupAttachment(
       securityGroups,
@@ -52,7 +53,8 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      messageMeta
+      messageMeta,
+      deleteWhenSent
     )
   }
 
@@ -104,8 +106,9 @@ class APIService {
     bor,
     messageID,
     sentBy,
-    flags = [],
-    messageMeta = ''
+    message = '',
+    messageMeta = '',
+    deleteWhenSent = false
   ) {
     return this.WickrIOAPI.cmdSendNetworkAttachment(
       filename,
@@ -114,8 +117,9 @@ class APIService {
       bor,
       messageID,
       sentBy,
-      flags,
-      messageMeta
+      message,
+      messageMeta,
+      deleteWhenSent
     )
   }
 
@@ -199,14 +203,15 @@ class APIService {
     )
   }
 
-  sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta) {
+  sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta, deleteWhenSent) {
     return this.WickrIOAPI.cmdSendRoomAttachment(
       vGroupID,
       attachment,
       display,
       ttl === undefined ? '' : ttl,
       bor === undefined ? '' : bor,
-      messagemeta === undefined ? '' : messagemeta
+      messagemeta === undefined ? '' : messagemeta,
+      deleteWhenSent === undefined ? false : deleteWhenSent
     )
   }
 
@@ -249,7 +254,8 @@ class APIService {
     bor,
     messageID,
     messageMeta,
-    message = ''
+    message = '',
+    deleteWhenSent = false
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
       filePath,
@@ -259,7 +265,8 @@ class APIService {
       bor,
       messageID,
       messageMeta,
-      message
+      message,
+      deleteWhenSent
     )
   }
 
@@ -271,7 +278,8 @@ class APIService {
     bor,
     messageID,
     messageMeta,
-    message = ''
+    message = '',
+    deleteWhenSent = false
   ) {
     return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
       filePath,
@@ -281,7 +289,8 @@ class APIService {
       bor,
       messageID,
       messageMeta,
-      message
+      message,
+      deleteWhenSent
     )
   }
 
