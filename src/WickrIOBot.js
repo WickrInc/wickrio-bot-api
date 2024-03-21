@@ -19,12 +19,12 @@ class WickrIOBot {
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
-    console.log = function () {
-      logger.info(util.format.apply(null, arguments))
-    }
-    console.error = function () {
-      logger.error(util.format.apply(null, arguments))
-    }
+//    console.log = function () {
+//      logger.info(util.format.apply(null, arguments))
+//    }
+//    console.error = function () {
+//      logger.error(util.format.apply(null, arguments))
+//    }
   }
 
   messageService({ rawMessage, adminDMonly = false, testOnly = false }) {
@@ -127,11 +127,12 @@ class WickrIOBot {
         resolve(status)
       })
     const clientconnectionPromise = () =>
-      new Promise((resolve, reject) => {
+      new Promise(async (resolve, reject) => {
         console.log('Checking for client connectionn...')
         let connected = false
         do {
-          connected = WickrIOAPI.isConnected(10)
+          console.log('calling isConnected...')
+          connected = await WickrIOAPI.isConnected(10)
           console.log('isConnected:', connected)
         } while (connected != true)
 
@@ -139,7 +140,7 @@ class WickrIOBot {
 
         let cState
         do {
-          cState = WickrIOAPI.getClientState()
+          cState = await WickrIOAPI.getClientState()
           console.log('isConnected: client state is', cState)
           if (cState != 'RUNNING') sleep(5000)
         } while (cState != 'RUNNING')
@@ -161,7 +162,7 @@ class WickrIOBot {
           tokens.ADMINISTRATORS.value
         ) {
           if (tokens.ADMINISTRATORS.encrypted) {
-            administrators = WickrIOAPI.cmdDecryptString(
+            administrators = await WickrIOAPI.cmdDecryptString(
               tokens.ADMINISTRATORS.value
             )
           } else {
@@ -218,8 +219,8 @@ class WickrIOBot {
   async startListening(callback) {
     try {
       const ref = this
-      return new Promise(function (resolve, reject) {
-        const start = WickrIOAPI.cmdStartAsyncRecvMessages(callback)
+      return new Promise(async function (resolve, reject) {
+        const start = await WickrIOAPI.cmdStartAsyncRecvMessages(callback)
         if (start === 'Success') resolve(start)
         else reject(start)
       })
