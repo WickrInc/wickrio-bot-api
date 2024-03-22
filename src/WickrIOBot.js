@@ -74,7 +74,7 @@ class WickrIOBot {
     // const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
 
     if (verifyusers.encrypted) {
-      verifyusers.value = WickrIOAPI.cmdDecryptString(verifyusers.value)
+      verifyusers.value = await WickrIOAPI.cmdDecryptString(verifyusers.value)
     }
     // else {
     //   verifyUsersMode = VERIFY_USERS.value
@@ -82,13 +82,13 @@ class WickrIOBot {
 
     this.setVerificationMode(verifyusers.value)
 
-    WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
-    WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
-    WickrIOAPI.cmdSetControl('duration', duration.toString())
-    WickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
-    WickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
-    WickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
-    WickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
+    await WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
+    await WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
+    await WickrIOAPI.cmdSetControl('duration', duration.toString())
+    await WickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
+    await WickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
+    await WickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
+    await WickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
   }
 
   /*
@@ -141,6 +141,12 @@ class WickrIOBot {
         let cState
         do {
           cState = await WickrIOAPI.getClientState()
+//          WickrIOAPI.getClientState().then(result =>{
+//            cState = result  
+//          });
+          if (cState === undefined) {
+            console.log('cState === undefined')
+          }
           console.log('isConnected: client state is', cState)
           if (cState != 'RUNNING') sleep(5000)
         } while (cState != 'RUNNING')
@@ -305,7 +311,7 @@ class WickrIOBot {
       }
 
       if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
-        key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
+        key = await WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
       } else {
         key = tokens.DATABASE_ENCRYPTION_KEY.value
       }
@@ -322,7 +328,7 @@ class WickrIOBot {
       for (const i in tokens) {
         if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
         if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
+          tokens[i].value = await WickrIOAPI.cmdEncryptString(tokens[i].value)
           tokens[i].encrypted = true
         }
       }
@@ -355,7 +361,7 @@ class WickrIOBot {
         return
       }
       console.log('Decrypting user database...')
-      const ciphertext = WickrIOAPI.cmdDecryptString(users.toString())
+      const ciphertext = await WickrIOAPI.cmdDecryptString(users.toString())
 
       if (encryptorDefined === true) {
         // Decrypt
@@ -388,7 +394,7 @@ class WickrIOBot {
         serialusers = JSON.stringify(this.wickrUsers)
       }
 
-      const encrypted = WickrIOAPI.cmdEncryptString(serialusers)
+      const encrypted = await WickrIOAPI.cmdEncryptString(serialusers)
       const saved = fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
       return true
@@ -415,9 +421,9 @@ class WickrIOBot {
    *      ]
    * }
    */
-  getTransmitQueueInfo() {
+  async getTransmitQueueInfo() {
     try {
-      const txQInfo = WickrIOAPI.cmdGetTransmitQueueInfo()
+      const txQInfo = await WickrIOAPI.cmdGetTransmitQueueInfo()
       console.log('Transmit Queue Info:' + txQInfo)
       if (txQInfo) {
         return JSON.parse(txQInfo)
@@ -433,7 +439,7 @@ class WickrIOBot {
   /*
    * Return the versions of all associated software component
    */
-  getVersions(packageFile) {
+  async getVersions(packageFile) {
     let reply = '*Versions*'
 
     /*
@@ -453,7 +459,7 @@ class WickrIOBot {
      * Get the bot client's version information
      */
     let clientVersion = ''
-    const clientInfoJSON = WickrIOAPI.cmdGetClientInfo()
+    const clientInfoJSON = await WickrIOAPI.cmdGetClientInfo()
     if (clientInfoJSON) {
       const clientInfo = JSON.parse(clientInfoJSON)
       if (clientInfo.version) {
