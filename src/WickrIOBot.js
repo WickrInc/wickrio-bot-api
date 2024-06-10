@@ -255,10 +255,10 @@ class WickrIOBot {
       if (settings.database) {
         const saved = await this.saveData()
       }
-      return new Promise(function (resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         let stopMessaging = 'not needed'
         if (ref.listenFlag === true)
-          stopMessaging = WickrIOAPI.cmdStopAsyncRecvMessages()
+          stopMessaging = await WickrIOAPI.cmdStopAsyncRecvMessages()
         resolve(stopMessaging)
       })
         .then(function (stopMessaging) {
@@ -461,7 +461,7 @@ class WickrIOBot {
     let clientVersion = ''
     const clientInfoJSON = await WickrIOAPI.cmdGetClientInfo()
     if (clientInfoJSON) {
-      const clientInfo = JSON.parse(clientInfoJSON)
+      const clientInfo = JSON.parse(JSON.stringify(clientInfoJSON))
       if (clientInfo.version) {
         clientVersion = clientInfo.version
       }

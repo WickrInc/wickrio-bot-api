@@ -530,7 +530,7 @@ class MessageService {
       } else {
         serialusers = JSON.stringify(this.wickrUsers)
       }
-      const encrypted = this.wickrAPI.cmdEncryptString(serialusers)
+      const encrypted = await this.wickrAPI.cmdEncryptString(serialusers)
       fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
       return true
