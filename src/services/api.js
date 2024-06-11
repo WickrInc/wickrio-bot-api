@@ -3,14 +3,14 @@ class APIService {
     this.WickrIOAPI = WickrIOAPI
   }
 
-  getSecurityGroups() {
-    const groupData = this.WickrIOAPI.cmdGetSecurityGroups()
+  async getSecurityGroups() {
+    const groupData = await this.WickrIOAPI.cmdGetSecurityGroups()
     const temp = JSON.parse(groupData)
     // return JSON.parse(groupData);
     return temp
   }
 
-  sendSecurityGroupVoiceMemo(
+  async sendSecurityGroupVoiceMemo(
     securityGroups,
     voiceMemo,
     duration,
@@ -21,7 +21,7 @@ class APIService {
     messageMeta = ''
   ) {
     // TODO add time sent to VoiceMemo String?
-    return this.WickrIOAPI.cmdSendSecurityGroupVoiceMemo(
+    return await this.WickrIOAPI.cmdSendSecurityGroupVoiceMemo(
       securityGroups,
       voiceMemo,
       'VoiceMemo',
@@ -34,7 +34,7 @@ class APIService {
     )
   }
 
-  sendSecurityGroupAttachment(
+  async sendSecurityGroupAttachment(
     securityGroups,
     filename,
     displayName,
@@ -45,7 +45,7 @@ class APIService {
     messageMeta,
     deleteWhenSent = false
   ) {
-    return this.WickrIOAPI.cmdSendSecurityGroupAttachment(
+    return await this.WickrIOAPI.cmdSendSecurityGroupAttachment(
       securityGroups,
       filename,
       displayName,
@@ -58,7 +58,7 @@ class APIService {
     )
   }
 
-  sendSecurityGroupMessage(
+  async sendSecurityGroupMessage(
     securityGroups,
     message,
     ttl,
@@ -67,7 +67,7 @@ class APIService {
     flags = [],
     messageMeta = ''
   ) {
-    return this.WickrIOAPI.cmdSendSecurityGroupMessage(
+    return await this.WickrIOAPI.cmdSendSecurityGroupMessage(
       message,
       securityGroups,
       ttl,
@@ -78,7 +78,7 @@ class APIService {
     )
   }
 
-  sendNetworkVoiceMemo(
+  async sendNetworkVoiceMemo(
     voiceMemo,
     duration,
     ttl,
@@ -87,7 +87,7 @@ class APIService {
     sentBy,
     messageMeta = ''
   ) {
-    return this.WickrIOAPI.cmdSendNetworkVoiceMemo(
+    return await this.WickrIOAPI.cmdSendNetworkVoiceMemo(
       voiceMemo,
       'VoiceMemo',
       duration,
@@ -99,7 +99,7 @@ class APIService {
     )
   }
 
-  sendNetworkAttachment(
+  async sendNetworkAttachment(
     filename,
     displayName,
     ttl,
@@ -110,7 +110,7 @@ class APIService {
     messageMeta = '',
     deleteWhenSent = false
   ) {
-    return this.WickrIOAPI.cmdSendNetworkAttachment(
+    return await this.WickrIOAPI.cmdSendNetworkAttachment(
       filename,
       displayName,
       ttl,
@@ -123,7 +123,7 @@ class APIService {
     )
   }
 
-  sendNetworkMessage(
+  async sendNetworkMessage(
     message,
     ttl,
     bor,
@@ -131,7 +131,7 @@ class APIService {
     flags = [],
     messageMeta = ''
   ) {
-    return this.WickrIOAPI.cmdSendNetworkMessage(
+    return await this.WickrIOAPI.cmdSendNetworkMessage(
       message,
       ttl,
       bor,
@@ -141,8 +141,8 @@ class APIService {
     )
   }
 
-  writeMessageIDDB(messageId, sender, target, dateSent, messageContent) {
-    return this.WickrIOAPI.cmdAddMessageID(
+  async writeMessageIDDB(messageId, sender, target, dateSent, messageContent) {
+    return await this.WickrIOAPI.cmdAddMessageID(
       messageId,
       sender,
       target,
@@ -151,9 +151,9 @@ class APIService {
     )
   }
 
-  getMessageStatus(messageID, type, page, pageSize) {
+  async getMessageStatus(messageID, type, page, pageSize) {
     try {
-      return this.WickrIOAPI.cmdGetMessageStatus(
+      return await this.WickrIOAPI.cmdGetMessageStatus(
         messageID,
         type,
         page,
@@ -164,9 +164,9 @@ class APIService {
     }
   }
 
-  getMessageStatusFiltered(messageID, type, page, pageSize, filter, users) {
+  async getMessageStatusFiltered(messageID, type, page, pageSize, filter, users) {
     try {
-      return this.WickrIOAPI.cmdGetMessageStatus(
+      return await this.WickrIOAPI.cmdGetMessageStatus(
         messageID,
         type,
         page,
@@ -179,20 +179,20 @@ class APIService {
     }
   }
 
-  getMessageIDEntry(messageID) {
+  async getMessageIDEntry(messageID) {
     try {
-      return this.WickrIOAPI.cmdGetMessageIDEntry(messageID)
+      return await this.WickrIOAPI.cmdGetMessageIDEntry(messageID)
     } catch (err) {
       return undefined
     }
   }
 
-  getMessageIDTable(page, size, sender) {
-    return this.WickrIOAPI.cmdGetMessageIDTable(page, size, sender)
+  async getMessageIDTable(page, size, sender) {
+    return await this.WickrIOAPI.cmdGetMessageIDTable(page, size, sender)
   }
 
-  sendRoomMessage(vGroupID, message, ttl, bor, messageID, flags, messagemeta) {
-    return this.WickrIOAPI.cmdSendRoomMessage(
+  async sendRoomMessage(vGroupID, message, ttl, bor, messageID, flags, messagemeta) {
+    return await this.WickrIOAPI.cmdSendRoomMessage(
       vGroupID,
       message,
       ttl === undefined ? '' : ttl,
@@ -203,8 +203,8 @@ class APIService {
     )
   }
 
-  sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta, deleteWhenSent) {
-    return this.WickrIOAPI.cmdSendRoomAttachment(
+  async sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta, deleteWhenSent) {
+    return await this.WickrIOAPI.cmdSendRoomAttachment(
       vGroupID,
       attachment,
       display,
@@ -215,8 +215,8 @@ class APIService {
     )
   }
 
-  sendMessageUserHashFile(filePath, message, ttl, bor, messageID, messageMeta) {
-    return this.WickrIOAPI.cmdSendMessageUserHashFile(
+  async sendMessageUserHashFile(filePath, message, ttl, bor, messageID, messageMeta) {
+    return await this.WickrIOAPI.cmdSendMessageUserHashFile(
       filePath,
       message,
       ttl,
@@ -226,7 +226,7 @@ class APIService {
     )
   }
 
-  sendMessageUserNameFile(
+  async sendMessageUserNameFile(
     filePath,
     message,
     ttl,
@@ -235,7 +235,7 @@ class APIService {
     flags = [],
     messageMeta = ''
   ) {
-    return this.WickrIOAPI.cmdSendMessageUserNameFile(
+    return await this.WickrIOAPI.cmdSendMessageUserNameFile(
       filePath,
       message,
       ttl,
@@ -246,7 +246,7 @@ class APIService {
     )
   }
 
-  sendAttachmentUserHashFile(
+  async sendAttachmentUserHashFile(
     filePath,
     attachment,
     display,
@@ -257,7 +257,7 @@ class APIService {
     message = '',
     deleteWhenSent = false
   ) {
-    return this.WickrIOAPI.cmdSendAttachmentUserHashFile(
+    return await this.WickrIOAPI.cmdSendAttachmentUserHashFile(
       filePath,
       attachment,
       display,
@@ -270,7 +270,7 @@ class APIService {
     )
   }
 
-  sendAttachmentUserNameFile(
+  async sendAttachmentUserNameFile(
     filePath,
     attachment,
     display,
@@ -281,7 +281,7 @@ class APIService {
     message = '',
     deleteWhenSent = false
   ) {
-    return this.WickrIOAPI.cmdSendAttachmentUserNameFile(
+    return await this.WickrIOAPI.cmdSendAttachmentUserNameFile(
       filePath,
       attachment,
       display,
@@ -294,7 +294,7 @@ class APIService {
     )
   }
 
-  sendVoiceMemoUserNameFile(
+  async sendVoiceMemoUserNameFile(
     filePath,
     voiceMemo,
     duration,
@@ -304,7 +304,7 @@ class APIService {
     messageMeta,
     sentBy = ''
   ) {
-    return this.WickrIOAPI.cmdSendVoiceMemoUserNameFile(
+    return await this.WickrIOAPI.cmdSendVoiceMemoUserNameFile(
       filePath,
       voiceMemo,
       'VoiceMemo',
@@ -317,7 +317,7 @@ class APIService {
     )
   }
 
-  sendVoiceMemoUserHashFile(
+  async sendVoiceMemoUserHashFile(
     filePath,
     voiceMemo,
     duration,
@@ -327,7 +327,7 @@ class APIService {
     messageMeta,
     sentBy = ''
   ) {
-    return this.WickrIOAPI.cmdSendVoiceMemoUserHashFile(
+    return await this.WickrIOAPI.cmdSendVoiceMemoUserHashFile(
       filePath,
       voiceMemo,
       'VoiceMemo',
@@ -340,8 +340,8 @@ class APIService {
     )
   }
 
-  setMessageStatus(messageID, userID, statusNumber, statusMessage) {
-    return this.WickrIOAPI.cmdSetMessageStatus(
+  async setMessageStatus(messageID, userID, statusNumber, statusMessage) {
+    return await this.WickrIOAPI.cmdSetMessageStatus(
       messageID,
       userID,
       statusNumber,
@@ -349,8 +349,8 @@ class APIService {
     )
   }
 
-  send1to1Message(userArray, reply, ttl, bor, messageID, flags, messagemeta) {
-    return this.WickrIOAPI.cmdSend1to1Message(
+  async send1to1Message(userArray, reply, ttl, bor, messageID, flags, messagemeta) {
+    return await this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,
       ttl === undefined ? '' : ttl,
@@ -361,7 +361,7 @@ class APIService {
     )
   }
 
-  send1to1MessageLowPriority(
+  async send1to1MessageLowPriority(
     userArray,
     reply,
     ttl,
@@ -370,7 +370,7 @@ class APIService {
     flags,
     messageMeta = ''
   ) {
-    return this.WickrIOAPI.cmdSend1to1Message(
+    return await this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,
       ttl,
@@ -382,24 +382,24 @@ class APIService {
     )
   }
 
-  cancelMessageID(messageID) {
-    return this.WickrIOAPI.cmdCancelMessageID(messageID)
+  async cancelMessageID(messageID) {
+    return await this.WickrIOAPI.cmdCancelMessageID(messageID)
   }
 
-  setEventCallback(callbackUrl) {
-    return this.WickrIOAPI.cmdSetEventCallback(callbackUrl)
+  async setEventCallback(callbackUrl) {
+    return await this.WickrIOAPI.cmdSetEventCallback(callbackUrl)
   }
 
-  getEventCallback() {
-    return this.WickrIOAPI.cmdGetEventCallback()
+  async getEventCallback() {
+    return await this.WickrIOAPI.cmdGetEventCallback()
   }
 
-  deleteEventCallback() {
-    return this.WickrIOAPI.cmdDeleteEventCallback()
+  async deleteEventCallback() {
+    return await this.WickrIOAPI.cmdDeleteEventCallback()
   }
 
-  getUserInfo(userNameList) {
-    const userInfo = this.WickrIOAPI.cmdGetUserInfo(userNameList)
+  async getUserInfo(userNameList) {
+    const userInfo = await this.WickrIOAPI.cmdGetUserInfo(userNameList)
     const temp = JSON.parse(userInfo)
     return temp
   }
