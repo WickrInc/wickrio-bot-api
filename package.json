@@ -7,7 +7,7 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.2",
     "simple-encryptor": "^3.0.0",
-    "wickrio_addon": "7.1.1-beta.01",
+    "wickrio_addon": "7.1.1-beta.02",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.5.5"
   },
