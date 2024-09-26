@@ -14,13 +14,14 @@ let encryptorDefined = false
 const logger = new WickrLogger().logger
 
 class WickrIOBot {
-  constructor() {
-    this.wickrIOAPI = new WickrIOAddon.WickrIOAddon();
+  constructor(debugOn) {
+    this.wickrIOAPI = new WickrIOAddon.WickrIOAddon(debugOn);
 
     this.wickrUsers = [] // wickrusers populate on load data which happens on start, or on addUser()
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
+    this.debug = debugOn
 //    console.log = function () {
 //      logger.info(util.format.apply(null, arguments))
 //    }
