@@ -1,4 +1,4 @@
-const WickrIOAPI = require('wickrio_addon')
+const WickrIOAddon = require('wickrio_addon')
 const WickrIOConfigure = require('./WickrIOConfigure')
 const WickrUser = require('./WickrUser')
 const WickrAdmin = require('./WickrAdmin')
@@ -14,17 +14,20 @@ let encryptorDefined = false
 const logger = new WickrLogger().logger
 
 class WickrIOBot {
-  constructor() {
+  constructor(debugOn) {
+    this.wickrIOAPI = new WickrIOAddon.WickrIOAddon(debugOn);
+
     this.wickrUsers = [] // wickrusers populate on load data which happens on start, or on addUser()
     this.listenFlag = false
     this.adminOnly = false
     this.myAdmins = null // admins dont populate until start
-    console.log = function () {
-      logger.info(util.format.apply(null, arguments))
-    }
-    console.error = function () {
-      logger.error(util.format.apply(null, arguments))
-    }
+    this.debug = debugOn
+//    console.log = function () {
+//      logger.info(util.format.apply(null, arguments))
+//    }
+//    console.error = function () {
+//      logger.error(util.format.apply(null, arguments))
+//    }
   }
 
   messageService({ rawMessage, adminDMonly = false, testOnly = false }) {
@@ -34,14 +37,14 @@ class WickrIOBot {
       adminOnly: this.adminOnly,
       wickrUsers: this.wickrUsers,
       adminDMonly,
-      wickrAPI: WickrIOAPI,
+      wickrAPI: this.wickrIOAPI,
       testOnly,
     })
   }
 
   apiService() {
     return new APIService({
-      WickrIOAPI,
+      WickrIOAPI: this.wickrIOAPI,
     })
   }
 
@@ -74,7 +77,7 @@ class WickrIOBot {
     // const VERIFY_USERS = JSON.parse(process.env.tokens).VERIFY_USERS
 
     if (verifyusers.encrypted) {
-      verifyusers.value = WickrIOAPI.cmdDecryptString(verifyusers.value)
+      verifyusers.value = await this.wickrIOAPI.cmdDecryptString(verifyusers.value)
     }
     // else {
     //   verifyUsersMode = VERIFY_USERS.value
@@ -82,20 +85,20 @@ class WickrIOBot {
 
     this.setVerificationMode(verifyusers.value)
 
-    WickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
-    WickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
-    WickrIOAPI.cmdSetControl('duration', duration.toString())
-    WickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
-    WickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
-    WickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
-    WickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
+    await this.wickrIOAPI.cmdSetControl('attachLifeMinutes', attachLifeMinutes.toString())
+    await this.wickrIOAPI.cmdSetControl('doreceive', doreceive.toString())
+    await this.wickrIOAPI.cmdSetControl('duration', duration.toString())
+    await this.wickrIOAPI.cmdSetControl('readreceipt', readreceipt.toString())
+    await this.wickrIOAPI.cmdSetControl('cleardb', cleardb.toString()) // ?
+    await this.wickrIOAPI.cmdSetControl('contactbackup', contactbackup.toString()) // ?
+    await this.wickrIOAPI.cmdSetControl('convobackup', convobackup.toString()) // ?
   }
 
   /*
    * Return the WickrIO addon API
    */
   getWickrIOAddon() {
-    return WickrIOAPI
+    return this.wickrIOAPI
   }
 
   /*
@@ -123,15 +126,16 @@ class WickrIOBot {
 
     const clientinitPromise = client_username =>
       new Promise((resolve, reject) => {
-        const status = WickrIOAPI.clientInit(client_username)
+        const status = this.wickrIOAPI.clientInit(client_username)
         resolve(status)
       })
     const clientconnectionPromise = () =>
-      new Promise((resolve, reject) => {
+      new Promise(async (resolve, reject) => {
         console.log('Checking for client connectionn...')
         let connected = false
         do {
-          connected = WickrIOAPI.isConnected(10)
+          console.log('calling isConnected...')
+          connected = await this.wickrIOAPI.isConnected(10)
           console.log('isConnected:', connected)
         } while (connected != true)
 
@@ -139,7 +143,13 @@ class WickrIOBot {
 
         let cState
         do {
-          cState = WickrIOAPI.getClientState()
+          cState = await this.wickrIOAPI.getClientState()
+//          this.wickrIOAPI.getClientState().then(result =>{
+//            cState = result  
+//          });
+          if (cState === undefined) {
+            console.log('cState === undefined')
+          }
           console.log('isConnected: client state is', cState)
           if (cState != 'RUNNING') sleep(5000)
         } while (cState != 'RUNNING')
@@ -161,7 +171,7 @@ class WickrIOBot {
           tokens.ADMINISTRATORS.value
         ) {
           if (tokens.ADMINISTRATORS.encrypted) {
-            administrators = WickrIOAPI.cmdDecryptString(
+            administrators = await this.wickrIOAPI.cmdDecryptString(
               tokens.ADMINISTRATORS.value
             )
           } else {
@@ -218,8 +228,8 @@ class WickrIOBot {
   async startListening(callback) {
     try {
       const ref = this
-      return new Promise(function (resolve, reject) {
-        const start = WickrIOAPI.cmdStartAsyncRecvMessages(callback)
+      return new Promise(async function (resolve, reject) {
+        const start = await ref.wickrIOAPI.cmdStartAsyncRecvMessages(callback)
         if (start === 'Success') resolve(start)
         else reject(start)
       })
@@ -248,10 +258,10 @@ class WickrIOBot {
       if (settings.database) {
         const saved = await this.saveData()
       }
-      return new Promise(function (resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         let stopMessaging = 'not needed'
         if (ref.listenFlag === true)
-          stopMessaging = WickrIOAPI.cmdStopAsyncRecvMessages()
+          stopMessaging = await this.wickrIOAPI.cmdStopAsyncRecvMessages()
         resolve(stopMessaging)
       })
         .then(function (stopMessaging) {
@@ -260,8 +270,12 @@ class WickrIOBot {
           }
           console.log('Shutting bot down...')
           return new Promise(function (resolve, reject) {
-            const closed = WickrIOAPI.closeClient()
-            resolve(closed)
+            if (this?.wickrIOAPI) {
+              const closed = this.wickrIOAPI.closeClient()
+              resolve(closed)
+            } else {
+              resolve(true)
+            }
           })
             .then(function (closed) {
               console.log(closed)
@@ -304,7 +318,7 @@ class WickrIOBot {
       }
 
       if (tokens.DATABASE_ENCRYPTION_KEY.encrypted) {
-        key = WickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
+        key = await this.wickrIOAPI.cmdDecryptString(tokens.DATABASE_ENCRYPTION_KEY.value)
       } else {
         key = tokens.DATABASE_ENCRYPTION_KEY.value
       }
@@ -321,7 +335,7 @@ class WickrIOBot {
       for (const i in tokens) {
         if (i === 'BOT_USERNAME' || i === 'WICKRIO_BOT_NAME') continue
         if (!tokens[i].encrypted) {
-          tokens[i].value = WickrIOAPI.cmdEncryptString(tokens[i].value)
+          tokens[i].value = await this.wickrIOAPI.cmdEncryptString(tokens[i].value)
           tokens[i].encrypted = true
         }
       }
@@ -354,7 +368,7 @@ class WickrIOBot {
         return
       }
       console.log('Decrypting user database...')
-      const ciphertext = WickrIOAPI.cmdDecryptString(users.toString())
+      const ciphertext = await this.wickrIOAPI.cmdDecryptString(users.toString())
 
       if (encryptorDefined === true) {
         // Decrypt
@@ -387,7 +401,7 @@ class WickrIOBot {
         serialusers = JSON.stringify(this.wickrUsers)
       }
 
-      const encrypted = WickrIOAPI.cmdEncryptString(serialusers)
+      const encrypted = await this.wickrIOAPI.cmdEncryptString(serialusers)
       const saved = fs.writeFileSync('users.txt', encrypted, 'utf-8')
       console.log('User database saved to file!')
       return true
@@ -414,9 +428,9 @@ class WickrIOBot {
    *      ]
    * }
    */
-  getTransmitQueueInfo() {
+  async getTransmitQueueInfo() {
     try {
-      const txQInfo = WickrIOAPI.cmdGetTransmitQueueInfo()
+      const txQInfo = await this.wickrIOAPI.cmdGetTransmitQueueInfo()
       console.log('Transmit Queue Info:' + txQInfo)
       if (txQInfo) {
         return JSON.parse(txQInfo)
@@ -432,7 +446,7 @@ class WickrIOBot {
   /*
    * Return the versions of all associated software component
    */
-  getVersions(packageFile) {
+  async getVersions(packageFile) {
     let reply = '*Versions*'
 
     /*
@@ -452,9 +466,9 @@ class WickrIOBot {
      * Get the bot client's version information
      */
     let clientVersion = ''
-    const clientInfoJSON = WickrIOAPI.cmdGetClientInfo()
+    const clientInfoJSON = await this.wickrIOAPI.cmdGetClientInfo()
     if (clientInfoJSON) {
-      const clientInfo = JSON.parse(clientInfoJSON)
+      const clientInfo = JSON.parse(JSON.stringify(clientInfoJSON))
       if (clientInfo.version) {
         clientVersion = clientInfo.version
       }
