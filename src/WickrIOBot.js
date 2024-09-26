@@ -120,7 +120,7 @@ class WickrIOBot {
    * WickrIO API functions used: clientInit() and isConnected()
    */
   async start(client_username) {
-    const myLocalAdmins = new WickrAdmin()
+    const myLocalAdmins = new WickrAdmin(this.wickrIOAPI)
     console.log('starting bot')
     this.myAdmins = myLocalAdmins
 
@@ -217,7 +217,7 @@ class WickrIOBot {
    * This start function is specific to the testing scripts
    */
   async startForTesting(client_username) {
-    const myLocalAdmins = new WickrAdmin()
+    const myLocalAdmins = new WickrAdmin(this.wickrIOAPI)
     console.log('test starting bot')
     this.myAdmins = myLocalAdmins
   }
