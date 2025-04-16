@@ -4,6 +4,8 @@ The Wickr IO Node.js Bot API Framework provides tools for an easier and more eff
 
 To get started, you would need to setup your system, download and install Docker and run the WickrIO Docker container. Full instructions on how to do so are available here: https://wickrinc.github.io/wickrio-docs/#wickr-io-getting-started
 
+NOTE: Versions 7.1.1(and above) do not rely on a specific version of node and the Wickrio Addon uses ZeroMq making the WickrIO Bot APIs asynchronous. Please use this example code to update your custom integration.
+
 ## Install
 
 ```bash
