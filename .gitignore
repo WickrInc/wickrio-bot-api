@@ -3,7 +3,6 @@ package-lock.json
 /test
 /lib
 build
-.github
 exclude-list.txt
 sync.sh
 .DS_Store
