@@ -100,6 +100,10 @@ class WickrAdmin {
 
   // This function will process admin commands from the incoming values.
   processAdminCommand(sender, vGroupID, command, argument) {
+    // Verify sender is an admin before processing any admin commands
+    if (!this.adminIDs.includes(sender)) {
+      return false
+    }
     if (command === '/admin') {
       const action = argument.toLowerCase().trim()
       if (action === 'list') {
