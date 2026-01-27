@@ -734,7 +734,6 @@ class WickrIOBot {
   }
 
   getMessage({ rawMessage }) {
-    console.log({ rawMessage })
     // const tokens = JSON.parse(process.env.tokens)
     const jsonmsg = JSON.parse(rawMessage)
     const {
