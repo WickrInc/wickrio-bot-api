@@ -27,8 +27,7 @@ class WickrAdmin {
   }
 
   async addAdmin(userID) {
-    if (userID === undefined || userID.length === 0)
-      return undefined
+    if (userID === undefined || userID.length === 0) return undefined
 
     const found = this.adminIDs.includes(userID)
     if (found === true) {
@@ -89,10 +88,7 @@ class WickrAdmin {
     try {
       fs.copyFileSync('./processes.json', './processes_backup.json')
 
-      fs.writeFileSync(
-        './processes.json',
-        JSON.stringify(pjson, null, 2)
-      )
+      fs.writeFileSync('./processes.json', JSON.stringify(pjson, null, 2))
     } catch (err) {
       console.log(err)
     }
@@ -146,10 +142,7 @@ class WickrAdmin {
             const donereply = strings.adminsAdded
               .replace('%{sender}', sender)
               .replace('%{userList}', userList)
-            this.wickrIOAPI.cmdSend1to1Message(
-              this.adminIDs,
-              donereply
-            )
+            this.wickrIOAPI.cmdSend1to1Message(this.adminIDs, donereply)
           }
         } else {
           const reply = strings.noNewAdmins
@@ -202,13 +195,13 @@ class WickrAdmin {
           const reply = strings.noRemoveAdmins
           this.wickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
         }
-      } else if(action === 'help'){
+      } else if (action === 'help') {
         return false
       } else {
         const reply = strings.invalidAdminCommand
         this.wickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
       }
-      
+
       return true
     } else {
       if (this.verifyAutomatic !== true) {
@@ -251,6 +244,7 @@ class WickrAdmin {
             const reply = this.wickrIOAPI.cmdVerifyAll()
             this.wickrIOAPI.cmdSendRoomMessage(vGroupID, reply)
           } else if (action === 'users') {
+            // TODO: what should this do?
           } else if (action.startsWith('setmode')) {
             // get the mode to be set
             const values = action.split(' ')

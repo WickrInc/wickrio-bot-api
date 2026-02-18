@@ -164,7 +164,14 @@ class APIService {
     }
   }
 
-  async getMessageStatusFiltered(messageID, type, page, pageSize, filter, users) {
+  async getMessageStatusFiltered(
+    messageID,
+    type,
+    page,
+    pageSize,
+    filter,
+    users
+  ) {
     try {
       return await this.WickrIOAPI.cmdGetMessageStatus(
         messageID,
@@ -174,7 +181,7 @@ class APIService {
         filter,
         users
       )
-    } catch (err) {
+    } catch {
       return undefined
     }
   }
@@ -182,7 +189,7 @@ class APIService {
   async getMessageIDEntry(messageID) {
     try {
       return await this.WickrIOAPI.cmdGetMessageIDEntry(messageID)
-    } catch (err) {
+    } catch {
       return undefined
     }
   }
@@ -191,7 +198,15 @@ class APIService {
     return await this.WickrIOAPI.cmdGetMessageIDTable(page, size, sender)
   }
 
-  async sendRoomMessage(vGroupID, message, ttl, bor, messageID, flags, messagemeta) {
+  async sendRoomMessage(
+    vGroupID,
+    message,
+    ttl,
+    bor,
+    messageID,
+    flags,
+    messagemeta
+  ) {
     return await this.WickrIOAPI.cmdSendRoomMessage(
       vGroupID,
       message,
@@ -203,7 +218,15 @@ class APIService {
     )
   }
 
-  async sendRoomAttachment(vGroupID, attachment, display, ttl, bor, messagemeta, deleteWhenSent) {
+  async sendRoomAttachment(
+    vGroupID,
+    attachment,
+    display,
+    ttl,
+    bor,
+    messagemeta,
+    deleteWhenSent
+  ) {
     return await this.WickrIOAPI.cmdSendRoomAttachment(
       vGroupID,
       attachment,
@@ -215,7 +238,14 @@ class APIService {
     )
   }
 
-  async sendMessageUserHashFile(filePath, message, ttl, bor, messageID, messageMeta) {
+  async sendMessageUserHashFile(
+    filePath,
+    message,
+    ttl,
+    bor,
+    messageID,
+    messageMeta
+  ) {
     return await this.WickrIOAPI.cmdSendMessageUserHashFile(
       filePath,
       message,
@@ -349,7 +379,15 @@ class APIService {
     )
   }
 
-  async send1to1Message(userArray, reply, ttl, bor, messageID, flags, messagemeta) {
+  async send1to1Message(
+    userArray,
+    reply,
+    ttl,
+    bor,
+    messageID,
+    flags,
+    messagemeta
+  ) {
     return await this.WickrIOAPI.cmdSend1to1Message(
       userArray,
       reply,

@@ -70,9 +70,8 @@ class WickrIOConfigure {
         this.package = require(packageFile)
         this.packageDataStringify = JSON.stringify(this.package)
         this.packageDataParsed = JSON.parse(this.packageDataStringify)
-        this.foreverFlag = this.packageDataParsed.scripts.start.includes(
-          'forever'
-        )
+        this.foreverFlag =
+          this.packageDataParsed.scripts.start.includes('forever')
         this.wpmFlag = this.packageDataParsed.scripts.start.includes('wpm')
       } else {
         console.error('package.json file does not exist! (' + packageFile + ')')
@@ -477,7 +476,7 @@ class WickrIOConfigure {
     const inputPromises = []
 
     for (let i = 0; i < this.tokenConfig.length; i++) {
-      const inputPromise = new Promise((resolve, reject) => {
+      const inputPromise = new Promise(resolve => {
         this.inputPrompt = function (tokenEntry) {
           let schema = {
             properties: {},
@@ -599,7 +598,7 @@ class WickrIOConfigure {
       await inputPromise
     }
 
-    return Promise.all(inputPromises).then(answer => {
+    return Promise.all(inputPromises).then(() => {
       const objectKeyArray = []
       const objectValueArray = []
       for (let i = 0; i < config.length; i++) {
@@ -695,9 +694,8 @@ class WickrIOConfigure {
           const objToAdd = {}
           let i
           for (i = 0; i < adminArray.length; i++) {
-            const userSecurityGroups = this.dataParsed.apps[0].env.tokens[
-              adminArray[i]
-            ].value.split(',')
+            const userSecurityGroups =
+              this.dataParsed.apps[0].env.tokens[adminArray[i]].value.split(',')
             objToAdd[adminArray[i]] = userSecurityGroups
           }
           // 4.
