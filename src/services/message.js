@@ -3,8 +3,6 @@ const WickrUser = require('../WickrUser')
 let encryptor
 const encryptorDefined = false
 
-const util = require('util')
-
 class MessageService {
   constructor({
     rawMessage,
@@ -126,7 +124,6 @@ class MessageService {
     const {
       message_id: messageID,
       message,
-      edit,
       control,
       file,
       msg_ts: msgTS,
@@ -139,7 +136,6 @@ class MessageService {
       msgtype: rawMsgType,
       call,
       users,
-      keyverify,
     } = jsonmsg
 
     let { bor } = jsonmsg
