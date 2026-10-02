@@ -399,6 +399,28 @@ class APIService {
     )
   }
 
+  async send1to1AttachmentLowPriority(
+    userArray,
+    filename,
+    displayName,
+    ttl,
+    bor,
+    messageID,
+    messageMeta = ''
+  ) {
+    return await this.WickrIOAPI.cmdSend1to1Attachment(
+      userArray,
+      filename,
+      displayName,
+      ttl,
+      bor,
+      messageMeta,
+      false,
+      true,
+      messageID
+    )
+  }
+
   async send1to1MessageLowPriority(
     userArray,
     reply,
